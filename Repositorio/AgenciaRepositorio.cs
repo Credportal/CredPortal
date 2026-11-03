@@ -36,9 +36,7 @@ namespace Analise.Repositorio
 
             // Atualização dos campos principais
             agenciaDB.Nome = agencia.Nome;
-            agenciaDB.Representante = agencia.Representante;
-            agenciaDB.Credito = agencia.Credito;
-            agenciaDB.Debito = agencia.Debito;
+            agenciaDB.Contacto = agencia.Contacto;
             agenciaDB.Endereco = agencia.Endereco;
 
             _context.Agencias.Update(agenciaDB);

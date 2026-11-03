@@ -1,47 +1,52 @@
-﻿using Analise.Data;
-using Analise.Enuns;
-using Analise.Helper;
+﻿using Analise.Data; // Ajuste para o namespace do seu DbContext
 using Analise.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.Contracts;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Analise.Repositorio
 {
     public class ContaRepositorio : IContaRepositorio
     {
-        private readonly BancoContext _context;
-        
-        public ContaRepositorio(BancoContext bancoContext)
-        {
-            this._context = bancoContext;           
-        }
-        public ContaModel ListarPorId(int id)
-        {
-            return _context.Contas.FirstOrDefault(x => x.Id == id);
-        }
-        public ContaModel Adicionar(ContaModel registo)
-        {
-            registo.DataCadastro = DateTime.Now;
-            _context.Contas.Add(registo);
-            _context.SaveChanges();
-            return registo;
-        }
-        public ContaModel Actualizar(ContaModel registo)
-        {
-            ContaModel registoDB = ListarPorId(registo.Id);
-            if (registoDB == null) throw new System.Exception("Erro na actualização!");
-            registoDB.Nome = registo.Nome;
-            //registoDB.Credito = registo.Credito;
-            //registoDB.Debito = registo.Debito;
+        private readonly BancoContext _contexto; // Substitua pelo nome do seu Contexto
 
-            _context.Contas.Update(registoDB);
-            _context.SaveChanges();
-            return registoDB;
-        }
-        public List<ContaModel> BuscarTodos()
+        public ContaRepositorio(BancoContext contexto)
         {
-            return _context.Contas.ToList();
+            _contexto = contexto;
+        }
+
+        public async Task<List<ContaModel>> BuscarTodasAsync()
+        {
+            return await _contexto.Contas.ToListAsync();
+        }
+
+        public async Task<ContaModel> BuscarPorIdAsync(int id)
+        {
+            return await _contexto.Contas.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<ContaModel> AdicionarAsync(ContaModel conta)
+        {
+            await _contexto.Contas.AddAsync(conta);
+            await _contexto.SaveChangesAsync();
+            return conta;
+        }
+
+        public async Task<ContaModel> AtualizarAsync(ContaModel conta)
+        {
+            _contexto.Contas.Update(conta);
+            await _contexto.SaveChangesAsync();
+            return conta;
+        }
+
+        public async Task<bool> ApagarAsync(int id)
+        {
+            var contaDB = await BuscarPorIdAsync(id);
+            if (contaDB == null) return false;
+
+            _contexto.Contas.Remove(contaDB);
+            await _contexto.SaveChangesAsync();
+            return true;
         }
     }
 }

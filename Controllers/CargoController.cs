@@ -45,25 +45,16 @@ namespace Analise.Controllers
 
             return View(viewModel);
         }
+
+        // POST: Criar
         [HttpPost]
         public IActionResult Criar(CargoViewModel viewModel)
         {
             try
             {
-                Console.WriteLine("Iniciando criação de cargo...");
-                Console.WriteLine("Valor recebido: " + viewModel?.CargoNome?.Cargo);
-
-                if (ModelState.IsValid)
+                // CORRIGIDO: Se o modelo NÃO for válido, exibe os erros
+                if (!ModelState.IsValid)
                 {
-                    Console.WriteLine("ModelState inválido. Erros:");
-                    foreach (var campo in ModelState)
-                    {
-                        foreach (var erro in campo.Value.Errors)
-                        {
-                            Console.WriteLine($"Erro no campo {campo.Key}: {erro.ErrorMessage}");
-                        }
-                    }
-
                     viewModel.ListaCargos = _cargoRepositorio.BuscarTodos();
                     TempData["MensagemErro"] = "Dados inválidos! Verifique os campos e tente novamente.";
                     return View(viewModel);
@@ -75,7 +66,6 @@ namespace Analise.Controllers
             }
             catch (Exception erro)
             {
-                Console.WriteLine("Erro ao criar cargo: " + erro.Message);
                 viewModel.ListaCargos = _cargoRepositorio.BuscarTodos();
                 TempData["MensagemErro"] = $"Erro ao registrar cargo: {erro.Message}";
                 return View(viewModel);
@@ -88,7 +78,8 @@ namespace Analise.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
+                // CORRIGIDO: Só actualiza se o ModelState for válido
+                if (ModelState.IsValid)
                 {
                     _cargoRepositorio.Actualizar(viewModel.CargoNome);
                     TempData["MensagemSucesso"] = "Actualizado com sucesso!";

@@ -1,0 +1,234 @@
+﻿@using Analise.Enuns
+@model dynamic
+@{
+    ViewData["Title"] = "Simulador da Prestação";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="container-fluid px-4 py-3">
+    <!-- Cabeçalho da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-solid text-dark mb-0">Simulador da Prestação</h2>
+    </div>
+
+    <div class="row g-4">
+        <!-- Coluna Esquerda: Parâmetros de Simulação -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 bg-white p-4">
+                <h5 class="fw-bold text-dark mb-3">Parâmetros do Crédito</h5>
+
+                <!-- Seleção / Busca de Cliente / Entidade -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small text-uppercase">Cliente / Entidade</label>
+                    <div class="input-group">
+                        <input type="text" id="txtCliente" class="form-control rounded-start-2" placeholder="Digite o nome ou selecione..." />
+                        <button class="btn btn-outline-secondary dropdown-toggle rounded-end-2 px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #ced4da;">
+                            <i class="fa-solid fa-search"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end w-100 shadow-sm" style="max-height: 200px; overflow-y: auto;" id="listaClientesDropdown">
+                            <li><h6 class="dropdown-header">Entidades Registadas</h6></li>
+                            @if (Model?.ListaEntidades != null && Model.ListaEntidades.Count > 0)
+                            {
+                                @foreach (var ent in Model.ListaEntidades)
+                                {
+                                    <li><a class="dropdown-item entidade-opcao" href="#" data-nome="@ent.Nome">@ent.Nome (#@ent.Id)</a></li>
+                                }
+                            }
+                            else
+                            {
+                                <li><a class="dropdown-item text-muted" href="#">Nenhuma entidade encontrada</a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Valor da Solicitação -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small text-uppercase">Valor da Solicitação (MT)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light fw-bold text-secondary">MT</span>
+                        <input type="number" id="txtValor" class="form-control rounded-end-2 fw-bold text-dark fs-5" placeholder="Ex: 50000" min="1000" step="1000">
+                    </div>
+                </div>
+
+                <!-- Taxa de Juros Mensal -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small text-uppercase">Taxa de Juros Mensal (%)</label>
+                    <div class="input-group">
+                        <input type="number" id="txtTaxaMensal" class="form-control rounded-start-2" placeholder="Ex: 2.5" step="0.1">
+                        <span class="input-group-text bg-light text-secondary">%</span>
+                    </div>
+                    <small class="text-muted" style="font-size: 11px;">(Cálculo baseado em Juros Compostos)</small>
+                </div>
+
+                <!-- Prazo em Meses -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-secondary small text-uppercase">Prazo (Meses)</label>
+                    <input type="number" id="txtPrazo" class="form-control rounded-2" placeholder="Ex: 12" min="1" max="120">
+                </div>
+
+                <button type="button" id="btnCalcular" class="btn btn-success w-100 py-2 rounded-2 text-white fw-semibold" style="background-color: #079b62; border-color: #079b62;">
+                    Calcular Prestação
+                </button>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Resumo da Simulação -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4 bg-white p-4 h-100">
+                <h5 class="fw-bold text-dark mb-3">Resumo da Simulação</h5>
+
+                <div class="row g-3 mb-3">
+                    <!-- Valor da Parcela Mensal -->
+                    <div class="col-md-4">
+                        <div class="rounded-3 border overflow-hidden">
+                            <div class="bg-success text-white px-3 py-1 small fw-semibold text-center" style="background-color: #079b62 !important;">Valor da Prestação Mensal</div>
+                            <div class="p-3 text-center bg-light">
+                                <h5 class="fw-bold text-dark mb-0 fs-6" id="resParcela">MT 0,00</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total a Pagar -->
+                    <div class="col-md-4">
+                        <div class="rounded-3 border overflow-hidden">
+                            <div class="bg-success text-white px-3 py-1 small fw-semibold text-center" style="background-color: #079b62 !important;">Total a Pagar</div>
+                            <div class="p-3 text-center bg-light">
+                                <h5 class="fw-bold text-dark mb-0 fs-6" id="resTotalPagar">MT 0,00</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total de Juros (Compostos) -->
+                    <div class="col-md-4">
+                        <div class="rounded-3 border overflow-hidden">
+                            <div class="bg-success text-white px-3 py-1 small fw-semibold text-center" style="background-color: #079b62 !important;">Total de Juros</div>
+                            <div class="p-3 text-center bg-light">
+                                <h5 class="fw-bold text-dark mb-0 fs-6" id="resTotalJuros">MT 0,00</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Método de Amortização -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small text-uppercase d-block">Método de Amortização</label>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-2 fw-normal" style="background-color: rgba(7, 155, 98, 0.1) !important; color: #079b62 !important;">Price (Compostos)</span>
+                        <span class="badge bg-light text-secondary border px-3 py-2 rounded-2 fw-normal">SAC</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela do Plano de Amortização -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mt-4">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="fw-bold text-dark mb-0">Plano de Amortização</h5>
+        </div>
+        <div class="table-responsive" style="max-height: 350px;">
+            <table class="table table-hover align-middle mb-0 text-nowrap" id="tabelaAmortizacao">
+                <thead class="table-light text-muted small text-uppercase sticky-top">
+                    <tr>
+                        <th class="ps-3 py-3">Nº Parcela</th>
+                        <th class="py-3">Data Vencimento</th>
+                        <th class="py-3">Valor da Parcela</th>
+                        <th class="py-3">Capital</th>
+                        <th class="py-3">Juros (Compostos)</th>
+                        <th class="text-end pe-3 py-3">Saldo Devedor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Insira os parâmetros e clique em "Calcular Prestação".</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const btnCalcular = document.getElementById("btnCalcular");
+            const txtCliente = document.getElementById("txtCliente");
+            const opcoesEntidade = document.querySelectorAll(".entidade-opcao");
+
+            opcoesEntidade.forEach(opcao => {
+                opcao.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    txtCliente.value = this.getAttribute("data-nome");
+                });
+            });
+
+            function formatarMoeda(valor) {
+                return "MT " + valor.toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function calcularSimulador() {
+                let PV = parseFloat(document.getElementById("txtValor").value) || 0;
+                let taxaMensalPercentual = parseFloat(document.getElementById("txtTaxaMensal").value) || 0;
+                let n = parseInt(document.getElementById("txtPrazo").value) || 0;
+
+                let tbody = document.querySelector("#tabelaAmortizacao tbody");
+                tbody.innerHTML = "";
+
+                if (PV <= 0 || n <= 0 || taxaMensalPercentual < 0) {
+                    alert("Por favor, preencha o Valor da Solicitação, a Taxa de Juros e o Prazo corretamente.");
+                    return;
+                }
+
+                let i = taxaMensalPercentual / 100;
+                let pmt = 0;
+                if (i === 0) {
+                    pmt = PV / n;
+                } else {
+                    let fator = Math.pow(1 + i, n);
+                    pmt = PV * (i * fator) / (fator - 1);
+                }
+
+                let saldoDevedor = PV;
+                let totalJurosGeral = 0;
+                let dataBase = new Date();
+
+                for (let mes = 1; mes <= n; mes++) {
+                    let jurosMes = saldoDevedor * i;
+                    let amortizacaoMes = pmt - jurosMes;
+                    saldoDevedor -= amortizacaoMes;
+                    if (saldoDevedor < 0) saldoDevedor = 0;
+
+                    totalJurosGeral += jurosMes;
+
+                    let dataVenc = new Date(dataBase);
+                    dataVenc.setMonth(dataBase.getMonth() + mes);
+                    let dataFormatada = dataVenc.toLocaleDateString('pt-MZ');
+
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                                <td class="ps-3 fw-semibold text-dark">${mes}</td>
+                                <td>${dataFormatada}</td>
+                                <td class="fw-bold" style="color: #079b62;">${formatarMoeda(pmt)}</td>
+                                <td>${formatarMoeda(amortizacaoMes)}</td>
+                                <td>${formatarMoeda(jurosMes)}</td>
+                                <td class="text-end pe-3 font-monospace">${formatarMoeda(saldoDevedor)}</td>
+                            `;
+                    tbody.appendChild(tr);
+                }
+
+                let totalPagar = PV + totalJurosGeral;
+
+                document.getElementById("resParcela").innerText = formatarMoeda(pmt);
+                document.getElementById("resTotalPagar").innerText = formatarMoeda(totalPagar);
+                document.getElementById("resTotalJuros").innerText = formatarMoeda(totalJurosGeral);
+            }
+
+            btnCalcular.addEventListener("click", calcularSimulador);
+        });
+    </script>
+}

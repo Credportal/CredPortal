@@ -1,0 +1,293 @@
+﻿@using Analise.Enuns
+@model EntidadeViewModel
+@{
+    ViewData["Title"] = "Detalhes da Entidade";
+
+    // Obtém os dados do utilizador logado
+    var usuarioLogado = SessaoUsuario.BuscarSessaoDoUsuario();
+    string nomeUtilizador = usuarioLogado?.Login ?? "Administrador";
+
+    // Nome limpo da Agência (sem exibir IDs)
+    string nomeAgencia = "Agência Maputo";
+
+    bool isEmpresa = Model?.EntidadeNome?.TipoCliente == "Empresarial";
+}
+
+@inject Analise.Helper.ISessao SessaoUsuario
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="container-fluid px-4 py-3">
+    <!-- Cabeçalho da Página com Botões de Ação -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-solid text-dark mb-0">Detalhes da Entidade</h2>
+        <div class="d-flex gap-2">
+            <!-- Botão de Pré-visualizar / Imprimir Ficha -->
+            <button onclick="window.print()" class="btn btn-outline-success rounded-2 px-3" style="color: #079b62; border-color: #079b62;">
+                <i class="fa-solid fa-file-pdf me-1"></i> Ficha
+            </button>
+            <!-- Botão Voltar direcionado para a action Ver -->
+            <a asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-4">
+                <i class="fa-solid fa-arrow-left me-1"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Cartão de Visualização / Ficha -->
+    <div id="fichaCliente" class="card shadow-sm border-0 rounded-4 bg-white p-4">
+        <div class="card-body p-2">
+
+            <!-- CABEÇALHO OFICIAL DO DOCUMENTO (Marca, Slogan, Logótipo Verde e Metadados) -->
+            <div class="d-flex justify-content-between align-items-center pb-4 mb-4 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 text-white" style="width: 50px; height: 50px; background-color: #079b62; font-size: 24px;">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0" style="color: #079b62; letter-spacing: -0.5px;">Cred</h4>
+                        <span class="text-muted" style="font-size: 12px;">Sua gestão simplificada.</span>
+                    </div>
+                </div>
+                <div class="text-end small text-secondary">
+                    <div class="fw-semibold text-dark"><i class="fa-solid fa-location-dot me-1 text-success"></i> @nomeAgencia</div>
+                    <div>Emitido por: <span class="fw-bold text-dark">@nomeUtilizador</span></div>
+                    <div>Data: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+            </div>
+
+            <div class="row align-items-center mb-4">
+                <!-- Avatar / Ícone -->
+                <div class="col-md-2 text-center border-end">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center text-success mb-2" style="width: 80px; height: 80px; font-size: 32px;">
+                        <i class="fa-solid @(isEmpresa ? "fa-building" : "fa-user-tie")"></i>
+                    </div>
+                    <div class="small fw-semibold text-muted">ID: #@Model.EntidadeNome.Id</div>
+                </div>
+
+                <!-- Nome / Razão Social, ID e Estado -->
+                <div class="col-md-10">
+                    <div class="row align-items-center">
+                        <div class="col-md-9">
+                            <span class="d-block text-secondary small text-uppercase fw-semibold">@(isEmpresa ? "Razão Social / Nome da Empresa" : "Nome Completo")</span>
+                            <h4 class="fw-bold text-dark mb-0">
+                                @Model.EntidadeNome.Nome
+                                <span class="badge bg-light text-secondary border ms-2 font-monospace" style="font-size: 13px;">#@Model.EntidadeNome.Id</span>
+                            </h4>
+                        </div>
+                        <div class="col-md-3 text-md-end mt-3 mt-md-0">
+                            <span class="d-block text-secondary small text-uppercase fw-semibold mb-1">Estado</span>
+                            @if (Model.EntidadeNome.Ativo)
+                            {
+                                <span class="badge bg-success px-3 py-2" style="font-size: 12px; background-color: #079b62 !important;">Ativo</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary px-3 py-2" style="font-size: 12px;">Inativo</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="text-muted opacity-25 my-4">
+
+            <!-- Secção: Identificação & Documentação -->
+            <h6 class="text-uppercase text-secondary fw-bold small mb-3">Identificação & Documentação</h6>
+
+            <div class="row g-4 mb-4">
+                <!-- ID da Entidade -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Código / ID Entidade</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">#@Model.EntidadeNome.Id</p>
+                </div>
+
+                <!-- Tipo de Entidade -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Tipo de Entidade</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.TipoCliente) ? "-" : Model.EntidadeNome.TipoCliente)</p>
+                </div>
+
+                @if (!isEmpresa)
+                {
+                    <!-- Género (Apenas Individual) -->
+                    <div class="col-md-4">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Género</span>
+                        <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Genero) ? "-" : Model.EntidadeNome.Genero)</p>
+                    </div>
+
+                    <!-- Estado Civil (Apenas Individual) -->
+                    <div class="col-md-4">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Estado Civil</span>
+                        <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.EstadoCivil) ? "-" : Model.EntidadeNome.EstadoCivil)</p>
+                    </div>
+                }
+
+                <!-- Data de Nascimento ou Constituição -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">@(isEmpresa ? "Data de Constituição" : "Data de Nascimento")</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(Model.EntidadeNome.Aniversario.HasValue ? Model.EntidadeNome.Aniversario.Value.ToString("dd/MM/yyyy") : "-")</p>
+                </div>
+
+                <!-- Naturalidade ou Sede -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">@(isEmpresa ? "Cidade / Sede" : "Naturalidade")</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Naturalidade) ? "-" : Model.EntidadeNome.Naturalidade)</p>
+                </div>
+
+                <!-- NUIT -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">NUIT</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Nuit) ? "-" : Model.EntidadeNome.Nuit)</p>
+                </div>
+
+                <!-- Tipo de Documento -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Tipo de Documento</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Documento) ? "-" : Model.EntidadeNome.Documento)</p>
+                </div>
+
+                <!-- Nr. Documento -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Nr. Documento</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.NrDocumento) ? "-" : Model.EntidadeNome.NrDocumento)</p>
+                </div>
+
+                <!-- Local de Emissão -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Local de Emissão</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.LocalEmissao) ? "-" : Model.EntidadeNome.LocalEmissao)</p>
+                </div>
+
+                <!-- Data de Emissão -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Data de Emissão</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(Model.EntidadeNome.Emissao.HasValue ? Model.EntidadeNome.Emissao.Value.ToString("dd/MM/yyyy") : "-")</p>
+                </div>
+
+                <!-- Data de Validade -->
+                <div class="col-md-4">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Data de Validade</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(Model.EntidadeNome.Validade.HasValue ? Model.EntidadeNome.Validade.Value.ToString("dd/MM/yyyy") : "-")</p>
+                </div>
+            </div>
+
+            @if (!isEmpresa)
+            {
+                <hr class="text-muted opacity-25 my-4">
+
+                <!-- Secção: Dados Profissionais (Apenas Individual) -->
+                <h6 class="text-uppercase text-secondary fw-bold small mb-3">Dados Profissionais</h6>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Profissão</span>
+                        <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Profissao) ? "-" : Model.EntidadeNome.Profissao)</p>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Cargo</span>
+                        <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Cargo) ? "-" : Model.EntidadeNome.Cargo)</p>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Local de Trabalho</span>
+                        <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.LocalTrabalho) ? "-" : Model.EntidadeNome.LocalTrabalho)</p>
+                    </div>
+                </div>
+            }
+
+            <hr class="text-muted opacity-25 my-4">
+
+            <!-- Secção: Filiação ou Representação Legal -->
+            <h6 class="text-uppercase text-secondary fw-bold small mb-3">@(isEmpresa ? "Representação Legal" : "Filiação e Cônjuge")</h6>
+
+            <div class="row g-4 mb-4">
+                @if (!isEmpresa)
+                {
+                    <div class="col-md-6">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Nome do Pai</span>
+                        <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Pai) ? "-" : Model.EntidadeNome.Pai)</p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Nome da Mãe</span>
+                        <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Mae) ? "-" : Model.EntidadeNome.Mae)</p>
+                    </div>
+                }
+                <div class="col-md-6">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">@(isEmpresa ? "Nome do Representante Legal" : "Nome do Cônjuge")</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Conjuge) ? "-" : Model.EntidadeNome.Conjuge)</p>
+                </div>
+                <div class="col-md-6">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">@(isEmpresa ? "Telefone do Representante Legal" : "Telefone do Cônjuge")</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.TelefoneConjuge) ? "-" : Model.EntidadeNome.TelefoneConjuge)</p>
+                </div>
+            </div>
+
+            <hr class="text-muted opacity-25 my-4">
+
+            <!-- Secção: Localização e Contacto -->
+            <h6 class="text-uppercase text-secondary fw-bold small mb-3">Localização e Contacto</h6>
+
+            <div class="row g-4 mb-3">
+                <!-- Endereço Completo -->
+                <div class="col-md-6">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Endereço Completo</span>
+                    <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Endereco) ? "-" : Model.EntidadeNome.Endereco)</p>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="row g-3">
+                        <!-- Contacto Principal -->
+                        <div class="col-md-6">
+                            <span class="d-block text-secondary small text-uppercase fw-semibold">Contacto Principal</span>
+                            <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Telefone) ? "-" : Model.EntidadeNome.Telefone)</p>
+                        </div>
+
+                        <!-- Contacto Alternativo -->
+                        <div class="col-md-6">
+                            <span class="d-block text-secondary small text-uppercase fw-semibold">Contacto Alternativo</span>
+                            <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Alternativo) ? "-" : Model.EntidadeNome.Alternativo)</p>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-12">
+                            <span class="d-block text-secondary small text-uppercase fw-semibold">Email</span>
+                            <p class="fw-medium text-dark fs-6 mb-0">@(string.IsNullOrEmpty(Model.EntidadeNome.Email) ? "-" : Model.EntidadeNome.Email)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- CSS Otimizado para Impressão e PDF -->
+<style>
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #fichaCliente, #fichaCliente * {
+            visibility: visible;
+        }
+
+        #fichaCliente {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none !important;
+            box-shadow: none !important;
+            background-color: #fff !important;
+        }
+
+        .sg-sidebar, .sg-topbar, .btn {
+            display: none !important;
+        }
+    }
+</style>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

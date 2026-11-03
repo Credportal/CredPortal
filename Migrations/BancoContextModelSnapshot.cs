@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Tab.Migrations
+namespace Cred.Migrations
 {
     [DbContext(typeof(BancoContext))]
     partial class BancoContextModelSnapshot : ModelSnapshot
@@ -30,14 +30,12 @@ namespace Tab.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Credito")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<string>("Contacto")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<DateTime>("DataCadastro")
+                    b.Property<DateTimeOffset>("DataCadastro")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Debito")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Endereco")
                         .IsRequired()
@@ -47,16 +45,12 @@ namespace Tab.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Representante")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
                     b.ToTable("Agencias");
                 });
 
-            modelBuilder.Entity("Analise.Models.AlunoModel", b =>
+            modelBuilder.Entity("Analise.Models.AmortizacaoModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -64,195 +58,56 @@ namespace Tab.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Contacto")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<long?>("CRR")
+                        .HasColumnType("bigint");
 
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<decimal>("Juro")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("Documento")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<decimal>("JuroAPerdoar")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("EstadoId")
+                    b.Property<decimal>("JuroPago")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MultaAPerdoar")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MultaPago")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("NR")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Mae")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime?>("Nascimento")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Nome")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Pai")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int?>("UsuarioId")
+                    b.Property<int>("PedidoId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("Prestacao")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Principal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PrincipalPago")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SaldoDevedor")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxaMultaDia")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotalPago")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("Vencimento")
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EstadoId");
+                    b.HasIndex("PedidoId");
 
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Alunos");
-                });
-
-            modelBuilder.Entity("Analise.Models.AulaModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("Adjunto1")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("Adjunto2")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("AlunoId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Cadastro1Id")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Cadastro2Id")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CadastroId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("LicaoId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("Presenca")
-                        .HasColumnType("numeric");
-
-                    b.Property<int?>("Professor")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("TurmaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AlunoId");
-
-                    b.HasIndex("Cadastro1Id");
-
-                    b.HasIndex("Cadastro2Id");
-
-                    b.HasIndex("CadastroId");
-
-                    b.HasIndex("LicaoId");
-
-                    b.HasIndex("TurmaId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Aulas");
-                });
-
-            modelBuilder.Entity("Analise.Models.CadastroModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Cliente")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Contacto")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Contribuinte")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Documento")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Fornecedor")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("Nascimento")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Obreiro")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Professor")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Cadastros");
-                });
-
-            modelBuilder.Entity("Analise.Models.CanalModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Banco")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Conta")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("DataActualizacao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Nib")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Titular")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Canais");
+                    b.ToTable("Amortizacoes");
                 });
 
             modelBuilder.Entity("Analise.Models.CargoModel", b =>
@@ -267,7 +122,7 @@ namespace Tab.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("DataCadastro")
+                    b.Property<DateTimeOffset>("DataCadastro")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -275,7 +130,7 @@ namespace Tab.Migrations
                     b.ToTable("cargos");
                 });
 
-            modelBuilder.Entity("Analise.Models.ClienteModel", b =>
+            modelBuilder.Entity("Analise.Models.ConfiguracaoModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -283,24 +138,27 @@ namespace Tab.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AgenciaId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Banco")
+                    b.Property<string>("ClausulaPrimeiraTexto")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Conta")
+                    b.Property<string>("ClausulaQuartaTexto")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("DataActualizacao")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("ClausulaQuintaTexto")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("ClausulaSegundaTexto")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<string>("DetalhePep")
+                    b.Property<string>("ClausulaTerceiraTexto")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Contactos")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -308,70 +166,25 @@ namespace Tab.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Endereco")
+                    b.Property<string>("NomeEmpresa")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Limite")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("NIB")
+                    b.Property<string>("QualidadeRepresentante")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Nascimento")
+                    b.Property<string>("Representante")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("Sede")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<string>("Nuit")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Pais")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Pep")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("Prazo")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("Registo")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Segmento")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Telefone")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Titular")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AgenciaId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Clientes");
+                    b.ToTable("Configuracoes");
                 });
 
             modelBuilder.Entity("Analise.Models.ContaModel", b =>
@@ -382,25 +195,46 @@ namespace Tab.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Banco")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Conta")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<decimal>("Credito")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("DataCadastro")
+                    b.Property<DateTimeOffset>("DataCadastro")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("Debito")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("NIB")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(34)
+                        .HasColumnType("character varying(34)");
+
+                    b.Property<string>("Titular")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("Contas");
                 });
 
-            modelBuilder.Entity("Analise.Models.ContasCobrarModel", b =>
+            modelBuilder.Entity("Analise.Models.CustosAdmModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -411,84 +245,19 @@ namespace Tab.Migrations
                     b.Property<int?>("AgenciaId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("CadastroId")
+                    b.Property<long?>("CRR")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("ContaId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("DataCadastro")
+                    b.Property<DateTimeOffset>("DataCadastro")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("Pago")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int?>("UsuarioId")
+                    b.Property<int>("EntidadeId")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("Valor")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgenciaId");
-
-                    b.HasIndex("CadastroId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("CobrarContas");
-                });
-
-            modelBuilder.Entity("Analise.Models.ContasPagarModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AgenciaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("CadastroId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Pago")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Valor")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgenciaId");
-
-                    b.HasIndex("CadastroId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("PagarContas");
-                });
-
-            modelBuilder.Entity("Analise.Models.EntradaEventoModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("CadastroId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("EventoId")
+                    b.Property<int?>("PedidoId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("UsuarioId")
@@ -498,67 +267,152 @@ namespace Tab.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CadastroId");
-
-                    b.HasIndex("EventoId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("EntradaEventos");
-                });
-
-            modelBuilder.Entity("Analise.Models.EntradaModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AgenciaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("CadastroId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ContaId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Descricao")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("LinhaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("TipoEntradaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Valor")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgenciaId");
-
-                    b.HasIndex("CadastroId");
 
                     b.HasIndex("ContaId");
 
-                    b.HasIndex("LinhaId");
+                    b.HasIndex("EntidadeId");
 
-                    b.HasIndex("TipoEntradaId");
+                    b.HasIndex("PedidoId");
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Entradas");
+                    b.ToTable("CustosAdm");
+                });
+
+            modelBuilder.Entity("Analise.Models.EntidadeModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AgenciaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Alternativo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("Aniversario")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Cargo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Conjuge")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("DataCadastro")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Documento")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("Emissao")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Endereco")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EstadoCivil")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Genero")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("LocalEmissao")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LocalTrabalho")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Mae")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Naturalidade")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NrDocumento")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Nuit")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)");
+
+                    b.Property<string>("Pai")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Profissao")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Telefone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("TelefoneConjuge")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("TipoCliente")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("Validade")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Entidades");
                 });
 
             modelBuilder.Entity("Analise.Models.EstadoModel", b =>
@@ -569,7 +423,7 @@ namespace Tab.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DataCadastro")
+                    b.Property<DateTimeOffset>("DataCadastro")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Estado")
@@ -581,155 +435,7 @@ namespace Tab.Migrations
                     b.ToTable("estados");
                 });
 
-            modelBuilder.Entity("Analise.Models.EventoModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Eventos");
-                });
-
-            modelBuilder.Entity("Analise.Models.ExtratoModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AgenciaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("CanalId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Credito")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Debito")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Descricao")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("LinhaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgenciaId");
-
-                    b.HasIndex("CanalId");
-
-                    b.HasIndex("LinhaId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Extratos");
-                });
-
-            modelBuilder.Entity("Analise.Models.FechoModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AgenciaId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("BCI1")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("BCI2")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Caixa")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Cobranca")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Construcao")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Corrente")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("EstadoId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Fevereiro")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Inventario")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Maguaza")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Mahubo")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Malhampsene")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Maluana")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Manhica")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Maputo")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Mpesa")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Passivo")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Romao")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgenciaId");
-
-                    b.HasIndex("EstadoId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Fechos");
-                });
-
-            modelBuilder.Entity("Analise.Models.InventarioModel", b =>
+            modelBuilder.Entity("Analise.Models.GarantiaModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -740,212 +446,131 @@ namespace Tab.Migrations
                     b.Property<int>("AgenciaId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("AnoAquisicao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Custo")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<long?>("Crr")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("Descricao")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("TabernaculoId")
+                    b.Property<int>("EntidadeId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UsuarioId")
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UsuarioId")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("ValorActual")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("ValorAquisicao")
+                        .HasColumnType("decimal(18,2)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("AgenciaId");
+                    b.HasIndex("EntidadeId");
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Inventarios");
+                    b.ToTable("Garantias");
                 });
 
-            modelBuilder.Entity("Analise.Models.LicaoModel", b =>
+            modelBuilder.Entity("Analise.Models.IntervenienteModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AgenciaId")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("Crr")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<string>("Descricao")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("TurmaId")
+                    b.Property<int>("EntidadeId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UsuarioId")
+                    b.Property<int>("IntervenienteID")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UsuarioId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TurmaId");
+                    b.HasIndex("EntidadeId");
+
+                    b.HasIndex("IntervenienteID");
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Licaos");
+                    b.ToTable("Intervenientes");
                 });
 
-            modelBuilder.Entity("Analise.Models.LinhaModel", b =>
+            modelBuilder.Entity("Analise.Models.MovimentoExternoModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AgenciaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ContaId")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("Credito")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("DataCadastro")
+                    b.Property<DateTimeOffset>("DataCadastro")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("Debito")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("Descricao")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
-
-                    b.ToTable("Linhas");
-                });
-
-            modelBuilder.Entity("Analise.Models.ListaModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int?>("EntidadeId")
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AlunoId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Classificacao")
+                    b.Property<string>("TipoOperacao")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("EstadoId")
+                    b.Property<int>("UsuarioId")
                         .HasColumnType("integer");
-
-                    b.Property<decimal?>("Falta")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal?>("Presenca")
-                        .HasColumnType("numeric");
-
-                    b.Property<int?>("TurmaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AlunoId");
-
-                    b.HasIndex("EstadoId");
-
-                    b.HasIndex("TurmaId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Listas");
-                });
-
-            modelBuilder.Entity("Analise.Models.ParticipanteEventoModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("CadastroId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("EventoId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Pago")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Valor")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CadastroId");
-
-                    b.HasIndex("EventoId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("ParticipanteEventos");
-                });
-
-            modelBuilder.Entity("Analise.Models.RecebimentoModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AgenciaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ClienteId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DataActualizacao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Valor")
-                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AgenciaId");
 
-                    b.HasIndex("ClienteId");
+                    b.HasIndex("ContaId");
 
-                    b.HasIndex("UsuarioId");
+                    b.HasIndex("EntidadeId");
 
-                    b.ToTable("Recebimentos");
+                    b.ToTable("MovimentosExternos");
                 });
 
-            modelBuilder.Entity("Analise.Models.SaidaModel", b =>
+            modelBuilder.Entity("Analise.Models.MovimentoInternoModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -956,33 +581,97 @@ namespace Tab.Migrations
                     b.Property<int?>("AgenciaId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("CadastroId")
+                    b.Property<int?>("ContaDestinoId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ContaId")
+                    b.Property<int?>("ContaOrigemId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("DataCadastro")
+                    b.Property<decimal>("Credito")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTimeOffset>("DataCadastro")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DataReferencia")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<decimal>("Debito")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Descricao")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("LinhaId")
+                    b.Property<string>("TipoOperacao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UsuarioId")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("Quantidade")
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgenciaId");
+
+                    b.HasIndex("ContaDestinoId");
+
+                    b.HasIndex("ContaOrigemId");
+
+                    b.ToTable("MovimentosInternos");
+                });
+
+            modelBuilder.Entity("Analise.Models.PedidoModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AgenciaId")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("CRR")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("CapitalPago")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("TipoDespesaId")
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTimeOffset?>("DataDesembolso")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Destino")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<int>("EntidadeId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("TipoServicoId")
+                    b.Property<int>("EstadoId")
                         .HasColumnType("integer");
+
+                    b.Property<int?>("GestorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Prazo")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PrazoDecisao")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Prestacao")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PrestacaoDecisao")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Taxa")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("TaxaDecisao")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("UsuarioId")
                         .HasColumnType("integer");
@@ -990,190 +679,21 @@ namespace Tab.Migrations
                     b.Property<decimal>("Valor")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("ValorDecisao")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ValorDesembolsado")
+                        .HasColumnType("decimal(18,2)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("AgenciaId");
+                    b.HasIndex("EntidadeId");
 
-                    b.HasIndex("CadastroId");
-
-                    b.HasIndex("ContaId");
-
-                    b.HasIndex("LinhaId");
-
-                    b.HasIndex("TipoDespesaId");
-
-                    b.HasIndex("TipoServicoId");
+                    b.HasIndex("GestorId");
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Saidas");
-                });
-
-            modelBuilder.Entity("Analise.Models.TicketModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Assunto")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("DataCriacao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Estado")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Problema")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Solucao")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Usuario")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Tickets");
-                });
-
-            modelBuilder.Entity("Analise.Models.TipoDespesaModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TipoDespesas");
-                });
-
-            modelBuilder.Entity("Analise.Models.TipoEntradaModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TipoEntradas");
-                });
-
-            modelBuilder.Entity("Analise.Models.TipoSaidaModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TipoSaidas");
-                });
-
-            modelBuilder.Entity("Analise.Models.TipoServicoModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TipoServicos");
-                });
-
-            modelBuilder.Entity("Analise.Models.TurmaModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AgenciaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Cadastro1Id")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Cadastro2Id")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Cadastro3Id")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Nome")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("Professor1")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("Professor2")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("Professor3")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgenciaId");
-
-                    b.HasIndex("Cadastro1Id");
-
-                    b.HasIndex("Cadastro2Id");
-
-                    b.HasIndex("Cadastro3Id");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Turmas");
+                    b.ToTable("Pedidos");
                 });
 
             modelBuilder.Entity("Analise.Models.UsuarioModel", b =>
@@ -1198,10 +718,10 @@ namespace Tab.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("DataActualizacao")
+                    b.Property<DateTimeOffset?>("DataActualizacao")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DataCadastro")
+                    b.Property<DateTimeOffset>("DataCadastro")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Editar")
@@ -1240,73 +760,18 @@ namespace Tab.Migrations
                     b.ToTable("Usuarios");
                 });
 
-            modelBuilder.Entity("Analise.Models.AlunoModel", b =>
+            modelBuilder.Entity("Analise.Models.AmortizacaoModel", b =>
                 {
-                    b.HasOne("Analise.Models.EstadoModel", "Estado")
+                    b.HasOne("Analise.Models.PedidoModel", "Pedido")
                         .WithMany()
-                        .HasForeignKey("EstadoId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Estado");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Analise.Models.AulaModel", b =>
-                {
-                    b.HasOne("Analise.Models.AlunoModel", "Aluno")
-                        .WithMany()
-                        .HasForeignKey("AlunoId");
-
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro1")
-                        .WithMany()
-                        .HasForeignKey("Cadastro1Id")
+                        .HasForeignKey("PedidoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro2")
-                        .WithMany()
-                        .HasForeignKey("Cadastro2Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro")
-                        .WithMany()
-                        .HasForeignKey("CadastroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Analise.Models.LicaoModel", "Licao")
-                        .WithMany()
-                        .HasForeignKey("LicaoId");
-
-                    b.HasOne("Analise.Models.TurmaModel", "Turma")
-                        .WithMany()
-                        .HasForeignKey("TurmaId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Aluno");
-
-                    b.Navigation("Cadastro");
-
-                    b.Navigation("Cadastro1");
-
-                    b.Navigation("Cadastro2");
-
-                    b.Navigation("Licao");
-
-                    b.Navigation("Turma");
-
-                    b.Navigation("Usuario");
+                    b.Navigation("Pedido");
                 });
 
-            modelBuilder.Entity("Analise.Models.CanalModel", b =>
+            modelBuilder.Entity("Analise.Models.ContaModel", b =>
                 {
                     b.HasOne("Analise.Models.UsuarioModel", "Usuario")
                         .WithMany()
@@ -1315,352 +780,155 @@ namespace Tab.Migrations
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Analise.Models.ClienteModel", b =>
+            modelBuilder.Entity("Analise.Models.CustosAdmModel", b =>
                 {
-                    b.HasOne("Analise.Models.AgenciaModel", "Agencia")
-                        .WithMany()
-                        .HasForeignKey("AgenciaId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Agencia");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Analise.Models.ContasCobrarModel", b =>
-                {
-                    b.HasOne("Analise.Models.AgenciaModel", "Agencia")
-                        .WithMany()
-                        .HasForeignKey("AgenciaId");
-
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro")
-                        .WithMany()
-                        .HasForeignKey("CadastroId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Agencia");
-
-                    b.Navigation("Cadastro");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Analise.Models.ContasPagarModel", b =>
-                {
-                    b.HasOne("Analise.Models.AgenciaModel", "Agencia")
-                        .WithMany()
-                        .HasForeignKey("AgenciaId");
-
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro")
-                        .WithMany()
-                        .HasForeignKey("CadastroId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Agencia");
-
-                    b.Navigation("Cadastro");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Analise.Models.EntradaEventoModel", b =>
-                {
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro")
-                        .WithMany()
-                        .HasForeignKey("CadastroId");
-
-                    b.HasOne("Analise.Models.EventoModel", "Evento")
-                        .WithMany()
-                        .HasForeignKey("EventoId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Cadastro");
-
-                    b.Navigation("Evento");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Analise.Models.EntradaModel", b =>
-                {
-                    b.HasOne("Analise.Models.AgenciaModel", "Agencia")
-                        .WithMany()
-                        .HasForeignKey("AgenciaId");
-
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro")
-                        .WithMany()
-                        .HasForeignKey("CadastroId");
-
                     b.HasOne("Analise.Models.ContaModel", "Conta")
                         .WithMany()
-                        .HasForeignKey("ContaId");
+                        .HasForeignKey("ContaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("Analise.Models.LinhaModel", "Linha")
+                    b.HasOne("Analise.Models.EntidadeModel", "Entidade")
                         .WithMany()
-                        .HasForeignKey("LinhaId");
+                        .HasForeignKey("EntidadeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("Analise.Models.TipoEntradaModel", "TipoEntrada")
+                    b.HasOne("Analise.Models.PedidoModel", "Pedido")
                         .WithMany()
-                        .HasForeignKey("TipoEntradaId");
+                        .HasForeignKey("PedidoId");
 
                     b.HasOne("Analise.Models.UsuarioModel", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Agencia");
-
-                    b.Navigation("Cadastro");
 
                     b.Navigation("Conta");
 
-                    b.Navigation("Linha");
+                    b.Navigation("Entidade");
 
-                    b.Navigation("TipoEntrada");
+                    b.Navigation("Pedido");
 
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Analise.Models.ExtratoModel", b =>
+            modelBuilder.Entity("Analise.Models.EntidadeModel", b =>
                 {
-                    b.HasOne("Analise.Models.AgenciaModel", "Agencia")
-                        .WithMany()
-                        .HasForeignKey("AgenciaId");
-
-                    b.HasOne("Analise.Models.ContaModel", "Canal")
-                        .WithMany()
-                        .HasForeignKey("CanalId");
-
-                    b.HasOne("Analise.Models.LinhaModel", "Linha")
-                        .WithMany()
-                        .HasForeignKey("LinhaId");
-
                     b.HasOne("Analise.Models.UsuarioModel", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId");
 
-                    b.Navigation("Agencia");
-
-                    b.Navigation("Canal");
-
-                    b.Navigation("Linha");
-
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Analise.Models.FechoModel", b =>
+            modelBuilder.Entity("Analise.Models.GarantiaModel", b =>
                 {
-                    b.HasOne("Analise.Models.AgenciaModel", "Agencia")
+                    b.HasOne("Analise.Models.EntidadeModel", "Entidade")
                         .WithMany()
-                        .HasForeignKey("AgenciaId");
-
-                    b.HasOne("Analise.Models.EstadoModel", "Estado")
-                        .WithMany()
-                        .HasForeignKey("EstadoId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Agencia");
-
-                    b.Navigation("Estado");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Analise.Models.InventarioModel", b =>
-                {
-                    b.HasOne("Analise.Models.AgenciaModel", "Agencia")
-                        .WithMany()
-                        .HasForeignKey("AgenciaId")
+                        .HasForeignKey("EntidadeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Analise.Models.UsuarioModel", "Usuario")
                         .WithMany()
-                        .HasForeignKey("UsuarioId");
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Agencia");
+                    b.Navigation("Entidade");
 
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Analise.Models.LicaoModel", b =>
+            modelBuilder.Entity("Analise.Models.IntervenienteModel", b =>
                 {
-                    b.HasOne("Analise.Models.TurmaModel", "Turma")
+                    b.HasOne("Analise.Models.EntidadeModel", "Entidade")
                         .WithMany()
-                        .HasForeignKey("TurmaId");
+                        .HasForeignKey("EntidadeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Analise.Models.EntidadeModel", "IntervenienteEntidade")
+                        .WithMany()
+                        .HasForeignKey("IntervenienteID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Analise.Models.UsuarioModel", "Usuario")
                         .WithMany()
-                        .HasForeignKey("UsuarioId");
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Turma");
+                    b.Navigation("Entidade");
 
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Analise.Models.ListaModel", b =>
-                {
-                    b.HasOne("Analise.Models.AlunoModel", "Aluno")
-                        .WithMany()
-                        .HasForeignKey("AlunoId");
-
-                    b.HasOne("Analise.Models.EstadoModel", "Estado")
-                        .WithMany()
-                        .HasForeignKey("EstadoId");
-
-                    b.HasOne("Analise.Models.TurmaModel", "Turma")
-                        .WithMany()
-                        .HasForeignKey("TurmaId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Aluno");
-
-                    b.Navigation("Estado");
-
-                    b.Navigation("Turma");
+                    b.Navigation("IntervenienteEntidade");
 
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Analise.Models.ParticipanteEventoModel", b =>
-                {
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro")
-                        .WithMany()
-                        .HasForeignKey("CadastroId");
-
-                    b.HasOne("Analise.Models.EventoModel", "Evento")
-                        .WithMany()
-                        .HasForeignKey("EventoId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Cadastro");
-
-                    b.Navigation("Evento");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Analise.Models.RecebimentoModel", b =>
+            modelBuilder.Entity("Analise.Models.MovimentoExternoModel", b =>
                 {
                     b.HasOne("Analise.Models.AgenciaModel", "Agencia")
                         .WithMany()
                         .HasForeignKey("AgenciaId");
-
-                    b.HasOne("Analise.Models.ClienteModel", "Cliente")
-                        .WithMany()
-                        .HasForeignKey("ClienteId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Agencia");
-
-                    b.Navigation("Cliente");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Analise.Models.SaidaModel", b =>
-                {
-                    b.HasOne("Analise.Models.AgenciaModel", "Agencia")
-                        .WithMany()
-                        .HasForeignKey("AgenciaId");
-
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro")
-                        .WithMany()
-                        .HasForeignKey("CadastroId");
 
                     b.HasOne("Analise.Models.ContaModel", "Conta")
                         .WithMany()
-                        .HasForeignKey("ContaId");
+                        .HasForeignKey("ContaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("Analise.Models.LinhaModel", "Linha")
+                    b.HasOne("Analise.Models.EntidadeModel", "Entidade")
                         .WithMany()
-                        .HasForeignKey("LinhaId");
-
-                    b.HasOne("Analise.Models.TipoDespesaModel", "TipoDespesa")
-                        .WithMany()
-                        .HasForeignKey("TipoDespesaId");
-
-                    b.HasOne("Analise.Models.TipoServicoModel", "TipoServico")
-                        .WithMany()
-                        .HasForeignKey("TipoServicoId");
-
-                    b.HasOne("Analise.Models.UsuarioModel", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
+                        .HasForeignKey("EntidadeId");
 
                     b.Navigation("Agencia");
 
-                    b.Navigation("Cadastro");
-
                     b.Navigation("Conta");
 
-                    b.Navigation("Linha");
-
-                    b.Navigation("TipoDespesa");
-
-                    b.Navigation("TipoServico");
-
-                    b.Navigation("Usuario");
+                    b.Navigation("Entidade");
                 });
 
-            modelBuilder.Entity("Analise.Models.TurmaModel", b =>
+            modelBuilder.Entity("Analise.Models.MovimentoInternoModel", b =>
                 {
                     b.HasOne("Analise.Models.AgenciaModel", "Agencia")
                         .WithMany()
                         .HasForeignKey("AgenciaId");
 
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro1")
+                    b.HasOne("Analise.Models.ContaModel", "ContaDestino")
                         .WithMany()
-                        .HasForeignKey("Cadastro1Id")
+                        .HasForeignKey("ContaDestinoId");
+
+                    b.HasOne("Analise.Models.ContaModel", "ContaOrigem")
+                        .WithMany()
+                        .HasForeignKey("ContaOrigemId");
+
+                    b.Navigation("Agencia");
+
+                    b.Navigation("ContaDestino");
+
+                    b.Navigation("ContaOrigem");
+                });
+
+            modelBuilder.Entity("Analise.Models.PedidoModel", b =>
+                {
+                    b.HasOne("Analise.Models.EntidadeModel", "Entidade")
+                        .WithMany()
+                        .HasForeignKey("EntidadeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro2")
+                    b.HasOne("Analise.Models.UsuarioModel", "Gestor")
                         .WithMany()
-                        .HasForeignKey("Cadastro2Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Analise.Models.CadastroModel", "Cadastro3")
-                        .WithMany()
-                        .HasForeignKey("Cadastro3Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("GestorId");
 
                     b.HasOne("Analise.Models.UsuarioModel", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId");
 
-                    b.Navigation("Agencia");
+                    b.Navigation("Entidade");
 
-                    b.Navigation("Cadastro1");
-
-                    b.Navigation("Cadastro2");
-
-                    b.Navigation("Cadastro3");
+                    b.Navigation("Gestor");
 
                     b.Navigation("Usuario");
                 });

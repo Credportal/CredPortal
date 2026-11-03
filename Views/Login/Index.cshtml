@@ -1,356 +1,223 @@
-﻿@model LoginModel
+﻿@model Analise.Models.LoginModel
 @{
-	Layout = "_Layout_Deslogado";
-	ViewData["Title"] = "Login";
+    ViewData["Title"] = "Acesso - Cred";
+    Layout = null; // Página autónoma sem o layout principal de dashboard
 }
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p6gH2IHzxxGzj2vDghXb6A0rR6B5H0KKU+IDkCVS1HOk4/4T7fpOM7V0x6B1yK1pYoT5xVZ4QF5wFz0oh7ktxw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<style>
-    /* reset simples */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        /* BOTÃO NAV */
-        .btn-nav {
-            padding: 6px 14px;
-            border-radius: 10px;
-            display: inline-block;
-            width: 100%;
-            text-align: center;
-            font-weight: 600;
-            border: 1px solid rgba(70,200,120,0.03);
-            backdrop-filter: blur(6px);
-            background: rgba(133,146,141);
-            color: rgba(0,0,0);
-            cursor: pointer;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
 
-        .btn-nav:hover {
-            background: rgba(255,255,255);
-            border: 1px solid rgba(133,146,141);
-            color: rgba(0,0,0);
-        }
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
 
-        /* Formulário */
-        .form-container {
-            width: 100%;
-            margin: 0;
-            padding: 0.5rem;
-            border-radius: 10px;
-            background-color: transparent;
-            box-sizing: border-box;
-        }
-
-        .form-group-spacing {
-            margin-bottom: 2rem;
-        }        
-
-        .btn {
-            padding: 10px 18px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-block;
-            border: 1px solid rgba(255,255,255,0.06);
-            backdrop-filter: blur(6px);
-        }
-
-        .btn.primary {
-            background: linear-gradient(90deg, rgba(70,200,120), rgba(50,160,90));
-            color: #eaffef;
-        }
-
-        .btn.ghost {
-            background: transparent;
-            color: rgba(0,0,0);
-            border: 1px solid rgba(133,146,141);
-        }
-
-        /* textbox */
-        .textbox {
-            padding: 6px 14px;
-            border-radius: 10px;
-            font-weight: 400;
-            border: 1px solid rgba(133,146,141);
-            backdrop-filter: blur(6px);
-            background: transparent;
-            color: rgba(0,0,0);
-            font-family: inherit;
-            font-size: 16px;
-            width: 100%;
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-        }
-
-        /* placeholder */
-        .textbox::placeholder {
-            color: rgba(255,255,255,0.3);
-        }
-
-        /* foco */
-        .textbox:focus {
-            outline: none;
-            border: 1px solid #48c878;
-            box-shadow: 0 0 12px rgba(72,200,120,0.3);
-        }
-
-        /* autocomplete transparente Chrome/Safari */
-        input.textbox:-webkit-autofill,
-        input.textbox:-webkit-autofill:hover,
-        input.textbox:-webkit-autofill:focus,
-        input.textbox:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
-            -webkit-text-fill-color: rgba(0,0,0) !important;
-            transition: background-color 5000s ease-in-out 0s;
-        }
-
-        /* autocomplete transparente Firefox */
-        input.textbox:-moz-autofill {
-            box-shadow: 0 0 0px 1000px transparent inset !important;
-            -moz-text-fill-color: rgba(0,0,0) !important;
-        }
-
-    .hero {
-        min-height: 72vh;
-        display: flex;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-        padding: 60px 40px;
-    }
-
-    .hero-inner {
-        max-width: 1100px;
-        width: 100%;
-        margin: 0 auto;
-        padding: 32px;
-        position: relative;
-        z-index: 3;
-    }
-
-    .hero h1 {
-        font-size: 48px;
-        line-height: 1.02;
-        margin-bottom: 12px;
-        color: rgba(0,0,0,0.45);
-        text-shadow: 0 6px 22px rgba(2,10,6,0.5);
-    }
-
-    .hero .accent {
-        color: #48c878;
-    }
-
-    .lead {
-        color: rgba(25,25,25,0.8);
-        margin-bottom: 18px
-    }
-
-    .hero-cta {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 22px
-    }
-
-    @@media (max-width:900px) {
-        .hero h1 {
-            font-size: 32px
-        }
-
-        .nav-links {
-            display: none
-        }
-
-        .hero {
-            padding: 30px
-        }
-
-        .cards {
-            flex-direction: column
-        }
-    }
-
-    .hero-inner::after {
-        content: "";
-        position: absolute;
-        right: -40px;
-        top: 40px;
-        width: 420px;
-        height: 420px;
-        border-radius: 50%;
-        border: 3px solid rgba(255,255,255,0.03);
-        box-shadow: 0 30px 90px rgba(0,0,0,0.45), inset 0 0 40px rgba(80,200,120,0.03);
-        z-index: 1;
-        pointer-events: none;
-    }
-        
-    /* cards */
-    .cards {
-        display: flex;
-        gap: 14px;
-        margin-top: 18px;
-    }
-
-    .card {
-        min-width: 200px;
-        padding: 14px;
-        border-radius: 12px;
-        background: linear-gradient(180deg, rgba(2,10,6,0.2), rgba(2,10,6,1));
-        box-shadow: 0 8px 24px rgba(2,10,6,0.45);
-        backdrop-filter: blur(6px);
-        color: #dff7e8;
-    }
-    /* link verde */
-    .link-green {
-        color: #48c878;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-        transition: color 0.3s ease;
-    }
-
-        .link-green:hover {
-            color: rgba(2,10,6,1);
-        }
-
-    .form-check-input {
-        appearance: none;
-        -webkit-appearance: none;
-        background-color: white;
-        border: 2px solid black;
-        width: 18px;
-        height: 18px;
-        border-radius: 3px;
-        cursor: pointer;
-        position: relative;
-        transition: all 0.2s ease;
-    }
-
-        /* Quando o checkbox estiver marcado */
-        .form-check-input:checked {
-            background-color: black;
-            border-color: black;
-        }
-
-            /* Adiciona o símbolo de check (✓) dentro */
-            .form-check-input:checked::after {
-                content: '✓';
-                color: white;
-                font-size: 13px;
-                position: absolute;
-                top: 0;
-                left: 3px;
+    <style>
+            :root {
+                --sg-green: #079b62;
+                --sg-green-dark: #08784f;
+                --sg-bg: #f5f7fb;
+                --sg-text: #172b4d;
+                --sg-border: #e8edf3;
             }
 
-    label {
-        color: #000; /* preto */
-    }
+            body {
+                background-color: var(--sg-bg);
+                color: var(--sg-text);
+                font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                margin: 0;
+            }
 
-</style>
+            .login-wrapper {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
 
+            .login-container {
+                max-width: 1050px;
+                width: 100%;
+                background: #fff;
+                border: 1px solid var(--sg-border);
+                border-radius: 16px;
+                box-shadow: 0 10px 30px rgba(20, 45, 75, 0.05);
+                overflow: hidden;
+                display: flex;
+            }
 
-@if (TempData["MensagemErro"] != null)
-{
-    <div class="alert alert-danger" role="alert">
-        <button type="button" class="btn btn-danger btn-sm close-alert" arial-label="Close">X</button>
-        @TempData["MensagemErro"]
+            .login-left {
+                flex: 1;
+                padding: 40px;
+                background: linear-gradient(135deg, #f0faf5 0%, #ffffff 100%);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                border-right: 1px solid var(--sg-border);
+            }
+
+            .login-right {
+                width: 440px;
+                padding: 40px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .sg-brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 24px;
+                font-weight: 800;
+                color: var(--sg-green);
+                text-decoration: none;
+                margin-bottom: 15px;
+            }
+
+            .login-illustration {
+                width: 100%;
+                border-radius: 10px;
+                object-fit: cover;
+                max-height: 220px;
+                margin: 15px 0;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            }
+
+            .form-control {
+                border-radius: 10px;
+                padding: 12px 16px;
+                border-color: var(--sg-border);
+                font-size: 14px;
+            }
+
+                .form-control:focus {
+                    border-color: var(--sg-green);
+                    box-shadow: 0 0 0 0.25rem rgba(7, 155, 98, 0.15);
+                }
+
+            .btn-green {
+                background-color: var(--sg-green);
+                color: #fff;
+                font-weight: 700;
+                border-radius: 10px;
+                padding: 12px;
+                transition: 0.2s;
+                font-size: 14px;
+            }
+
+                .btn-green:hover {
+                    background-color: var(--sg-green-dark);
+                    color: #fff;
+                }
+
+            @@media (max-width: 991px) {
+                .login-left {
+                    display: none;
+                }
+
+                .login-right {
+                    width: 100%;
+                    padding: 30px;
+                }
+            }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA SUPERIOR DE APOIO -->
+    <div class="container-fluid py-3 px-4 d-flex justify-content-between align-items-center bg-white border-bottom">
+        <div class="fw-bold text-secondary" style="font-size: 15px;"><i class="fa-solid fa-shield-halved text-success me-2"></i>Cred</div>
+        <div class="text-secondary small"><i class="fa-solid fa-location-dot me-1 text-secondary"></i> Agência Maputo</div>
     </div>
-}
 
-@if (TempData["MensagemSucesso"] != null)
-{
-    <div class="alert alert-success" role="alert">
-        <button type="button" class="btn btn-danger btn-sm close-alert" arial-label="Close">X</button>
-        @TempData["MensagemSucesso"]
-    </div>
-}
+    <!-- CORPO DO LOGIN -->
+    <div class="login-wrapper">
+        <div class="login-container">
 
-<div class="row">
-    <!-- Coluna esquerda 60% -->
-    <div class="col-12 col-md-7">
-        <main class="hero">
-            <div class="hero-inner">
-                <h1>Igreja <span class="accent">Crentes</span> da Bíblia em Moçambique</h1>
-                <p class="lead">
-                    Portal de gestão de finanças e patrimônio.
-                </p>
-                <div class="hero-cta">
-                   @*  <a class="btn primary" href="#">Explore agora</a> *@
-                    <a class="btn ghost" href="#">Saiba mais</a>
+            <!-- LADO ESQUERDO: APRESENTAÇÃO, MARCA E IMAGEM -->
+            <div class="login-left">
+                <div>
+                    <a href="#" class="sg-brand">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Cred</span>
+                    </a>
+                    <h2 class="fw-bold text-dark mb-2" style="font-size: 24px; line-height: 1.3;">Sua gestão simplificada.</h2>
+                    <p class="text-muted small mb-2">Plataforma inteligente para o controlo integrado de operações, crédito e acompanhamento de clientes.</p>
+
+                    <!-- IMAGEM DA EQUIPA / ILUSTRAÇÃO -->
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80" alt="Equipa Cred" class="login-illustration" />
                 </div>
 
-                <div class="cards">
-                    @* <div class="card">Comece agora mesmo</div> *@
-                    <div class="card">TopUp Go Website</div>
+                <div class="text-muted" style="font-size: 11px;">
+                    &copy; @DateTime.Now.Year Cred, Lda. Todos os direitos reservados.
                 </div>
-                <h1> <span class="accent">Church+</span> </h1>
             </div>
-        </main>
-    </div>
 
-    <!-- Coluna direita 40% -->
-    <div class="col-12 col-md-5 d-flex align-items-center">
-        <div class="w-100">
-            <div class="text-center mb-4">
-                <h1 style="color: black;" class="fs-3 custom-border d-inline-block">Acesso</h1>
-            </div>
-            <form asp-controller="Login" asp-action="Entrar" method="post" class="form-horizontal">
-                <div class="row form-group-spacing">
-                    <label class="col-12 col-sm-3 col-form-label text-sm-end">Usuário</label>
-                    <div class="col-12 col-sm-6">
-                        <input type="text" asp-for="Login" class="textbox" id="Login" placeholder="Digite o usuário" />
-                        @Html.ValidationMessageFor(x => x.Login)
+            <!-- LADO DIREITO: FORMULÁRIO DE ENTRADA -->
+            <div class="login-right">
+                <h3 class="fw-bold text-dark mb-1" style="font-size: 22px;">Acesse sua Conta</h3>
+                <p class="text-muted small mb-4">Entre com suas credenciais Cred.</p>
+
+                <!-- MENSAGEM DE ERRO (CASO EXISTA) -->
+                @if (TempData["MensagemErro"] != null)
+                {
+                    <div class="alert alert-danger py-2 small mb-3 border-0 shadow-sm" style="background-color: #fdf2f2; color: #dc2626;">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i> @TempData["MensagemErro"]
                     </div>
-                </div>
+                }
 
-                <div class="row form-group-spacing">
-                    <label for="Senha" class="col-12 col-sm-3 col-form-label text-sm-end">Senha</label>
-                    <div class="col-12 col-sm-6">
-                        <input type="password" asp-for="Senha" class="textbox" id="Senha" placeholder="Digite a senha" />
-                        @Html.ValidationMessageFor(x => x.Senha)
-
-                        <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" value="" id="MostrarSenha">
-                            <label class="form-check-label" for="MostrarSenha">
-                                Mostrar senha
-                            </label>
+                <form asp-controller="Login" asp-action="Entrar" method="post">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Seu Nome de Usuário</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px; border-color: var(--sg-border);">
+                                <i class="fa-regular fa-user text-muted"></i>
+                            </span>
+                            <input asp-for="Login" class="form-control border-start-0 ps-0" placeholder="Utilizador / E-mail" required autocomplete="off" />
                         </div>
+                        <span asp-validation-for="Login" class="text-danger small"></span>
                     </div>
-                </div>
 
-                <br>
-                <div class="row form-group-spacing">
-                    <label class="col-12 col-sm-3 col-form-label text-sm-end"></label>
-                    <div class="col-12 col-sm-6 text-center" style="color: black;">
-                        Esqueceu sua senha?
-                        <a asp-action="RedefinirSenha" asp-controller="Login" class="link-green">Clique aqui</a>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Sua Senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px; border-color: var(--sg-border);">
+                                <i class="fa-solid fa-lock text-muted"></i>
+                            </span>
+                            <input asp-for="Senha" type="password" class="form-control border-start-0 ps-0" placeholder="Senha" required />
+                        </div>
+                        <span asp-validation-for="Senha" class="text-danger small"></span>
                     </div>
-                </div>
-                <div class="row form-group-spacing">
-                    <label class="col-12 col-sm-3 col-form-label text-sm-end"></label>
-                    <div class="col-12 col-sm-6">
-                        <button type="submit" class="btn-nav w-100">Entrar</button>
+
+                    <button type="submit" class="btn btn-green w-100 mb-3 shadow-sm">
+                        ENTRAR <i class="fa-solid fa-arrow-right-to-bracket ms-1"></i>
+                    </button>
+
+                    <div class="text-center">
+                        <a asp-action="RedefinirSenha" class="text-decoration-none small fw-semibold" style="color: var(--sg-green);">
+                            Esqueceu sua senha?
+                        </a>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
+
         </div>
     </div>
-</div>
 
+    <!-- RODAPÉ INFERIOR -->
+    <footer class="text-center py-3 text-muted small border-top bg-white">
+        <span class="me-3 cursor-pointer">Sobre Nós</span>
+        <span class="me-3 cursor-pointer">Contacto</span>
+        <span class="cursor-pointer">Termos e Privacidade</span>
+    </footer>
 
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script>
-    $(document).ready(function () {
-        $("#MostrarSenha").change(function () {
-            var senhaInput = $("#Senha");
-            if ($(this).is(":checked")) {
-                senhaInput.attr("type", "text");
-            } else {
-                senhaInput.attr("type", "password");
-            }
-        });
-    });
-</script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script></body>
+</html>

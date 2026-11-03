@@ -4,201 +4,83 @@
     ViewData["Title"] = "Redefinir Senha";
 }
 
-<style>
-    .form-container {
-        width: 100%;
-        margin: 0;
-        padding: 1rem;
-        border: 0px solid #ccc;
-        border-radius: 10px;
-        background-color: rgba(248, 249, 250, 0);
-        box-sizing: border-box;
-    }
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    .form-container1 {
-        width: 100%;
-        margin: 0;
-        padding: 0.5rem;
-        border: 0px solid #ccc;
-        border-top-left-radius: 0px;
-        border-top-right-radius: 0px;
-        border-bottom-left-radius: 8px;
-        border-bottom-right-radius: 8px;
-        background-color: rgba(248, 249, 250, 0);
-        box-sizing: border-box;
-    }
+<div class="container py-5">
+    <div class="row justify-content-center align-items-center min-vh-75">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
 
-    .form-group-spacing {
-        margin-bottom: 0.5rem;
-    }
+            <!-- Alerta de Sucesso com Destaque para a Senha -->
+            @if (TempData["MensagemSucesso"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4 p-4 text-center" role="alert">
+                    <i class="fa-solid fa-circle-check fs-2 text-success mb-2 d-block"></i>
+                    <h5 class="fw-bold text-success">Senha Redefinida!</h5>
+                    <p class="mb-2 text-dark">@TempData["MensagemSucesso"]</p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
-    .section-header {
-        background-color: #3C4043;
-        color: white;
-        padding: 0.5rem;
-        margin: 0;
-        border-top-left-radius: 0px;
-        border-top-right-radius: 0px;
-        border-bottom-left-radius: 0px;
-        border-bottom-right-radius: 0px;
-        font-weight: bold;
-        display: block;
-    }
+            @if (TempData["MensagemErro"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["MensagemErro"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
-    .bank-entry-container {
-        display: flex;
-        justify-content: center; /* centraliza o botão se houver espaço */
-        border: 1px solid #29b6b6;
-        border-radius: 6px;
-        padding: 1rem;
-        margin-top: 2rem;
-        color: black;
-    }
+            <!-- Cartão Principal -->
+            <div class="sg-card bg-white p-4 p-md-5 shadow-sm rounded-4 border-0">
 
-    .add-entry {
-        width: 100%; /* ocupa toda a largura do container */
-        max-width: 98%; /* deixa pouca margem lateral */
-        text-align: center;
-        cursor: pointer;
-        color: black;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        border-left: 1px dashed #29b6b6;
-        transition: background-color 0.3s ease;
-        padding: 1rem;
-        box-sizing: border-box;
-    }
+                <div class="text-center mb-4">
+                    <div class="bg-success-subtle text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 55px; height: 55px;">
+                        <i class="fa-solid fa-key fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Redefinir Senha</h3>
+                    <p class="text-muted small">Insira o login para verificar o utilizador e gerar uma nova senha imediata.</p>
+                </div>
 
-        .add-entry:hover {
-            background-color: #e0f7f7;
-        }
+                <form asp-controller="Login" asp-action="EnviarLinkParaRedefinirSenha" method="post">
 
-    .plus-sign {
-        font-size: 2rem;
-        line-height: 1;
-    }
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary small">Login de Utilizador</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 rounded-start-3 text-muted"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" asp-for="Login" class="form-control form-control-lg border-start-0 rounded-end-3 fs-6" placeholder="Digite o seu login" id="Login" />
+                        </div>
+                        <span class="text-danger small">@Html.ValidationMessageFor(x => x.Login)</span>
+                    </div>
 
-    .add-text {
-        font-size: 0.9rem;
-        margin-top: 0.2rem;
-    }
+                    <div class="mb-3" style="display: none;">
+                        <input type="text" asp-for="Email" class="form-control" id="Email" readonly />
+                    </div>
 
-    .section-header1 {
-        background-color: transparent;
-        color: black;
-        padding: 0.5rem;
-        margin: 0;
-        border-top-left-radius: 0px;
-        border-top-right-radius: 0px;
-        border-bottom-left-radius: 0px;
-        border-bottom-right-radius: 0px;
-        font-weight: bold;
-        display: block;
-    }
+                    <div class="mb-3 text-center">
+                        <div id="mensagemUsuario" class="small" style="font-weight: 600;"></div>
+                    </div>
 
-    .form-container2 {
-        width: 100%;
-        margin: 0;
-        padding: 0.5rem;
-        border: 0px solid #ccc;
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
-        border-bottom-left-radius: 8px;
-        border-bottom-right-radius: 8px;
-        background-color: rgba(248, 249, 250, 0);
-        box-sizing: border-box;
-    }
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="button" class="btn btn-outline-secondary py-2 rounded-3 fw-semibold" id="btnVerificar">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> Verificar Utilizador
+                        </button>
 
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 9999;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-    }
+                        <button type="submit" class="btn btn-success py-2 rounded-3 fw-semibold shadow-sm" id="btnRedefinir" disabled>
+                            <i class="fa-solid fa-rotate-right me-1"></i> Gerar e Exibir Nova Senha
+                        </button>
+                    </div>
 
-        .modal.show {
-            display: block;
-        }
+                    <div class="text-center pt-3 border-top">
+                        <a class="text-decoration-none text-muted small fw-semibold" asp-controller="Login" asp-action="Index">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Voltar à página de login
+                        </a>
+                    </div>
 
-    .modal-content {
-        background-color: white;
-        border-radius: 8px;
-        margin: 10% auto;
-        padding: 1rem;
-        width: 100%;
-        max-width: 500px;
-    }
+                </form>
+            </div>
 
-    .btn-close {
-        background: none;
-        border: none;
-        font-size: 1.4rem;
-        float: right;
-    }
-</style>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-<div class="text-center">
-
-    @if (TempData["MensagemSucesso"] != null)
-    {
-        <div class="alert alert-success" role="alert">
-            <button type="button" class="btn btn-danger btn-sm close-alert" arial-label="Close">X</button>
-            @TempData["MensagemSucesso"]
         </div>
-    }
-
-    @if (TempData["MensagemErro"] != null)
-    {
-        <div class="alert alert-danger" role="alert">
-            <button type="button" class="btn btn-danger btn-sm close-alert" arial-label="Close">X</button>
-            @TempData["MensagemErro"]
-        </div>
-    }
+    </div>
 </div>
-<h1 style="font-size: 20px;margin-top: 60px;">Redefinir Senha</h1>
-
-<br />
-@if (TempData["MensagemErro"] != null)
-{
-    <div class="alert alert-danger" role="alert">
-        <button type="button" class="btn btn-danger btn-sm close-alert" arial-label="Close">X</button>
-        @TempData["MensagemErro"]
-    </div>
-}
-<form asp-controller="Login" asp-action="EnviarLinkParaRedefinirSenha" method="post">
-    <div class="row form-group-spacing">
-        <label class="col-12 col-sm-3 col-form-label text-sm-end">Login</label>
-        <div class="col-12 col-sm-6">
-            <input type="text" asp-for="Login" class="form-control" placeholder="Qual é o login" id="Login" />
-            @Html.ValidationMessageFor(x => x.Login)
-        </div>
-    </div>
-
-    <div class="row form-group-spacing" style="display: none;">
-        <label class="col-12 col-sm-3 col-form-label text-sm-end">Email</label>
-        <div class="col-12 col-sm-6">
-            <input type="text" asp-for="Email" class="form-control" placeholder="Digite email" id="Email" readonly />
-            @Html.ValidationMessageFor(x => x.Email)
-        </div>
-    </div>
-
-    <div class="row form-group-spacing">
-        <div class="col-12 col-sm-6 offset-sm-3">
-            <div id="mensagemUsuario" style="font-weight:bold; margin-bottom:10px;"></div>
-        </div>
-    </div>
-
-    
-    <a class="btn btn-outline-dark " asp-controller="Login" asp-action="Index" role="button">Voltar</a>
-    <a class="btn btn-outline-dark" id="btnVerificar" role="button">Verificar os dados</a>
-    <button type="submit" class="btn btn-dark text-center" id="btnRedefinir" disabled>Redefinir senha</button>
-</form>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -212,14 +94,16 @@
                 return;
             }
 
+            $("#mensagemUsuario").text("A verificar...").css("color", "#6c757d");
+
             $.get("/Login/ObterEmailPorLogin", { login: login }, function (res) {
                 if (res.sucesso) {
                     $("#Email").val(res.email);
-                    $("#mensagemUsuario").text("✅ Usuário verificado").css("color", "green");
+                    $("#mensagemUsuario").html('<i class="fa-solid fa-circle-check text-success me-1"></i> Utilizador verificado com sucesso').css("color", "#198754");
                     $("#btnRedefinir").prop("disabled", false);
                 } else {
                     $("#Email").val("");
-                    $("#mensagemUsuario").text("❌ Usuário não encontrado").css("color", "red");
+                    $("#mensagemUsuario").html('<i class="fa-solid fa-circle-xmark text-danger me-1"></i> Utilizador não encontrado').css("color", "#dc3545");
                     $("#btnRedefinir").prop("disabled", true);
                 }
             });

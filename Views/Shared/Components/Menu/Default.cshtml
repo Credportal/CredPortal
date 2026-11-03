@@ -4,272 +4,400 @@
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p6gH2IHzxxGzj2vDghXb6A0rR6B5H0KKU+IDkCVS1HOk4/4T7fpOM7V0x6B1yK1pYoT5xVZ4QF5wFz0oh7ktxw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 <style>
-   /* Botão estilo nav-link */
-    .btn-nav {
-        padding: 6px 14px;
-        border-radius: 10px;
-        display: inline-block;
-        width: 100%;
-        text-align: center;
-        font-weight: 600;
-        border: 1px solid rgba(70,200,120,0.03);
-        backdrop-filter: blur(6px);
-        background: rgba(133,146,141);
-        color: rgba(0,0,0);
-        cursor: pointer;
-        transition: background 0.3s ease, color 0.3s ease;
+    :root {
+        --sg-green: #079b62;
+        --sg-green-dark: #08784f;
+        --sg-bg: #f5f7fb;
+        --sg-text: #172b4d;
+        --sg-muted: #718096;
+        --sg-border: #e8edf3;
     }
 
-        .btn-nav:hover {
-            background: rgba(255,255,255);
-            border: 1px solid rgba(133,146,141);
-            color: rgba(0,0,0);
-        }
-
-    .form-container {
-        width: 100%;
-        margin: 0;
-        padding: 0.5rem;
-        border: 0px solid #ccc;
-        border-radius: 10px;
-        background-color: rgba(248, 249, 250, 0);
-        box-sizing: border-box;
+    .sg-dashboard {
+        background: var(--sg-bg);
+        min-height: 100vh;
+        color: var(--sg-text);
+        margin: -1rem;
+        font-size: 14px;
     }
 
-    .form-group-spacing {
-        margin-bottom: 2rem;
-    }
-
-/* reset simples */
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0
-    }
-
-        html, body {
-            height: 100%;
-            margin: 0;
-            display: flex; /* 🔹 ativa flexbox */
-            flex-direction: column; /* 🔹 organiza em coluna */
-        }
-
-        /* garante que o conteúdo principal expanda e empurre o footer */
-        main {
-            flex: 1;
-        }
-
-        /* rodapé sempre no fim */
-        .site-footer {
-            margin-top: auto; /* 🔹 cola o rodapé ao fundo */
-            padding: 24px;
-            text-align: center;
-            color: rgba(200,230,210,0);
-        }
-
-/* fundo geral: imagem + gradientes sobrepostos */
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-        color: #e6f3ea;
-        background-color: #0b2818;
-        background: rgba(255,255,255);
-        background-size: cover, cover, cover;
-        background-position: center center;
-        background-repeat: no-repeat;
-        min-height: 100%;
-            padding-top: 90px; /* espaço para o header fixo */
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
-/* efeito de overlay */
-    body::before {
-        content: "";
+    .sg-sidebar {
+        width: 245px;
+        min-height: 100vh;
+        background: #fff;
+        border-right: 1px solid var(--sg-border);
+        padding: 24px 18px;
         position: fixed;
-        inset: 0;
-        pointer-events: none;
-            background: rgba(255,255,255);
-        mix-blend-mode: overlay;
-        filter: blur(6px);
-        z-index: 0;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        overflow-y: auto;
+        z-index: 1030;
+        transition: transform .25s ease;
     }
 
-/* layout do header */
-    .site-header {
+    .sg-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 23px;
+        font-weight: 800;
+        color: var(--sg-green);
+        margin: 0 0 35px 8px;
+        text-decoration: none;
+    }
+
+        .sg-brand i {
+            font-size: 29px;
+        }
+
+    .sg-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+        .sg-nav a {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 13px 14px;
+            border-radius: 9px;
+            text-decoration: none;
+            color: #24415f;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+            .sg-nav a i {
+                width: 21px;
+                text-align: center;
+                font-size: 17px;
+            }
+
+            .sg-nav a:hover,
+            .sg-nav a.active {
+                color: #fff;
+                background: var(--sg-green);
+            }
+
+    .sg-sidebar-info {
+        margin-top: 35px;
+        padding: 20px 14px;
+        border-radius: 12px;
+        background: #f0faf5;
+        border: 1px solid #e1f1e9;
+    }
+
+        .sg-sidebar-info i {
+            color: var(--sg-green);
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+    .sg-main {
+        margin-left: 245px;
+        min-width: 0;
+    }
+
+    .sg-topbar {
+        min-height: 68px;
+        padding: 14px 27px;
+        background: #fff;
+        border-bottom: 1px solid var(--sg-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
-        background: rgba(26, 60, 46, 0); /* transparente + leve cor de base */
-        backdrop-filter: blur(6px); /* efeito vidro */
-        z-index: 1000;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        height: 70px;
     }
 
-        .nav {
-            display: flex;
-            align-items: center;
-            padding: 4px 6px;
+    .sg-content {
+        padding: 27px;
+    }
+
+    .sg-page-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 24px;
+    }
+
+        .sg-page-heading h1 {
+            font-size: 25px;
+            font-weight: 750;
+            margin-bottom: 5px;
         }
 
-/* logotipo + nome */
-    .brand {
+    .sg-muted {
+        color: var(--sg-muted);
+    }
+
+    .sg-filter {
+        background: #fff;
+        border: 1px solid var(--sg-border);
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: #334968;
+        min-height: 39px;
+    }
+
+    .sg-kpi {
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--sg-border);
+        border-radius: 13px;
+        padding: 19px 16px;
+        box-shadow: 0 3px 10px rgba(20, 45, 75, .035);
+    }
+
+    .sg-kpi-top {
         display: flex;
         align-items: center;
+        gap: 12px;
+    }
+
+    .sg-kpi-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e7f7ef;
+        color: var(--sg-green);
+        font-size: 20px;
+    }
+
+        .sg-kpi-icon.orange {
+            background: #fff3e4;
+            color: #ed900c;
+        }
+
+    .sg-kpi-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #596b83;
+        margin-bottom: 7px;
+    }
+
+    .sg-kpi-value {
+        font-size: clamp(17px, 1.45vw, 24px);
+        font-weight: 800;
+        white-space: nowrap;
+        letter-spacing: -.5px;
+    }
+
+    .sg-kpi-change {
+        font-size: 11px;
+        margin-top: 12px;
+    }
+
+    .sg-positive {
+        color: var(--sg-green);
+    }
+
+    .sg-negative {
+        color: #dc3545;
+    }
+
+    .sg-panel {
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--sg-border);
+        border-radius: 13px;
+        box-shadow: 0 3px 10px rgba(20, 45, 75, .035);
+        overflow: hidden;
+    }
+
+    .sg-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 20px 21px;
+    }
+
+        .sg-panel-header h5 {
+            font-size: 16px;
+            font-weight: 750;
+            margin: 0;
+        }
+
+    .sg-chart {
+        padding: 0 15px 15px;
+        height: 275px;
+    }
+
+    .sg-table {
+        width: 100%;
+        border-collapse: collapse;
+        white-space: nowrap;
+    }
+
+        .sg-table th {
+            font-size: 11px;
+            text-transform: none;
+            color: #5b6b7f;
+            background: #f8fafc;
+            font-weight: 700;
+        }
+
+        .sg-table th,
+        .sg-table td {
+            padding: 13px 15px;
+            border-top: 1px solid #edf0f5;
+            text-align: left;
+        }
+
+        .sg-table td {
+            font-size: 12px;
+        }
+
+    .sg-status {
+        display: inline-block;
+        border-radius: 6px;
+        padding: 5px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        background: #fff4df;
+        color: #b87500;
+    }
+
+        .sg-status.pending {
+            background: #fff0e8;
+            color: #df6a20;
+        }
+
+        .sg-status.paid {
+            background: #e4f8ed;
+            color: #087d4c;
+        }
+
+    .sg-days {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 6px;
+        color: #d52b36;
+        background: #fff0f0;
         font-weight: 700;
     }
-        /* Wrapper para menu + botão no lado direito */
-        .menu-wrapper {
-            margin-left: auto; /* empurra tudo para a direita */
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(255, 255, 255); /* transparente + leve cor de base */
-        }
-/* links (lado direito) */
-    .nav-links {
-        list-style: none;
-        display: flex;
-        gap: 18px;
-        margin: 0;
-        padding: 0;
-    }
 
-/* submenu oculto por padrão */
-    .nav-links .submenu {
-        display: none;
-        position: absolute;
-        background: transparent; /* fundo transparente */
-        list-style: none;
-        padding: 10px 0;
-        margin-top: 4px;
-        min-width: 140px;
-        backdrop-filter: blur(6px); /* efeito vidro */
-    }
-
-/* links dentro do submenu */
-    .nav-links .submenu li a {
-        display: block;
-        padding: 6px 12px;
-        color: black; /* verde claro */
+    .sg-link {
+        color: var(--sg-green);
         text-decoration: none;
-        border-radius: 4px;
-        transition: background 0.3s ease, color 0.3s ease;
+        font-weight: 700;
+        font-size: 12px;
     }
 
-    .nav-links .submenu li a:hover {
-        background: rgba(255,255,255,0.05); /* leve efeito hover */
-    }
-
-    /* mostrar submenu ao passar o mouse (desktop) */
-    .nav-links li.has-submenu:hover > .submenu {
-        display: block;
-    }
-
-/* para posicionar corretamente */
-    .nav-links li.has-submenu {
-        position: relative;
-    }
-
-/* RESPONSIVO */
-    @@media (max-width: 900px) {
-        .nav-links a,
-        .nav-links .submenu li a {
-            color: white !important; /* deixa o texto branco */
+        .sg-link:hover {
+            color: var(--sg-green-dark);
         }
 
-            .nav-links a:hover,
-            .nav-links .submenu li a:hover {
-                color: #48c878 !important; /* verde suave ao passar o mouse */
-                background: rgba(255,255,255,0.1); /* leve destaque */
+    .sg-partner {
+        border: 1px solid var(--sg-border);
+        border-radius: 9px;
+        padding: 16px 8px;
+        text-align: center;
+        font-weight: 700;
+        color: #36526c;
+        background: #fff;
+    }
+
+    .sg-mobile-toggle {
+        display: none;
+    }
+
+    @@media (max-width: 1199px) {
+        .sg-sidebar {
+            width: 220px;
+        }
+
+        .sg-main {
+            margin-left: 220px;
+        }
+
+        .sg-content {
+            padding: 20px;
+        }
+    }
+
+    @@media (max-width: 767px) {
+        .sg-sidebar {
+            transform: translateX(-100%);
+            width: 245px;
+        }
+
+            .sg-sidebar.show {
+                transform: translateX(0);
             }
 
-        .menu-toggle {
-            color: black !important; /* ícone do menu hamburguer branco */
-        }
-        /* Fundo do menu mais escuro para contraste */
-        .nav-links {
-            background: rgba(0,0,0,0.7) !important;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-    }
-
-    .nav-links a {
-        color: rgba(0,0,0); /* cor do texto */
-        text-decoration: none;
-        padding: 6px 10px;
-        border-radius: 6px;
-        background: transparent; /* fundo transparente */
-        transition: background 0.3s ease, color 0.3s ease;
-    }
-
-        /* efeito hover leve sem fundo sólido */
-        .nav-links a:hover {
-            background: rgba(255,255,255,0.5); /* leve efeito sobre o fundo */
-            color: black; /* mantém o texto legível */
+        .sg-main {
+            margin-left: 0;
         }
 
-/* botão hamburguer */
-    .menu-toggle {
-        display: none;
-        margin-left: auto; /* 🔹 empurra o botão para o canto direito */
-        font-size: 26px;
-        background: transparent; /* fundo transparente */
-        border: none;
-        color: black;
-        cursor: pointer;
-    }
-
-    .btn {
-        padding: 10px 18px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 600;
-        display: inline-block;
-        border: 1px solid rgba(255,255,255,0.06);
-        backdrop-filter: blur(6px);
-    }
-
-        .btn.primary {
-            background: linear-gradient(90deg, rgba(70,200,120), rgba(50,160,90));
-            color: #eaffef;
+        .sg-content {
+            padding: 15px;
         }
 
-        .btn.ghost {
-            background: transparent;
-            color: rgba(0,0,0);
-            border: 1px solid rgba(133,146,141);
+        .sg-topbar {
+            padding: 13px 15px;
         }
 
-   
-    /* link verde */
-    .link-green {
-        color: black;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-        transition: color 0.3s ease;
-    }
+        .sg-mobile-toggle {
+            display: inline-flex;
+        }
 
-    .link-green:hover {
-        color: black;
-    }
+        .sg-page-heading h1 {
+            font-size: 22px;
+        }
 
+        .sg-kpi-value {
+            font-size: 20px;
+        }
+
+        .sg-table-wrap {
+            overflow-x: auto;
+        }
+    }
 </style>
 
-<nav class="nav">
-    <div class="brand align-items-center">
-        <!-- Logotipo -->
-        <img src="~/images/logo.png" alt="Logotipo" class="me-3" style="width: 40px; height: auto;" />
 
-        <!-- Nome usuário -->
-        <a class="navbar-brand p-2 me-3"
-           style="font-size: 13px; border-bottom: 3px solid rgba(2,10,6,0.45); border-radius: 12px;"
-           asp-area="" asp-controller="Home" asp-action="Index">
-            @Model.Login
-        </a>
-    </div>
-</nav>
+<main class="sg-main">
 
+    <header class="sg-topbar">
+        <div class="d-flex align-items-center gap-3">
+            <a asp-controller="Painel" asp-action="Index" class="sg-brand">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>SeguroGest</span>
+            </a>            
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-none d-md-block">
+                <input type="search" id="sgSearch"
+                       class="form-control form-control-sm"
+                       placeholder="Pesquisar cliente ou apólice...">
+            </div>
+            <button class="btn btn-light position-relative" type="button"
+                    title="Notificações">
+                <i class="fa-regular fa-bell"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+                    3
+                </span>
+            </button>
+            <span class="small fw-semibold d-none d-md-inline">@Model.Login</span>
+        </div>
+    </header>
+
+</main>

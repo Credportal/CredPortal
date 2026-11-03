@@ -1,0 +1,259 @@
+﻿@using Analise.Enuns
+@model PedidoViewModel
+@{
+    ViewData["Title"] = "Lista de Pedidos";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="container-fluid px-4 py-3">
+    <!-- Cabeçalho da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-solid text-dark mb-0">Lista de Pedidos</h2>
+    </div>
+
+    <!-- Barra de Ações (Novo Pedido, Pesquisa, Filtros e Exportar) -->
+    <div class="card shadow-sm border-0 mb-4 rounded-4 bg-white">
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3 py-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a asp-controller="Pedido" asp-action="Criar" class="btn btn-success px-3 rounded-2 d-flex align-items-center gap-2 text-white fw-normal" style="background-color: #079b62; border-color: #079b62;">
+                    <i class="fa-solid fa-plus"></i> Novo Pedido
+                </a>
+
+                <!-- Caixa de Pesquisa com Botão -->
+                <div class="input-group" style="width: 280px;">
+                    <input type="text" id="inputPesquisa" class="form-control rounded-start-2 shadow-sm" placeholder="Pesquisar por CRR ou Entidade..." />
+                    <button class="btn btn-outline-secondary rounded-end-2 px-3" type="button" id="btnPesquisar" style="border-color: #ced4da;">
+                        <i class="fa-solid fa-search"></i>
+                    </button>
+                </div>
+
+                <!-- Filtro por Estado -->
+                <select class="form-select rounded-2 w-auto shadow-sm" id="selectFiltroEstado">
+                    <option selected value="">Todos os Estados</option>
+                    <option value="1">Pendente</option>
+                    <option value="2">Aprovado</option>
+                    <option value="3">Vigente</option>
+                    <option value="4">Rejeitado</option>
+                    <option value="5">Liquidado</option>
+                </select>
+            </div>
+
+            <div>
+                <button class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-file-export"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Dados -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tabelaPedidos" style="min-height: 200px;">
+                <thead class="table-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-3 py-3">ID</th>
+                        <th class="py-3">CRR</th>
+                        <th class="py-3">Entidade / Cliente</th>
+                        <th class="py-3">Valor (MT)</th>
+                        <th class="py-3">Prazo</th>
+                        <th class="py-3">Taxa (%)</th>
+                        <th class="py-3">Prestação (MT)</th>
+                        <th class="py-3">Gestor</th>
+                        <th class="py-3">Data</th>
+                        <th class="py-3">Estado</th>
+                        <th class="text-end pe-3 py-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model?.ListaPedidos != null && Model.ListaPedidos.Any())
+                    {
+                        @foreach (PedidoModel pedido in Model.ListaPedidos)
+                        {
+                            <tr data-estado="@pedido.EstadoId">
+                                <td class="ps-3 fw-semibold text-dark">#@pedido.Id</td>
+                                <td class="font-monospace fw-bold text-success" style="color: #079b62 !important;">@(pedido.CRR.HasValue ? pedido.CRR.Value.ToString("0") : "-")</td>
+                                <td class="fw-medium text-dark">@(pedido.Entidade != null ? pedido.Entidade.Nome : "Entidade #" + pedido.EntidadeId)</td>
+                                <td class="fw-bold">MT @pedido.Valor.ToString("N2")</td>
+                                <td>@pedido.Prazo meses</td>
+                                <td>@pedido.Taxa.ToString("N2")%</td>
+                                <td class="fw-semibold">MT @pedido.Prestacao.ToString("N2")</td>
+                                <td>@(pedido.Gestor != null ? pedido.Gestor.Login : (pedido.GestorId.HasValue ? "Utilizador #" + pedido.GestorId : "-"))</td>
+                                <td>@pedido.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @switch (pedido.EstadoId)
+                                    {
+                                        case 1:
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2 py-1" style="font-size: 11px;">Pendente</span>
+                                            break;
+                                        case 2:
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1" style="font-size: 11px;">Aprovado</span>
+                                            break;
+                                        case 3:
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 11px;">Vigente</span>
+                                            break;
+                                        case 4:
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2 py-1" style="font-size: 11px;">Rejeitado</span>
+                                            break;
+                                        case 5:
+                                            <span class="badge bg-success text-white rounded-pill px-2 py-1" style="font-size: 11px; background-color: #079b62 !important;">Liquidado</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-light text-dark border rounded-pill px-2 py-1" style="font-size: 11px;">Desconhecido</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-end pe-3">
+                                    <!-- Menu de Ações (Dropdown) -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light border shadow-sm dropdown-toggle rounded-2 px-3 text-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Ações
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">
+                                            <!-- Sempre visível: Detalhes -->
+                                            <li>
+                                                <a class="dropdown-item py-2 text-dark small d-flex align-items-center gap-2" asp-action="Detalhes" asp-route-id="@pedido.Id">
+                                                    <i class="fa-solid fa-eye text-secondary" style="width: 16px;"></i> Detalhes
+                                                </a>
+                                            </li>
+
+                                            @if (pedido.EstadoId == 3)
+                                            {
+                                                <!-- Se o estado for Vigente, exibe Documentos e Pagamento -->
+                                                <li><hr class="dropdown-divider my-1"></li>
+                                                <li>
+                                                    <a class="dropdown-item py-2 text-dark small d-flex align-items-center gap-2" asp-controller="Pedido" asp-action="Documentos" asp-route-id="@pedido.Id">
+                                                        <i class="fa-solid fa-folder-open text-primary" style="width: 16px;"></i> Documentos
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item py-2 text-dark small d-flex align-items-center gap-2" asp-controller="Pedido" asp-action="Pagamento" asp-route-id="@pedido.Id">
+                                                        <i class="fa-solid fa-money-bill-wave text-success" style="width: 16px;"></i> Pagamento
+                                                    </a>
+                                                </li>
+                                            }
+                                            else if (pedido.EstadoId == 5)
+                                            {
+                                                <!-- Se o estado for Liquidado, exibe apenas Documentos -->
+                                                <li><hr class="dropdown-divider my-1"></li>
+                                                <li>
+                                                    <a class="dropdown-item py-2 text-dark small d-flex align-items-center gap-2" asp-controller="Pedido" asp-action="Documentos" asp-route-id="@pedido.Id">
+                                                        <i class="fa-solid fa-folder-open text-primary" style="width: 16px;"></i> Documentos
+                                                    </a>
+                                                </li>
+                                            }
+                                            else
+                                            {
+                                                <!-- Regras normais para os outros estados -->
+                                                @if (pedido.EstadoId != 2)
+                                                {
+                                                    <li>
+                                                        <a class="dropdown-item py-2 text-dark small d-flex align-items-center gap-2" asp-controller="Pedido" asp-action="Interveniente" asp-route-id="@pedido.Id">
+                                                            <i class="fa-solid fa-users text-primary" style="width: 16px;"></i> Intervenientes
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item py-2 text-dark small d-flex align-items-center gap-2" asp-controller="Pedido" asp-action="Garantia" asp-route-id="@pedido.Id">
+                                                            <i class="fa-solid fa-shield-halved text-success" style="width: 16px;"></i> Garantias
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item py-2 text-dark small d-flex align-items-center gap-2" asp-controller="Pedido" asp-action="Decisao" asp-route-id="@pedido.Id">
+                                                            <i class="fa-solid fa-gavel text-warning" style="width: 16px;"></i> Decisão
+                                                        </a>
+                                                    </li>
+                                                }
+
+                                                @if (pedido.EstadoId != 1 && pedido.EstadoId != 4)
+                                                {
+                                                    <li><hr class="dropdown-divider my-1"></li>
+                                                    <li>
+                                                        <a class="dropdown-item py-2 text-dark small d-flex align-items-center gap-2" asp-controller="Pedido" asp-action="Documentos" asp-route-id="@pedido.Id">
+                                                            <i class="fa-solid fa-folder-open text-primary" style="width: 16px;"></i> Documentos
+                                                        </a>
+                                                    </li>
+                                                }
+
+                                                @if (pedido.EstadoId != 1)
+                                                {
+                                                    <li><hr class="dropdown-divider my-1"></li>
+                                                    <li>
+                                                        <a class="dropdown-item py-2 text-dark small d-flex align-items-center gap-2" asp-action="Despacho" asp-route-id="@pedido.Id">
+                                                            <i class="fa-solid fa-paper-plane text-info" style="width: 16px;"></i> Despachar
+                                                        </a>
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="11" class="text-center py-4 text-muted">Nenhum pedido registado foi encontrado.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação Inferior e Totais -->
+        <div class="card-footer bg-white py-3 border-top d-flex justify-content-between align-items-center">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><span class="page-link rounded-start-pill">Anterior</span></li>
+                    <li class="page-item active"><span class="page-link border-success text-white" style="background-color: #079b62; border-color: #079b62;">1</span></li>
+                    <li class="page-item"><a class="page-link text-dark" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link text-dark" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link text-dark rounded-end-pill" href="#">Próximo</a></li>
+                </ul>
+            </nav>
+            <span class="text-muted small">
+                Total: @(Model?.ListaPedidos?.Count ?? 0) pedidos |
+                <span class="fw-bold text-dark">Valor Total: MT @((Model?.ListaPedidos?.Sum(p => p.Valor) ?? 0).ToString("N2"))</span>
+            </span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputPesquisa = document.getElementById("inputPesquisa");
+            const selectFiltroEstado = document.getElementById("selectFiltroEstado");
+            const linhasTabela = document.querySelectorAll("#tabelaPedidos tbody tr");
+
+            function filtrarTabela() {
+                const termo = inputPesquisa.value.toLowerCase().trim();
+                const estadoSelecionado = selectFiltroEstado.value;
+
+                linhasTabela.forEach(linha => {
+                    if (linha.cells.length < 11) return;
+
+                    const crr = linha.cells[1].textContent.toLowerCase();
+                    const entidade = linha.cells[2].textContent.toLowerCase();
+                    const estado = linha.getAttribute("data-estado") || "";
+
+                    const correspondeTermo = crr.includes(termo) || entidade.includes(termo);
+                    const correspondeEstado = !estadoSelecionado || estado === estadoSelecionado;
+
+                    if (correspondeTermo && correspondeEstado) {
+                        linha.style.display = "";
+                    } else {
+                        linha.style.display = "none";
+                    }
+                });
+            }
+
+            inputPesquisa.addEventListener("keyup", filtrarTabela);
+            selectFiltroEstado.addEventListener("change", filtrarTabela);
+        });
+    </script>
+}

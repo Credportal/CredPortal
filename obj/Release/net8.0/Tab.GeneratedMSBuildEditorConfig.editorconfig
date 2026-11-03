@@ -1,0 +1,299 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v8.0
+build_property.RootNamespace = Tab
+build_property.RootNamespace = Tab
+build_property.ProjectDir = C:\TopMarket\Analise\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\TopMarket\Analise
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/TopMarket/Analise/Views/Agencia/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWdlbmNpYVxFZGl0YXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Agencia/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWdlbmNpYVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Agencia/Ver.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWdlbmNpYVxWZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/AlterarSenha/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWx0ZXJhclNlbmhhXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Cadastro/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2FkYXN0cm9cQ3JpYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Cadastro/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2FkYXN0cm9cRWRpdGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Cargo/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2FyZ29cQ3JpYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Cargo/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2FyZ29cRWRpdGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/ContasCobrar/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29udGFzQ29icmFyXENyaWFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/ContasCobrar/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29udGFzQ29icmFyXEVkaXRhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/ContasPagar/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29udGFzUGFnYXJcQ3JpYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/ContasPagar/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29udGFzUGFnYXJcRWRpdGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Conta/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29udGFcQ3JpYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Conta/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29udGFcRWRpdGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Conta/Transferir.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29udGFcVHJhbnNmZXJpci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Email/Email.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1haWxcRW1haWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Entrada/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW50cmFkYVxDcmlhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Entrada/RelatorioEntradaAgrupadoConta.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW50cmFkYVxSZWxhdG9yaW9FbnRyYWRhQWdydXBhZG9Db250YS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Entrada/RelatorioEntradaAgrupadoLinha.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW50cmFkYVxSZWxhdG9yaW9FbnRyYWRhQWdydXBhZG9MaW5oYS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Entrada/RelatorioEntradaAgrupadoTab.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW50cmFkYVxSZWxhdG9yaW9FbnRyYWRhQWdydXBhZG9UYWIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Entrada/RelatorioEntradaAgrupadoTipo.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW50cmFkYVxSZWxhdG9yaW9FbnRyYWRhQWdydXBhZG9UaXBvLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Entrada/RelatorioEntradas.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW50cmFkYVxSZWxhdG9yaW9FbnRyYWRhcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Estado/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXN0YWRvXENyaWFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Estado/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXN0YWRvXEVkaXRhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Evento/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXZlbnRvXENyaWFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Evento/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXZlbnRvXEVkaXRhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Fecho/Relatorio.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmVjaG9cUmVsYXRvcmlvLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Inventario/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW52ZW50YXJpb1xDcmlhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Inventario/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW52ZW50YXJpb1xFZGl0YXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Linha/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTGluaGFcQ3JpYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Linha/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTGluaGFcRWRpdGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Linha/Transferir.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTGluaGFcVHJhbnNmZXJpci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Login/Email.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cRW1haWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Login/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Login/RedefinirSenha.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cUmVkZWZpbmlyU2VuaGEuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Relatorio/Entradas.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVsYXRvcmlvXEVudHJhZGFzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Restrito/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVzdHJpdG9cSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Saida/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FpZGFcQ3JpYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Saida/RelatorioSaidaAgrupadoConta.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FpZGFcUmVsYXRvcmlvU2FpZGFBZ3J1cGFkb0NvbnRhLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Saida/RelatorioSaidaAgrupadoLinha.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FpZGFcUmVsYXRvcmlvU2FpZGFBZ3J1cGFkb0xpbmhhLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Saida/RelatorioSaidaAgrupadoTab.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FpZGFcUmVsYXRvcmlvU2FpZGFBZ3J1cGFkb1RhYi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Saida/RelatorioSaidaAgrupadoTipo.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FpZGFcUmVsYXRvcmlvU2FpZGFBZ3J1cGFkb1RpcG8uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Saida/RelatorioSaidas.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FpZGFcUmVsYXRvcmlvU2FpZGFzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Shared/Components/Menu/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNcTWVudVxEZWZhdWx0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Ticket/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlja2V0XENyaWFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Ticket/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlja2V0XEVkaXRhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Ticket/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlja2V0XEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/TipoDespesa/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlwb0Rlc3Blc2FcQ3JpYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/TipoDespesa/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlwb0Rlc3Blc2FcRWRpdGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/TipoEntrada/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlwb0VudHJhZGFcQ3JpYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/TipoEntrada/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlwb0VudHJhZGFcRWRpdGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/TipoSaida/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlwb1NhaWRhXENyaWFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/TipoSaida/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlwb1NhaWRhXEVkaXRhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/TipoServico/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlwb1NlcnZpY29cQ3JpYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/TipoServico/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGlwb1NlcnZpY29cRWRpdGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Usuario/ApagarConfirmacao.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXN1YXJpb1xBcGFnYXJDb25maXJtYWNhby5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Usuario/Criar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXN1YXJpb1xDcmlhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Usuario/Editar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXN1YXJpb1xFZGl0YXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Usuario/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXN1YXJpb1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TopMarket/Analise/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-ifuubcg9oc
+
+[C:/TopMarket/Analise/Views/Shared/_Layout_Deslogado.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRfRGVzbG9nYWRvLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = b-opyrmdze7j

@@ -1,12 +1,15 @@
 ﻿using Analise.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Analise.Repositorio
 {
     public interface IContaRepositorio
     {
-        ContaModel ListarPorId(int id);
-        List<ContaModel> BuscarTodos();
-        ContaModel Adicionar(ContaModel cargo);
-        ContaModel Actualizar(ContaModel cargo);
+        Task<List<ContaModel>> BuscarTodasAsync();
+        Task<ContaModel> BuscarPorIdAsync(int id);
+        Task<ContaModel> AdicionarAsync(ContaModel conta);
+        Task<ContaModel> AtualizarAsync(ContaModel conta);
+        Task<bool> ApagarAsync(int id);
     }
 }

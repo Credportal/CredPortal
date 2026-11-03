@@ -1,0 +1,235 @@
+﻿@model Analise.Models.PedidoModel
+@{
+    ViewData["Title"] = "Registar Novo Pedido";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css" />
+
+<div class="text-center">
+    @if (TempData["MensagemSucesso"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            <button type="button" class="btn btn-danger btn-sm close-alert" aria-label="Close">X</button>
+            @TempData["MensagemSucesso"]
+        </div>
+    }
+
+    @if (TempData["MensagemErro"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            <button type="button" class="btn btn-danger btn-sm close-alert" aria-label="Close">X</button>
+            @TempData["MensagemErro"]
+        </div>
+    }
+</div>
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Registar Novo Pedido</h2>
+            <p class="text-muted small mb-0">Preencha os dados abaixo para submeter um novo pedido de crédito no sistema.</p>
+        </div>
+        <a asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Voltar à Lista
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-4">
+            <form asp-action="Criar" method="post" id="formCriarPedido">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3">
+                    <!-- Entidade / Cliente -->
+                    <div class="col-md-6">
+                        <label asp-for="EntidadeId" class="form-label fw-semibold text-secondary">Entidade / Cliente</label>
+                        <select asp-for="EntidadeId" asp-items="Model.ListaEntidades" class="form-select rounded-2 shadow-sm" id="selectEntidade">
+                            <option value="">-- Selecione ou pesquise a Entidade --</option>
+                        </select>
+                        <span asp-validation-for="EntidadeId" class="text-danger small"></span>
+                    </div>
+
+                    <!-- CRR Gerado Automaticamente -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-secondary">Código CRR Gerado</label>
+                        <input type="text" class="form-control rounded-2 shadow-sm bg-light fw-bold text-success" readonly id="txtCRR" placeholder="Será gerado ao selecionar a entidade..." />
+                    </div>
+
+                    <!-- Gestor Responsável -->
+                    <div class="col-md-6">
+                        <label asp-for="GestorId" class="form-label fw-semibold text-secondary">Gestor Responsável</label>
+                        <select asp-for="GestorId" asp-items="Model.ListaGestores" class="form-select rounded-2 shadow-sm" id="selectGestor">
+                            <option value="">-- Selecione ou pesquise o Gestor --</option>
+                        </select>
+                        <span asp-validation-for="GestorId" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Valor do Empréstimo -->
+                    <div class="col-md-3">
+                        <label asp-for="Valor" class="form-label fw-semibold text-secondary">Valor do Empréstimo (MT)</label>
+                        <input asp-for="Valor" class="form-control rounded-2 shadow-sm" type="number" step="0.01" placeholder="0.00" id="txtValor" />
+                        <span asp-validation-for="Valor" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Prazo em Meses -->
+                    <div class="col-md-3">
+                        <label asp-for="Prazo" class="form-label fw-semibold text-secondary">Prazo (Meses)</label>
+                        <input asp-for="Prazo" class="form-control rounded-2 shadow-sm" type="number" placeholder="Ex: 12" id="txtPrazo" />
+                        <span asp-validation-for="Prazo" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Taxa de Juro (%) -->
+                    <div class="col-md-3">
+                        <label asp-for="Taxa" class="form-label fw-semibold text-secondary">Taxa de Juro (%)</label>
+                        <input asp-for="Taxa" class="form-control rounded-2 shadow-sm" type="number" step="0.01" placeholder="Ex: 5.00" id="txtTaxa" />
+                        <span asp-validation-for="Taxa" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Prestação Mensal (Juro Composto) -->
+                    <div class="col-md-3">
+                        <label asp-for="Prestacao" class="form-label fw-semibold text-secondary">Prestação Mensal (MT)</label>
+                        <input asp-for="Prestacao" class="form-control rounded-2 shadow-sm bg-light" type="number" step="0.01" readonly id="txtPrestacao" />
+                        <span asp-validation-for="Prestacao" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Destino do Crédito -->
+                    <div class="col-md-12">
+                        <label asp-for="Destino" class="form-label fw-semibold text-secondary">Destino do Crédito</label>
+                        <textarea asp-for="Destino" class="form-control rounded-2 shadow-sm" rows="3" placeholder="Descreva detalhadamente o destino ou finalidade do crédito..."></textarea>
+                        <span asp-validation-for="Destino" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a asp-action="Ver" class="btn btn-light px-4 rounded-2 text-secondary border">Cancelar</a>
+                    <button type="submit" class="btn btn-success px-4 rounded-2 text-white fw-normal" style="background-color: #079b62; border-color: #079b62;">
+                        <i class="fa-solid fa-check me-1"></i> Registar Pedido
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Alerta de Pedido Ativo -->
+<div class="modal fade" id="modalPedidoAtivo" tabindex="-1" aria-labelledby="modalPedidoAtivoLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="modalPedidoAtivoLabel">
+                    <i class="fa-solid fa-triangle-exclamation text-warning fs-4"></i> Pedido Ativo Encontrado
+                </h5>
+            </div>
+            <div class="modal-body py-3">
+                <p class="mb-0 text-secondary" id="modalMensagemTexto">
+                    Esta entidade já possui um pedido ativo. Será redirecionado para visualizar os detalhes desse pedido.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-success rounded-2 px-4 text-white" id="btnVerDetalhes" style="background-color: #079b62; border-color: #079b62;">
+                    <i class="fa-solid fa-eye me-1"></i> Ver Detalhes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $('#selectEntidade').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Selecione ou pesquise a Entidade --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            $('#selectGestor').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Selecione ou pesquise o Gestor --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            const txtValor = document.getElementById("txtValor");
+            const txtPrazo = document.getElementById("txtPrazo");
+            const txtTaxa = document.getElementById("txtTaxa");
+            const txtPrestacao = document.getElementById("txtPrestacao");
+            const selectEntidade = document.getElementById("selectEntidade");
+            const txtCRR = document.getElementById("txtCRR");
+
+            // Instância do Modal Bootstrap
+            const modalElement = document.getElementById('modalPedidoAtivo');
+            const modalPedidoAtivo = new bootstrap.Modal(modalElement);
+            const btnVerDetalhes = document.getElementById('btnVerDetalhes');
+            const modalMensagemTexto = document.getElementById('modalMensagemTexto');
+
+            function atualizarCRRPreview() {
+                const entidadeId = selectEntidade.value;
+                if (entidadeId) {
+                    txtCRR.value = entidadeId + "00X (Gerado automaticamente)";
+                } else {
+                    txtCRR.value = "";
+                }
+            }
+
+            // --- VERIFICAÇÃO COM MODAL E REDIRECIONAMENTO ---
+            $('#selectEntidade').on('change', function () {
+                const entidadeId = selectEntidade.value;
+
+                if (entidadeId) {
+                    atualizarCRRPreview();
+
+                    fetch(`/Pedido/VerificarPedidoAtivo?entidadeId=${entidadeId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.possuiPedidoAtivo) {
+                                modalMensagemTexto.innerHTML = `A entidade selecionada já possui um pedido no estado <strong class="text-dark">${data.estado}</strong>. Não é possível submeter uma nova solicitação.`;
+
+                                // Configurar o botão para redirecionar ao clicar
+                                btnVerDetalhes.onclick = function () {
+                                    window.location.href = `/Pedido/Detalhes/${data.pedidoId}`;
+                                };
+
+                                modalPedidoAtivo.show();
+                            }
+                        })
+                        .catch(err => console.error("Erro ao verificar pedido ativo:", err));
+                } else {
+                    txtCRR.value = "";
+                }
+            });
+
+            function calcularPrestacaoComposta() {
+                const pv = parseFloat(txtValor.value) || 0;
+                const n = parseInt(txtPrazo.value) || 0;
+                const i = (parseFloat(txtTaxa.value) || 0) / 100;
+
+                if (pv > 0 && n > 0) {
+                    let prestacao = 0;
+                    if (i > 0) {
+                        const fator = Math.pow(1 + i, n);
+                        prestacao = pv * (i * fator) / (fator - 1);
+                    } else {
+                        prestacao = pv / n;
+                    }
+                    txtPrestacao.value = prestacao.toFixed(2);
+                } else {
+                    txtPrestacao.value = "";
+                }
+            }
+
+            if (txtValor && txtPrazo && txtTaxa) {
+                txtValor.addEventListener("input", calcularPrestacaoComposta);
+                txtPrazo.addEventListener("input", calcularPrestacaoComposta);
+                txtTaxa.addEventListener("input", calcularPrestacaoComposta);
+            }
+        });
+    </script>
+}

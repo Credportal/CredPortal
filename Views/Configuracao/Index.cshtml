@@ -1,0 +1,97 @@
+﻿@model Analise.Models.ConfiguracaoModel
+@{
+    ViewData["Title"] = "Configurações Institucionais e Cláusulas";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Configurações Gerais</h2>
+            <p class="text-muted small mb-0">Atualize os dados da instituição e personalize o esqueleto de cláusulas do contrato.</p>
+        </div>
+    </div>
+
+    @if (TempData["MensagemSucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> @TempData["MensagemSucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <form asp-controller="Configuracao" asp-action="Salvar" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <!-- Secção 1: Dados Institucionais Editáveis -->
+        <div class="card shadow-sm border-0 rounded-4 bg-white p-4 mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-building text-success me-2" style="color: #079b62 !important;"></i>Dados Institucionais do Operador</h5>
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label asp-for="NomeEmpresa" class="form-label fw-semibold text-secondary">Nome da Empresa / Operador</label>
+                    <input asp-for="NomeEmpresa" class="form-control rounded-2 shadow-sm border" required />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label fw-semibold text-secondary">E-mail</label>
+                    <input asp-for="Email" class="form-control rounded-2 shadow-sm border" type="email" required />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Contactos" class="form-label fw-semibold text-secondary">Contactos / Telefones</label>
+                    <input asp-for="Contactos" class="form-control rounded-2 shadow-sm border" required />
+                </div>
+                <div class="col-md-12">
+                    <label asp-for="Sede" class="form-label fw-semibold text-secondary">Morada da Sede</label>
+                    <input asp-for="Sede" class="form-control rounded-2 shadow-sm border" required />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Representante" class="form-label fw-semibold text-secondary">Representante Legal (Administrador)</label>
+                    <input asp-for="Representante" class="form-control rounded-2 shadow-sm border" required />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="QualidadeRepresentante" class="form-label fw-semibold text-secondary">Cargo / Qualidade do Representante</label>
+                    <input asp-for="QualidadeRepresentante" class="form-control rounded-2 shadow-sm border" required />
+                </div>
+            </div>
+        </div>
+
+        <!-- Secção 2: Esqueleto e Cláusulas Editáveis -->
+        <div class="card shadow-sm border-0 rounded-4 bg-white p-4 mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-lines text-success me-2" style="color: #079b62 !important;"></i>Esqueleto e Textos das Cláusulas</h5>
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label asp-for="ClausulaPrimeiraTexto" class="form-label fw-semibold text-secondary">Cláusula Primeira (Valor do Empréstimo)</label>
+                    <textarea asp-for="ClausulaPrimeiraTexto" class="form-control rounded-2 shadow-sm border" rows="2"></textarea>
+                </div>
+                <div class="col-md-12">
+                    <label asp-for="ClausulaSegundaTexto" class="form-label fw-semibold text-secondary">Cláusula Segunda (Taxas de Juros)</label>
+                    <textarea asp-for="ClausulaSegundaTexto" class="form-control rounded-2 shadow-sm border" rows="2"></textarea>
+                </div>
+                <div class="col-md-12">
+                    <label asp-for="ClausulaTerceiraTexto" class="form-label fw-semibold text-secondary">Cláusula Terceira (Reembolso)</label>
+                    <textarea asp-for="ClausulaTerceiraTexto" class="form-control rounded-2 shadow-sm border" rows="3"></textarea>
+                </div>
+                <div class="col-md-12">
+                    <label asp-for="ClausulaQuartaTexto" class="form-label fw-semibold text-secondary">Cláusula Quarta (Custos Administrativos)</label>
+                    <textarea asp-for="ClausulaQuartaTexto" class="form-control rounded-2 shadow-sm border" rows="2"></textarea>
+                </div>
+                <div class="col-md-12">
+                    <label asp-for="ClausulaQuintaTexto" class="form-label fw-semibold text-secondary">Cláusula Quinta (Vencimento Imediato)</label>
+                    <textarea asp-for="ClausulaQuintaTexto" class="form-control rounded-2 shadow-sm border" rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mb-5">
+            <button type="submit" class="btn btn-success px-4 py-2 rounded-3 fw-bold text-white shadow-sm" style="background-color: #079b62; border-color: #079b62;">
+                <i class="fa-solid fa-floppy-disk me-2"></i> Guardar Alterações
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

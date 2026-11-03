@@ -1,0 +1,181 @@
+﻿@using Analise.Enuns
+@model EntidadeViewModel
+@{
+    ViewData["Title"] = "Lista de Entidades";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="container-fluid px-4 py-3">
+    <!-- Cabeçalho da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-solid text-dark mb-0">Lista de Entidades</h2>
+    </div>
+
+    <!-- Barra de Ações (Nova Entidade, Pesquisa, Filtros e Exportar) -->
+    <div class="card shadow-sm border-0 mb-4 rounded-4 bg-white">
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3 py-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a asp-controller="Entidade" asp-action="Criar" class="btn btn-success px-3 rounded-2 d-flex align-items-center gap-2 text-white fw-normal" style="background-color: #079b62; border-color: #079b62;">
+                    <i class="fa-solid fa-plus"></i> Nova Entidade
+                </a>
+
+                <!-- Caixa de Pesquisa com Botão -->
+                <div class="input-group" style="width: 280px;">
+                    <input type="text" id="inputPesquisa" class="form-control rounded-start-2 shadow-sm" placeholder="Pesquisar por nome ou NUIT..." />
+                    <button class="btn btn-outline-secondary rounded-end-2 px-3" type="button" id="btnPesquisar" style="border-color: #ced4da;">
+                        <i class="fa-solid fa-search"></i>
+                    </button>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle rounded-2 px-3" type="button" data-bs-toggle="dropdown">
+                        <i class="fa-solid fa-filter me-1"></i> Filtrar
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Todas</a></li>
+                        <li><a class="dropdown-item" href="#">Ativas</a></li>
+                        <li><a class="dropdown-item" href="#">Inativas</a></li>
+                    </ul>
+                </div>
+                <select class="form-select rounded-2 w-auto shadow-sm" id="selectFiltroTipo">
+                    <option selected value="">Todos os Tipos</option>
+                    <option value="Individual">Individual</option>
+                    <option value="Empresarial">Empresarial</option>
+                </select>
+            </div>
+
+            <div>
+                <button class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-file-export"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Dados -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-nowrap" id="tabelaEntidades">
+                <thead class="table-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-3 py-3">ID</th>
+                        <th class="py-3">Nome</th>
+                        <th class="py-3">Tipo</th>
+                        <th class="py-3">NUIT</th>
+                        <th class="py-3">Documento</th>
+                        <th class="py-3">Nr. Documento</th>
+                        <th class="py-3">Data Nasc.</th>
+                        <th class="py-3">Contacto</th>
+                        <th class="py-3">Email</th>
+                        <th class="py-3">Data Cadastro</th>
+                        <th class="py-3">Estado</th>
+                        <th class="text-end pe-3 py-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model?.ListaEntidades != null && Model.ListaEntidades.Any())
+                    {
+                        @foreach (EntidadeModel entidade in Model.ListaEntidades)
+                        {
+                            <tr data-tipo="@entidade.TipoCliente">
+                                <td class="ps-3 fw-semibold text-dark">#@entidade.Id</td>
+                                <td class="fw-medium text-dark">@entidade.Nome</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        @(string.IsNullOrEmpty(entidade.TipoCliente) ? "Individual" : entidade.TipoCliente)
+                                    </span>
+                                </td>
+                                <td class="font-monospace">@(string.IsNullOrEmpty(entidade.Nuit) ? "-" : entidade.Nuit)</td>
+                                <td>@(string.IsNullOrEmpty(entidade.Documento) ? "-" : entidade.Documento)</td>
+                                <td>@(string.IsNullOrEmpty(entidade.NrDocumento) ? "-" : entidade.NrDocumento)</td>
+                                <td>@(entidade.Aniversario.HasValue ? entidade.Aniversario.Value.ToString("dd/MM/yyyy") : "-")</td>
+                                <td>@(string.IsNullOrEmpty(entidade.Telefone) ? "-" : entidade.Telefone)</td>
+                                <td>@(string.IsNullOrEmpty(entidade.Email) ? "-" : entidade.Email)</td>
+                                <td>@entidade.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (entidade.Ativo)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 11px;">Ativo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2 py-1" style="font-size: 11px;">Inativo</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-action="Detalhes" asp-route-id="@entidade.Id" class="btn btn-sm btn-light text-secondary rounded-circle shadow-sm" title="Detalhes">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <a asp-action="Editar" asp-route-id="@entidade.Id" class="btn btn-sm btn-light text-primary rounded-circle shadow-sm" title="Editar">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="12" class="text-center py-4 text-muted">Nenhuma entidade registada foi encontrada.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação Inferior -->
+        <div class="card-footer bg-white py-3 border-top d-flex justify-content-between align-items-center">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><span class="page-link rounded-start-pill">Anterior</span></li>
+                    <li class="page-item active"><span class="page-link border-success text-white" style="background-color: #079b62; border-color: #079b62;">1</span></li>
+                    <li class="page-item"><a class="page-link text-dark" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link text-dark" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link text-dark rounded-end-pill" href="#">Próximo</a></li>
+                </ul>
+            </nav>
+            <span class="text-muted small">Total: @(Model?.ListaEntidades?.Count ?? 0) entidades</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputPesquisa = document.getElementById("inputPesquisa");
+            const selectFiltroTipo = document.getElementById("selectFiltroTipo");
+            const linhasTabela = document.querySelectorAll("#tabelaEntidades tbody tr");
+
+            function filtrarTabela() {
+                const termo = inputPesquisa.value.toLowerCase().trim();
+                const tipoSelecionado = selectFiltroTipo.value;
+
+                linhasTabela.forEach(linha => {
+                    if (linha.cells.length < 12) return; // Ignora linha de "nenhum resultado"
+
+                    const nome = linha.cells[1].textContent.toLowerCase();
+                    const nuit = linha.cells[3].textContent.toLowerCase();
+                    const tipo = linha.getAttribute("data-tipo") || "";
+
+                    const correspondeTermo = nome.includes(termo) || nuit.includes(termo);
+                    const correspondeTipo = !tipoSelecionado || tipo === tipoSelecionado;
+
+                    if (correspondeTermo && correspondeTipo) {
+                        linha.style.display = "";
+                    } else {
+                        linha.style.display = "none";
+                    }
+                });
+            }
+
+            inputPesquisa.addEventListener("keyup", filtrarTabela);
+            selectFiltroTipo.addEventListener("change", filtrarTabela);
+        });
+    </script>
+}

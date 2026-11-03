@@ -1,0 +1,470 @@
+﻿@model Analise.Models.PedidoModel
+@{
+    ViewData["Title"] = "Decisão de Crédito do Pedido";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="container-fluid px-4 py-3">
+    <!-- Cabeçalho da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Decisão de Crédito do Pedido #@Model.Id</h2>
+            <p class="text-muted small mb-0">Análise e Aprovação Final do Pedido de Crédito</p>
+        </div>
+        <a asp-controller="Pedido" asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Voltar à Lista de Pedidos
+        </a>
+    </div>
+
+    <!-- Informações do Pedido e CRR -->
+    <div class="card shadow-sm border-0 rounded-4 bg-white mb-4">
+        <div class="card-body p-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-8">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Entidade Principal / Cliente</span>
+                    <h5 class="fw-bold text-dark mb-0">@Model.Entidade?.Nome <span class="text-muted small">(ID: #@Model.EntidadeId)</span></h5>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Código CRR</span>
+                    <h5 class="font-monospace fw-bold text-success mb-0" style="color: #079b62 !important;">@(Model.CRR.HasValue ? Model.CRR.Value.ToString("0") : "Não atribuído")</h5>
+                </div>
+            </div>
+
+            <hr class="my-4 text-muted" />
+
+            <div class="row g-4 text-center">
+                <div class="col-md-3 border-end">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Valor do Pedido Solicitado</span>
+                    <h4 class="fw-bold text-dark mb-0">MT @Model.Valor.ToString("N2")</h4>
+                </div>
+                <div class="col-md-3 border-end">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Prazo Solicitado</span>
+                    <h4 class="fw-bold text-dark mb-0">@Model.Prazo Meses</h4>
+                </div>
+                <div class="col-md-3 border-end">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Prestação Solicitada</span>
+                    <h4 class="fw-bold text-dark mb-0">MT @Model.Prestacao.ToString("N2")</h4>
+                </div>
+                <div class="col-md-3">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Estado do Pedido</span>
+                    <h4 class="fw-bold text-dark mb-0">
+                        @switch (Model.EstadoId)
+                        {
+                            case 1:
+                                <span class="badge bg-warning text-dark px-3 py-1">Pendente</span>
+                                break;
+                            case 2:
+                                <span class="badge bg-success text-white px-3 py-1" style="background-color: #079b62 !important;">Aprovado</span>
+                                break;
+                            case 3:
+                                <span class="badge bg-primary text-white px-3 py-1">Vigente</span>
+                                break;
+                            case 4:
+                                <span class="badge bg-danger text-white px-3 py-1">Rejeitado</span>
+                                break;
+                            case 5:
+                                <span class="badge bg-secondary text-white px-3 py-1">Liquidado</span>
+                                break;
+                            default:
+                                <span class="badge bg-light text-dark border px-3 py-1">Desconhecido</span>
+                                break;
+                        }
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo de Garantias e Intervenientes -->
+    <h5 class="fw-bold text-dark mb-3">RESUMO DE GARANTIAS E INTERVENIENTES</h5>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+                <span class="text-muted small text-uppercase fw-semibold">Garantia Atual do Cliente</span>
+                <h4 class="fw-bold text-dark mb-0 mt-1"><i class="fa-solid fa-user-shield text-success me-2" style="color: #079b62 !important;"></i> MT @Model.TotalGarantiasCliente.ToString("N2")</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+                <span class="text-muted small text-uppercase fw-semibold">Garantias dos Intervenientes</span>
+                <h4 class="fw-bold text-dark mb-0 mt-1"><i class="fa-solid fa-users-shield text-success me-2" style="color: #079b62 !important;"></i> MT @Model.TotalGarantiasIntervenientes.ToString("N2")</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+                <span class="text-muted small text-uppercase fw-semibold">Soma de Garantias</span>
+                <h4 class="fw-bold text-success mb-0 mt-1" style="color: #079b62 !important;">MT @Model.SomaTotalGarantias.ToString("N2")</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Intervenientes (Agrupados com o Cliente) -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-5">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h5 class="fw-bold text-dark mb-0">LISTA DE INTERVENIENTES (Agrupados com o Cliente)</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3">Grupo</th>
+                        <th class="py-3">Nome</th>
+                        <th class="py-3">NUIT</th>
+                        <th class="py-3">Tipo</th>
+                        <th class="py-3">Garantias (MT)</th>
+                        <th class="py-3">Total do Grupo (MT)</th>
+                        <th class="py-3 text-end pe-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="ps-4 fw-semibold text-dark">Cliente</td>
+                        <td class="fw-medium text-dark">@Model.Entidade?.Nome <span class="text-muted small">(ID: #@Model.EntidadeId)</span></td>
+                        <td><code>@(Model.Entidade != null ? Model.Entidade.Nuit : "-")</code></td>
+                        <td><span class="badge bg-light text-dark border rounded-pill px-2 py-1">Titular</span></td>
+                        <td class="fw-bold text-success" style="color: #079b62 !important;">MT @Model.TotalGarantiasCliente.ToString("N2")</td>
+                        <td class="fw-bold text-success" style="color: #079b62 !important;">MT @Model.TotalGarantiasCliente.ToString("N2")</td>
+                        <td class="text-end pe-4">
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-2 ms-auto" data-bs-toggle="modal" data-bs-target="#modalGarantiaCliente">
+                                <i class="fa-solid fa-shield-halved"></i> Ver
+                            </button>
+                        </td>
+                    </tr>
+
+                    @if (ViewBag.Intervenientes != null)
+                    {
+                        @foreach (var inter in (List<IntervenienteModel>)ViewBag.Intervenientes)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-semibold text-dark">Intervenientes</td>
+                                <td class="fw-medium text-dark">@(inter.IntervenienteEntidade != null ? inter.IntervenienteEntidade.Nome : "Interveniente #" + inter.IntervenienteID)</td>
+                                <td><code>@(inter.IntervenienteEntidade != null ? inter.IntervenienteEntidade.Nuit : "-")</code></td>
+                                <td><span class="badge bg-light text-dark border rounded-pill px-2 py-1">@inter.Tipo</span></td>
+                                <td class="fw-bold text-success" style="color: #079b62 !important;">MT @inter.ValorActualGarantia.ToString("N2")</td>
+                                <td class="fw-bold text-success" style="color: #079b62 !important;">MT @inter.ValorActualGarantia.ToString("N2")</td>
+                                <td class="text-end pe-4">
+                                    <button type="button" class="btn btn-sm btn-outline-success rounded-2 ms-auto" data-bs-toggle="modal" data-bs-target="#modalGarantia_@inter.IntervenienteID">
+                                        <i class="fa-solid fa-shield-halved"></i> Ver
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Área de Decisão de Crédito -->
+    <h5 class="fw-bold text-dark mb-3">DECISÃO DE CRÉDITO</h5>
+    <div class="row g-4 mb-5">
+        <!-- Formulário de Decisão e Valores Aprovados -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+                <div class="row g-3 align-items-center text-center">
+                    <div class="col-md-3 border-end">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Garantias Totais</span>
+                        <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;">MT @Model.SomaTotalGarantias.ToString("N2")</h4>
+                    </div>
+                    <div class="col-md-1 fs-3 fw-bold text-secondary">=</div>
+                    <div class="col-md-3 border-end">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Cobertura de 150%</span>
+                        <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;">MT @((Model.LimiteMaximoAprovacao * 1.5m).ToString("N2"))</h4>
+                    </div>
+                    <div class="col-md-1 fs-3 fw-bold text-secondary">=</div>
+                    <div class="col-md-4">
+                        <span class="d-block text-secondary small text-uppercase fw-semibold">Limite Máximo de Aprovação</span>
+                        <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;">MT @Model.LimiteMaximoAprovacao.ToString("N2")</h4>
+                        <span class="text-muted small">(-/ 1.5)</span>
+                    </div>
+                </div>
+
+                <hr class="my-4 text-muted" />
+
+                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-pen-to-square text-success me-2" style="color: #079b62 !important;"></i>VALORES DA APROVAÇÃO (INSERÇÃO MANUAL)</h6>
+                <form id="formDecisao" asp-controller="Pedido" asp-action="ProcessarDecisao" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="ValorDecisao" class="form-label fw-semibold text-secondary">Valor Aprovado</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text rounded-2 border-0 bg-light text-muted fw-bold">MT</span>
+                                <input asp-for="ValorDecisao" id="txtValorAprovado" class="form-control form-control-sm rounded-2 shadow-sm border" type="number" step="0.01" value="" placeholder="Ex: 50000.00" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="TaxaDecisao" class="form-label fw-semibold text-secondary">Taxa de Juro Mensal (%)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text rounded-2 border-0 bg-light text-muted fw-bold">%</span>
+                                <input asp-for="TaxaDecisao" id="txtTaxaAprovada" class="form-control form-control-sm rounded-2 shadow-sm border" type="number" step="0.01" value="" placeholder="Ex: 2.50" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PrazoDecisao" class="form-label fw-semibold text-secondary">Prazo (Meses)</label>
+                            <input asp-for="PrazoDecisao" id="txtPrazoAprovado" class="form-control form-control-sm rounded-2 shadow-sm border" type="number" value="" placeholder="Ex: 12" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PrestacaoDecisao" class="form-label fw-semibold text-secondary">Prestação Mensal (Calculada)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text rounded-2 border-0 bg-light text-muted fw-bold">MT</span>
+                                <input asp-for="PrestacaoDecisao" id="txtPrestacaoAprovada" class="form-control form-control-sm rounded-2 shadow-sm border bg-light" type="number" step="0.01" value="" placeholder="0.00" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Painel de Ações de Decisão -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <h6 class="fw-bold text-dark mb-4">AÇÕES DA DECISÃO</h6>
+
+                    <!-- Botão Principal de Aprovação (Em Destaque) -->
+                    <button type="submit" form="formDecisao" name="decisao" value="Aprovar" class="btn btn-lg btn-success rounded-3 text-white fw-bold py-3 w-100 d-flex align-items-center gap-2 justify-content-center shadow-sm" style="background-color: #079b62; border-color: #079b62;">
+                        <i class="fa-solid fa-circle-check fs-4"></i> APROVAR PEDIDO
+                    </button>
+                    <span class="d-block text-muted small text-center mt-2">Valida os dados inseridos e altera o estado para <strong>Aprovado</strong>.</span>
+                </div>
+
+                <!-- Botão Secundário de Rejeição (Pequeno e Distante) -->
+                <div class="mt-5 pt-4 border-top">
+                    <span class="d-block text-secondary small fw-semibold mb-2 text-center">Zona de Risco / Recusa</span>
+                    <button type="submit" form="formDecisao" name="decisao" value="Rejeitar" class="btn btn-sm btn-outline-danger rounded-2 fw-semibold w-100 py-2 d-flex align-items-center gap-2 justify-content-center" onclick="return confirm('Tem certeza de que deseja rejeitar este pedido de crédito?');">
+                        <i class="fa-solid fa-ban"></i> Rejeitar Pedido
+                    </button>
+
+                    <a asp-controller="Pedido" asp-action="Ver" class="btn btn-xs text-muted w-100 text-center mt-3 text-decoration-underline">
+                        Cancelar e Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Dinâmica do Plano de Amortização Projetado -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-5" id="cardAmortizacao">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">PLANO DE AMORTIZAÇÃO PROJETADO (Aprovação)</h5>
+                <p class="text-muted small mb-0">Simulação automática calculada com base no valor, taxa e prazo inseridos.</p>
+            </div>
+            <span class="badge bg-light text-dark border font-monospace px-3 py-2" id="badgeTotalGeral">MT 0.00</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3 text-center">Nº Prestação</th>
+                        <th class="py-3">Capital Inicial</th>
+                        <th class="py-3">Prestação</th>
+                        <th class="py-3">Juros</th>
+                        <th class="py-3">Amortização</th>
+                        <th class="py-3 text-end pe-4">Saldo Devedor</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyAmortizacao">
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Preencha o Valor Aprovado, Taxa e Prazo acima para gerar o plano de amortização.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL FLUTUANTE DE GARANTIAS DO CLIENTE -->
+<div class="modal fade" id="modalGarantiaCliente" tabindex="-1" aria-labelledby="modalLabelCliente" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark" id="modalLabelCliente">
+                    <i class="fa-solid fa-shield-halved text-success me-2" style="color: #079b62 !important;"></i>
+                    Garantias de @Model.Entidade?.Nome (Cliente)
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <h6 class="fw-bold text-dark mb-3">Garantias Prestadas</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light text-muted small">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Descrição</th>
+                                <th>Valor Aquisição</th>
+                                <th class="text-end">Valor Atual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.GarantiasCliente != null && ((List<GarantiaModel>)ViewBag.GarantiasCliente).Any())
+                            {
+                                @foreach (var g in (List<GarantiaModel>)ViewBag.GarantiasCliente)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-light text-dark border">@g.Tipo</span></td>
+                                        <td>@g.Descricao</td>
+                                        <td>MT @g.ValorAquisicao.ToString("N2")</td>
+                                        <td class="fw-semibold text-success text-end" style="color: #079b62 !important;">MT @g.ValorActual.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-3 text-muted small">Nenhuma garantia registada para o cliente neste CRR.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAIS FLUTUANTES DE GARANTIAS DOS INTERVENIENTES -->
+@if (ViewBag.Intervenientes != null)
+{
+    var garantiasMap = ViewBag.GarantiasPorInterveniente as Dictionary<int, List<GarantiaModel>>;
+
+    @foreach (var inter in (List<IntervenienteModel>)ViewBag.Intervenientes)
+    {
+        var garantiasDoInterveniente = garantiasMap != null && garantiasMap.ContainsKey(inter.IntervenienteID)
+            ? garantiasMap[inter.IntervenienteID]
+            : new List<GarantiaModel>();
+
+        <div class="modal fade" id="modalGarantia_@inter.IntervenienteID" tabindex="-1" aria-labelledby="modalLabel_@inter.IntervenienteID" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow">
+                    <div class="modal-header border-0 pt-4 px-4">
+                        <h5 class="modal-title fw-bold text-dark" id="modalLabel_@inter.IntervenienteID">
+                            <i class="fa-solid fa-shield-halved text-success me-2" style="color: #079b62 !important;"></i>
+                            Garantias de @(inter.IntervenienteEntidade != null ? inter.IntervenienteEntidade.Nome : "Interveniente #" + inter.IntervenienteID)
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <h6 class="fw-bold text-dark mb-3">Garantias Prestadas</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light text-muted small">
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Descrição</th>
+                                        <th>Valor Aquisição</th>
+                                        <th class="text-end">Valor Atual</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (garantiasDoInterveniente != null && garantiasDoInterveniente.Any())
+                                    {
+                                        @foreach (var g in garantiasDoInterveniente)
+                                        {
+                                            <tr>
+                                                <td><span class="badge bg-light text-dark border">@g.Tipo</span></td>
+                                                <td>@g.Descricao</td>
+                                                <td>MT @g.ValorAquisicao.ToString("N2")</td>
+                                                <td class="fw-semibold text-success text-end" style="color: #079b62 !important;">MT @g.ValorActual.ToString("N2")</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center py-3 text-muted small">Nenhuma garantia registada para este interveniente neste CRR.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const txtValor = document.getElementById("txtValorAprovado");
+            const txtTaxa = document.getElementById("txtTaxaAprovada");
+            const txtPrazo = document.getElementById("txtPrazoAprovado");
+            const txtPrestacao = document.getElementById("txtPrestacaoAprovada");
+            const tbody = document.getElementById("tbodyAmortizacao");
+            const badgeTotal = document.getElementById("badgeTotalGeral");
+
+            function formatarMT(valor) {
+                return "MT " + valor.toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function calcularSimulacao() {
+                const valor = parseFloat(txtValor.value) || 0;
+                const taxaPercentual = parseFloat(txtTaxa.value) || 0;
+                const prazo = parseInt(txtPrazo.value) || 0;
+
+                if (valor <= 0 || prazo <= 0) {
+                    txtPrestacao.value = "";
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Preencha o Valor Aprovado, Taxa e Prazo acima para gerar o plano de amortização.</td></tr>';
+                    badgeTotal.innerText = "MT 0.00";
+                    return;
+                }
+
+                const i = (taxaPercentual / 100);
+                let prestacao = 0;
+
+                if (i > 0) {
+                    prestacao = (valor * i * Math.pow(1 + i, prazo)) / (Math.pow(1 + i, prazo) - 1);
+                } else {
+                    prestacao = valor / prazo;
+                }
+
+                txtPrestacao.value = prestacao.toFixed(2);
+
+                // Gerar Tabela de Amortização
+                let saldoDevedor = valor;
+                let htmlLines = "";
+                let totalPagar = 0;
+
+                for (let n = 1; n <= prazo; n++) {
+                    let juros = saldoDevedor * i;
+                    let amortizacao = prestacao - juros;
+                    let saldoInicial = saldoDevedor;
+                    saldoDevedor -= amortizacao;
+
+                    if (n === prazo || saldoDevedor < 0) {
+                        saldoDevedor = 0;
+                    }
+
+                    totalPagar += prestacao;
+
+                    htmlLines += `
+                                <tr>
+                                    <td class="ps-4 text-center font-monospace small">#${n}</td>
+                                    <td>${formatarMT(saldoInicial)}</td>
+                                    <td class="fw-semibold text-dark">${formatarMT(prestacao)}</td>
+                                    <td class="text-danger">${formatarMT(juros)}</td>
+                                    <td class="text-primary">${formatarMT(amortizacao)}</td>
+                                    <td class="text-end pe-4 fw-bold ${saldoDevedor === 0 ? 'text-success' : ''}">${formatarMT(saldoDevedor)}</td>
+                                </tr>
+                            `;
+                }
+
+                tbody.innerHTML = htmlLines;
+                badgeTotal.innerText = "Total Projetado: " + formatarMT(totalPagar);
+            }
+
+            // Ativar recálculo ao digitar nos campos
+            txtValor.addEventListener("input", calcularSimulacao);
+            txtTaxa.addEventListener("input", calcularSimulacao);
+            txtPrazo.addEventListener("input", calcularSimulacao);
+        });
+    </script>
+}

@@ -2,125 +2,92 @@
 @{
     ViewData["Title"] = "Alterar senha";
 }
-<style>
-    .form-container {
-        width: 100%;
-        margin: 0;
-        padding: 0.5rem;
-        border: 1px solid #ccc;
-        border-radius: 10px; /* opcional: remove o arredondamento se quiser bordas quadradas */
-        box-sizing: border-box; /* garante que padding não estoure a largura */
-        background-color: rgba(248, 249, 250, 0.75);
-    }
-    /*
-            .custom-border {
-                border-bottom: 2px solid black;
-                padding: 0.25rem;
-            } */
 
-    .form-group-spacing {
-        margin-bottom: 2rem; /* Triplo do padrão (~1.33rem) */
-    }
+<div class="container-fluid px-0">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-8">
 
-    .form-container2 {
-        width: 100%;
-        margin: 0;
-        padding: 0.5rem;
-        border: 1px solid #ccc;
-        border-radius: 0; /* opcional: remove o arredondamento se quiser bordas quadradas */
-        box-sizing: border-box; /* garante que padding não estoure a largura */
-        background-color: rgba(248, 249, 250, 0.9);
-    }
+            <!-- Mensagens de Sucesso / Erro -->
+            @if (TempData["MensagemSucesso"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i>@TempData["MensagemSucesso"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
-    #table-usuarios {
-        table-layout: auto !important;
-        width: auto !important;
-    }
+            @if (TempData["MensagemErro"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["MensagemErro"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
-        #table-usuarios th,
-        #table-usuarios td {
-            white-space: nowrap; /* impede quebra de linha */
-            font-size: 12px; /* já reduz o tamanho da fonte */
-            padding: 4px 8px; /* opcional: deixa a célula mais compacta */
-        }
+            <!-- Cartão Principal -->
+            <div class="sg-card bg-white p-4 p-md-5 shadow-sm rounded-4 border-0">
 
-    .icon-mini {
-        font-size: 1.05rem; /* ~12px */
-    }
+                <!-- Cabeçalho -->
+                <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
+                    <h5 class="fw-bold text-dark m-0">
+                        <i class="fa-solid fa-key text-success me-2"></i>Alterar a Minha Senha
+                    </h5>
+                    <a class="btn btn-outline-secondary btn-sm rounded-3 px-3" asp-controller="Home" asp-action="Index" role="button">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Voltar
+                    </a>
+                </div>
 
-    .botao-transparente {
-        background-color: transparent;
-        border: 1px solid transparent;
-        color: black;
-    }
+                <form asp-controller="AlterarSenha" asp-action="Alterar" method="post" class="needs-validation" novalidate>
 
-        .botao-transparente:hover {
-            border-color: black;
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-</style>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary small">Senha actual</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 rounded-start-3 text-muted"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="SenhaActual" asp-for="SenhaActual" class="form-control form-control-lg border-start-0 rounded-end-3 fs-6" placeholder="Digite a senha actual" />
+                        </div>
+                        <span class="text-danger small">@Html.ValidationMessageFor(x => x.SenhaActual)</span>
+                    </div>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<div class="text-center">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary small">Nova senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 rounded-start-3 text-muted"><i class="fa-solid fa-key"></i></span>
+                            <input type="password" id="NovaSenha" asp-for="NovaSenha" class="form-control form-control-lg border-start-0 rounded-end-3 fs-6" placeholder="Digite a nova senha" />
+                        </div>
+                        <span class="text-danger small">@Html.ValidationMessageFor(x => x.NovaSenha)</span>
+                    </div>
 
-    @if (TempData["MensagemSucesso"] != null)
-    {
-        <div class="alert alert-success" role="alert">
-            <button type="button" class="btn btn-danger btn-sm close-alert" arial-label="Close">X</button>
-            @TempData["MensagemSucesso"]
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary small">Confirmar nova senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 rounded-start-3 text-muted"><i class="fa-solid fa-check-double"></i></span>
+                            <input type="password" id="ConfirmarNovaSenha" asp-for="ConfirmarNovaSenha" class="form-control form-control-lg border-start-0 rounded-end-3 fs-6" placeholder="Confirme a nova senha" />
+                        </div>
+                        <span class="text-danger small">@Html.ValidationMessageFor(x => x.ConfirmarNovaSenha)</span>
+                    </div>
+
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" class="form-check-input" id="MostrarSenha" />
+                        <label class="form-check-label text-secondary small user-select-none" for="MostrarSenha">Mostrar senha</label>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a class="btn btn-outline-secondary px-4 py-2 rounded-3 fw-semibold" asp-controller="Home" asp-action="Index" role="button">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success px-4 py-2 rounded-3 fw-semibold shadow-sm">
+                            <i class="fa-solid fa-floppy-disk me-1"></i> Salvar Alteração
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
         </div>
-    }
-
-    @if (TempData["MensagemErro"] != null)
-    {
-        <div class="alert alert-danger" role="alert">
-            <button type="button" class="btn btn-danger btn-sm close-alert" arial-label="Close">X</button>
-            @TempData["MensagemErro"]
-        </div>
-    }
-</div>
-
-<div class="form-container">
-
-    <div class="text-center mb-4">
-        <h1 class="fs-3 custom-border d-inline-block">Alterar a minha senha</h1>
     </div>
-    <form asp-controller="AlterarSenha" asp-action="Alterar" method="post" class="form-horizontal">
-        <div class="row form-group-spacing">
-            <label class="col-12 col-sm-2 col-form-label text-sm-end">Senha actual</label>
-            <div class="col-12 col-sm-8">
-                <input type="password" id="SenhaActual" asp-for="SenhaActual" class="form-control" placeholder="Digite a senha actual" />
-                @Html.ValidationMessageFor(x => x.SenhaActual)
-            </div>
-        </div>
-
-        <div class="row form-group-spacing">
-            <label class="col-12 col-sm-2 col-form-label text-sm-end">Nova senha</label>
-            <div class="col-12 col-sm-8">
-                <input type="password" id="NovaSenha" asp-for="NovaSenha" class="form-control" placeholder="Digite a nova senha" />
-                @Html.ValidationMessageFor(x => x.NovaSenha)
-            </div>
-        </div>
-
-        <div class="row form-group-spacing">
-            <label class="col-12 col-sm-2 col-form-label text-sm-end">Confirmar nova senha</label>
-            <div class="col-12 col-sm-8">
-                <input type="password" id="ConfirmarNovaSenha" asp-for="ConfirmarNovaSenha" class="form-control" placeholder="Confirme a nova senha" />
-                @Html.ValidationMessageFor(x => x.ConfirmarNovaSenha)
-            </div>
-        </div>
-
-        <div class="row form-group-spacing">
-            <div class="col-12 col-sm-10 offset-sm-2">
-                <input type="checkbox" id="MostrarSenha" /> Mostrar senha
-            </div>
-        </div>
-        <div class="d-flex justify-content-between mt-5">
-            <a class="btn btn-outline-dark" asp-controller="Home" asp-action="Index" role="button">Sair da página</a>
-            <button type="submit" class="btn btn-dark">Salvar</button>
-        </div>
-    </form>
 </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
     document.getElementById('MostrarSenha').addEventListener('change', function () {

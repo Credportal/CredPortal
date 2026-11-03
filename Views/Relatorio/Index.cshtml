@@ -1,0 +1,501 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Relatórios Consolidados";
+    Layout = "_Layout";
+    string tipoRelatorio = ViewBag.RelatorioTipo ?? "Pendentes";
+}
+
+<div class="container-fluid px-0">
+
+    <!-- TÍTULO -->
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1 fs-3">Relatórios de Crédito e Operações</h2>
+            <div class="text-secondary small">Gestão analítica de carteira, pagamentos, clientes e movimentos</div>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-secondary px-3 py-2 rounded-3 shadow-sm" onclick="window.print();">
+                <i class="fa-solid fa-print me-1"></i> Imprimir Relatório
+            </button>
+        </div>
+    </div>
+
+    <!-- PAINEL DE FILTROS GLOBAIS -->
+    <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0 mb-4">
+        <form asp-controller="Relatorio" asp-action="Index" method="get">
+            <div class="row g-3 align-items-end">
+
+                <input type="hidden" name="tipoRelatorio" id="inputTipoRelatorio" value="@tipoRelatorio" />
+
+                <!-- Data Inicial -->
+                <div class="col-12 col-md-3 col-xl-2">
+                    <label class="form-label text-secondary small fw-semibold">Data Inicial</label>
+                    <input type="date" name="dataInicial" class="form-control sg-filter-select w-100" />
+                </div>
+
+                <!-- Data Final -->
+                <div class="col-12 col-md-3 col-xl-2">
+                    <label class="form-label text-secondary small fw-semibold">Data Final</label>
+                    <input type="date" name="dataFinal" class="form-control sg-filter-select w-100" />
+                </div>
+
+                <!-- Gestor -->
+                <div class="col-12 col-md-3 col-xl-2">
+                    <label class="form-label text-secondary small fw-semibold">Gestor</label>
+                    <select name="gestorId" class="form-select sg-filter-select w-100">
+                        <option value="">-- Todos os Gestores --</option>
+                        @if (ViewBag.ListaGestores != null)
+                        {
+                            foreach (var g in ViewBag.ListaGestores)
+                            {
+                                <option value="@g.Id">@g.Nome</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Agência (Atualizado para carregar dinamicamente da base de dados) -->
+                <div class="col-12 col-md-3 col-xl-2">
+                    <label class="form-label text-secondary small fw-semibold">Agência</label>
+                    <select name="agencia" class="form-select sg-filter-select w-100">
+                        <option value="Todas">-- Todas as Agências --</option>
+                        @if (ViewBag.ListaAgencias != null)
+                        {
+                            foreach (var ag in ViewBag.ListaAgencias)
+                            {
+                                <option value="@ag.Id">@ag.Nome</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Cliente -->
+                <div class="col-12 col-md-4 col-xl-2">
+                    <label class="form-label text-secondary small fw-semibold">Cliente</label>
+                    <select name="entidadeId" class="form-select sg-filter-select w-100">
+                        <option value="">-- Todos os Clientes --</option>
+                        @if (ViewBag.ListaEntidades != null)
+                        {
+                            foreach (var e in ViewBag.ListaEntidades)
+                            {
+                                <option value="@e.Id">@e.Nome</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Botão Filtrar -->
+                <div class="col-12 col-md-2 col-xl-2">
+                    <button type="submit" class="btn btn-success w-100 text-white fw-semibold py-2" style="background-color: #079b62; border-color: #079b62;">
+                        <i class="fa-solid fa-filter me-1"></i> Filtrar
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <!-- ABAS PRINCIPAIS DE NAVEGAÇÃO -->
+    <ul class="nav nav-pills mb-4 gap-2 flex-wrap" id="mainTab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active rounded-3 fw-semibold px-3 py-2" id="carteira-tab" data-bs-toggle="pill" data-bs-target="#carteiraSecao" type="button" style="background-color: #079b62 !important; color: #fff;">
+                <i class="fa-solid fa-folder-open me-2"></i>Carteira de Crédito
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-3 fw-semibold px-3 py-2 text-dark bg-white border" id="pagamentos-tab" data-bs-toggle="pill" data-bs-target="#pagamentosSecao" type="button">
+                <i class="fa-solid fa-file-invoice-dollar me-2 text-success"></i>Pagamentos (Amortizações)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-3 fw-semibold px-3 py-2 text-dark bg-white border" id="clientes-tab" data-bs-toggle="pill" data-bs-target="#clientesSecao" type="button">
+                <i class="fa-solid fa-users me-2 text-primary"></i>Clientes (Entidades)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-3 fw-semibold px-3 py-2 text-dark bg-white border" id="movInternos-tab" data-bs-toggle="pill" data-bs-target="#movimentosInternosSecao" type="button">
+                <i class="fa-solid fa-right-left me-2 text-warning"></i>Movimentos Internos
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-3 fw-semibold px-3 py-2 text-dark bg-white border" id="movExternos-tab" data-bs-toggle="pill" data-bs-target="#movimentosExternosSecao" type="button">
+                <i class="fa-solid fa-exchange-alt me-2 text-info"></i>Movimentos Externos
+            </button>
+        </li>
+    </ul>
+
+    <!-- CONTEÚDO DAS ABAS PRINCIPAIS -->
+    <div class="tab-content" id="mainTabContent">
+
+        <!-- SEÇÃO 1: CARTEIRA DE CRÉDITO -->
+        <div class="tab-pane fade show active" id="carteiraSecao" role="tabpanel">
+
+            <!-- Sub-abas para os Estados da Carteira -->
+            <ul class="nav nav-tabs mb-3" id="carteiraSubTab" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabPendentes">Pendentes</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabAprovados">Aprovados</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabRejeitados">Rejeitados</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabVigentes">Vigentes</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabLiquidados">Liquidados</button></li>
+                <li class="nav-item"><button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#tabMora">Mora</button></li>
+            </ul>
+
+            <div class="tab-content sg-card bg-white p-4 shadow-sm rounded-4 border-0">
+
+                <!-- TABELA: PENDENTES -->
+                <div class="tab-pane fade show active" id="tabPendentes">
+                    <h5 class="fw-bold text-dark mb-3">Pedidos Pendentes</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light text-secondary text-uppercase small">
+                                <tr>
+                                    <th>Agência</th>
+                                    <th>Gestor</th>
+                                    <th>Cliente</th>
+                                    <th>CRR</th>
+                                    <th>Data Cadastro</th>
+                                    <th class="text-end">Valor</th>
+                                    <th class="text-center">Prazo</th>
+                                    <th class="text-end">Taxa</th>
+                                    <th class="text-end">Prestação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.Pendentes != null)
+                                {
+                                    foreach (var p in (List<PedidoModel>)ViewBag.Pendentes)
+                                    {
+                                        <tr>
+                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
+                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                            <td><span class="font-monospace text-success">@p.CRR</span></td>
+                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end fw-bold">MT @p.Valor.ToString("N2")</td>
+                                            <td class="text-center">@p.Prazo meses</td>
+                                            <td class="text-end">@p.Taxa.ToString("N2")%</td>
+                                            <td class="text-end fw-bold text-success">MT @p.Prestacao.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TABELA: APROVADOS -->
+                <div class="tab-pane fade" id="tabAprovados">
+                    <h5 class="fw-bold text-dark mb-3">Pedidos Aprovados</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light text-secondary text-uppercase small">
+                                <tr>
+                                    <th>Agência</th>
+                                    <th>Gestor</th>
+                                    <th>Cliente</th>
+                                    <th>CRR</th>
+                                    <th>Data Cadastro</th>
+                                    <th class="text-end">Valor Decisão</th>
+                                    <th class="text-center">Prazo Decisão</th>
+                                    <th class="text-end">Taxa Decisão</th>
+                                    <th class="text-end">Prestação Decisão</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.Aprovados != null)
+                                {
+                                    foreach (var p in (List<PedidoModel>)ViewBag.Aprovados)
+                                    {
+                                        <tr>
+                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
+                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                            <td><span class="font-monospace text-success">@p.CRR</span></td>
+                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                            <td class="text-center">@p.PrazoDecisao meses</td>
+                                            <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
+                                            <td class="text-end fw-bold text-success">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TABELA: REJEITADOS -->
+                <div class="tab-pane fade" id="tabRejeitados">
+                    <h5 class="fw-bold text-dark mb-3">Pedidos Rejeitados</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light text-secondary text-uppercase small">
+                                <tr>
+                                    <th>Agência</th>
+                                    <th>Gestor</th>
+                                    <th>Cliente</th>
+                                    <th>CRR</th>
+                                    <th>Data Cadastro</th>
+                                    <th class="text-end">Valor</th>
+                                    <th class="text-center">Prazo</th>
+                                    <th class="text-end">Taxa de Juro</th>
+                                    <th class="text-end">Prestação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.Rejeitados != null)
+                                {
+                                    foreach (var p in (List<PedidoModel>)ViewBag.Rejeitados)
+                                    {
+                                        <tr>
+                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
+                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                            <td><span class="font-monospace text-danger">@p.CRR</span></td>
+                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end fw-bold">MT @p.Valor.ToString("N2")</td>
+                                            <td class="text-center">@p.Prazo meses</td>
+                                            <td class="text-end">@p.Taxa.ToString("N2")%</td>
+                                            <td class="text-end fw-bold">MT @p.Prestacao.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TABELA: VIGENTES -->
+                <div class="tab-pane fade" id="tabVigentes">
+                    <h5 class="fw-bold text-dark mb-3">Créditos Vigentes</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light text-secondary text-uppercase small">
+                                <tr>
+                                    <th>Agência</th>
+                                    <th>Gestor</th>
+                                    <th>Cliente</th>
+                                    <th>CRR</th>
+                                    <th>Data Desembolso</th>
+                                    <th class="text-end">Valor Desembolso</th>
+                                    <th class="text-center">Prazo</th>
+                                    <th class="text-end">Taxa</th>
+                                    <th class="text-end">Prestação</th>
+                                    <th class="text-end">Capital Vigente</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.Vigentes != null)
+                                {
+                                    foreach (var p in (List<PedidoModel>)ViewBag.Vigentes)
+                                    {
+                                        <tr>
+                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
+                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                            <td><span class="font-monospace text-success">@p.CRR</span></td>
+                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                            <td class="text-center">@p.PrazoDecisao meses</td>
+                                            <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
+                                            <td class="text-end">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
+                                            <td class="text-end fw-bold text-success">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TABELA: LIQUIDADOS -->
+                <div class="tab-pane fade" id="tabLiquidados">
+                    <h5 class="fw-bold text-dark mb-3">Créditos Liquidados</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light text-secondary text-uppercase small">
+                                <tr>
+                                    <th>Agência</th>
+                                    <th>Gestor</th>
+                                    <th>Cliente</th>
+                                    <th>CRR</th>
+                                    <th>Data Desembolso</th>
+                                    <th class="text-end">Valor Desembolso</th>
+                                    <th class="text-center">Prazo</th>
+                                    <th class="text-end">Taxa</th>
+                                    <th class="text-end">Prestação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.Liquidados != null)
+                                {
+                                    foreach (var p in (List<PedidoModel>)ViewBag.Liquidados)
+                                    {
+                                        <tr>
+                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
+                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                            <td><span class="font-monospace text-muted">@p.CRR</span></td>
+                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                            <td class="text-center">@p.PrazoDecisao meses</td>
+                                            <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
+                                            <td class="text-end">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TABELA: MORA -->
+                <div class="tab-pane fade" id="tabMora">
+                    <h5 class="fw-bold text-danger mb-3">Créditos em Mora (Atraso)</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light text-secondary text-uppercase small">
+                                <tr>
+                                    <th>Agência</th>
+                                    <th>Gestor</th>
+                                    <th>Cliente</th>
+                                    <th>CRR</th>
+                                    <th>Data Desembolso</th>
+                                    <th class="text-end">Valor Desembolso</th>
+                                    <th class="text-center">Prazo</th>
+                                    <th class="text-end">Taxa</th>
+                                    <th class="text-end">Prestação</th>
+                                    <th class="text-end">Capital Vigente</th>
+                                    <th class="text-center">Dias Atraso</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.Mora != null)
+                                {
+                                    foreach (var p in (List<PedidoModel>)ViewBag.Mora)
+                                    {
+                                        <tr>
+                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
+                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                            <td><span class="font-monospace text-danger">@p.CRR</span></td>
+                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                            <td class="text-center">@p.PrazoDecisao meses</td>
+                                            <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
+                                            <td class="text-end">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
+                                            <td class="text-end fw-bold text-danger">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                            <td class="text-center"><span class="badge bg-danger-subtle text-danger px-2 py-1">+5 dias</span></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SEÇÃO 2: PAGAMENTOS (AMORTIZAÇÕES) -->
+        <div class="tab-pane fade" id="pagamentosSecao" role="tabpanel">
+            <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0">
+                <h5 class="fw-bold text-dark mb-3">Relatório de Pagamentos e Amortizações</h5>
+                <p class="text-muted small">Previstos, Feitos e Por Fazer com controlo de dias de atraso e multas.</p>
+            </div>
+        </div>
+
+        <!-- SEÇÃO 3: CLIENTES (ENTIDADES) -->
+        <div class="tab-pane fade" id="clientesSecao" role="tabpanel">
+            <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0">
+                <h5 class="fw-bold text-dark mb-3">Registo de Clientes (Entidades)</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light text-secondary text-uppercase small">
+                            <tr>
+                                <th>Nome</th>
+                                <th>Tipo</th>
+                                <th>NUIT</th>
+                                <th>Documento</th>
+                                <th>Nr Documento</th>
+                                <th>Validade</th>
+                                <th>Data Nasc.</th>
+                                <th>Contacto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.Clientes != null)
+                            {
+                                foreach (var c in (List<EntidadeModel>)ViewBag.Clientes)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@c.Nome</td>
+                                        <td>@c.TipoCliente</td>
+                                        <td>@c.Nuit</td>
+                                        <td>@c.Documento</td>
+                                        <td>@c.NrDocumento</td>
+                                        <td>@(c.Validade?.ToString("dd/MM/yyyy") ?? "N/D")</td>
+                                        <td>@(c.Aniversario?.ToString("dd/MM/yyyy") ?? "N/D")</td>
+                                        <td>@c.Telefone</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO 4: MOVIMENTOS INTERNOS -->
+        <div class="tab-pane fade" id="movimentosInternosSecao" role="tabpanel">
+            <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0">
+                <h5 class="fw-bold text-dark mb-3">Relatório de Movimentos Internos</h5>
+                <p class="text-muted small">Filtragem por conta e intervalo de datas.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light text-secondary text-uppercase small">
+                            <tr>
+                                <th>Descrição</th>
+                                <th class="text-end">Crédito</th>
+                                <th class="text-end">Débito</th>
+                                <th>Tipo</th>
+                                <th>Conta Origem</th>
+                                <th>Conta Destino</th>
+                                <th class="text-center">Data Cadastro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Preencher com a lista correspondente de movimentos internos -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO 5: MOVIMENTOS EXTERNOS -->
+        <div class="tab-pane fade" id="movimentosExternosSecao" role="tabpanel">
+            <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0">
+                <h5 class="fw-bold text-dark mb-3">Relatório de Movimentos Externos</h5>
+                <p class="text-muted small">Filtragem por cliente e intervalo de datas.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light text-secondary text-uppercase small">
+                            <tr>
+                                <th>Descrição</th>
+                                <th class="text-end">Crédito</th>
+                                <th class="text-end">Débito</th>
+                                <th>Tipo</th>
+                                <th>Conta</th>
+                                <th class="text-center">Data Cadastro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Preencher com a lista correspondente de movimentos externos -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

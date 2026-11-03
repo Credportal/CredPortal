@@ -8,22 +8,14 @@ namespace Analise.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Digite o nome do tabernáculo")]
+        [Required(ErrorMessage = "Digite o nome da agência")]
         public string Nome { get; set; }
 
-        [Required(ErrorMessage = "Digite o nome do representante")]
-        public string Representante { get; set; }
+        [Required(ErrorMessage = "Digite o contacto")]
+        public string Contacto { get; set; }
 
         [Required(ErrorMessage = "Digite o endereço")]
         public string Endereco { get; set; }
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Credito { get; set; } = 0;
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Debito { get; set; } = 0;
-        [NotMapped]
-        public decimal Saldo => Credito - Debito;
         public DateTimeOffset DataCadastro { get; set; }
     }
 }

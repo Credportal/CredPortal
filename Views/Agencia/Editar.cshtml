@@ -352,16 +352,16 @@
         <div class="row form-group-spacing">
             <label class="col-12 col-sm-4 col-form-label text-sm-end">Nome</label>
             <div class="col-12 col-sm-6">
-                <input type="text" asp-for="Nome" class="textbox" placeholder="Digite o nome do Tabenáculo" />
+                <input type="text" asp-for="Nome" class="textbox" placeholder="Digite o nome da agência" />
                 @Html.ValidationMessageFor(x => x.Nome)
             </div>
         </div>
 
         <div class="row form-group-spacing">
-            <label class="col-12 col-sm-4 col-form-label text-sm-end">Representante</label>
+            <label class="col-12 col-sm-4 col-form-label text-sm-end">Contacto</label>
             <div class="col-12 col-sm-6">
-                <input type="text" asp-for="Representante" class="textbox" placeholder="Digite o nome do representante" />
-                @Html.ValidationMessageFor(x => x.Representante)
+                <input type="text" asp-for="Contacto" class="textbox" placeholder="Digite o contacto" />
+                @Html.ValidationMessageFor(x => x.Contacto)
             </div>
         </div>
 
@@ -370,30 +370,6 @@
             <div class="col-12 col-sm-6">
                 <input type="text" asp-for="Endereco" class="textbox" placeholder="Digite o endereço" />
                 @Html.ValidationMessageFor(x => x.Endereco)
-            </div>
-        </div>
-
-        <div class="row form-group-spacing">
-            <label class="col-12 col-sm-4 col-form-label text-sm-end">Crédito</label>
-            <div class="col-12 col-sm-6">
-                <input type="number" asp-for="Credito" class="textbox" placeholder="Digite valor" />
-                @Html.ValidationMessageFor(x => x.Credito)
-            </div>
-        </div>
-
-        <div class="row form-group-spacing">
-            <label class="col-12 col-sm-4 col-form-label text-sm-end">Débito</label>
-            <div class="col-12 col-sm-6">
-                <input type="number" asp-for="Debito" class="textbox" placeholder="Digite valor" />
-                @Html.ValidationMessageFor(x => x.Debito)
-            </div>
-        </div>
-
-        <div class="row form-group-spacing">
-            <label class="col-12 col-sm-4 col-form-label text-sm-end">Saldo</label>
-            <div class="col-12 col-sm-6">
-                <input type="number" asp-for="Saldo" class="textbox" placeholder="0,00" readonly />
-                @Html.ValidationMessageFor(x => x.Saldo)
             </div>
         </div>
 

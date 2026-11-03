@@ -1,0 +1,163 @@
+﻿@model Analise.Models.ContaViewModel
+@{
+    ViewData["Title"] = "Listagem de Contas Bancárias";
+
+    // Obtém os dados do utilizador logado de forma segura
+    var usuarioLogado = SessaoUsuario.BuscarSessaoDoUsuario();
+    string nomeUtilizador = usuarioLogado?.Login ?? "Administrador";
+    string nomeAgencia = "Agência Maputo";
+}
+
+@inject Analise.Helper.ISessao SessaoUsuario
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="text-center">
+    @if (TempData["MensagemSucesso"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            <button type="button" class="btn btn-danger btn-sm close-alert" aria-label="Close">X</button>
+            @TempData["MensagemSucesso"]
+        </div>
+    }
+
+    @if (TempData["MensagemErro"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            <button type="button" class="btn btn-danger btn-sm close-alert" aria-label="Close">X</button>
+            @TempData["MensagemErro"]
+        </div>
+    }
+</div>
+
+<div class="container-fluid px-4 py-3">
+    <!-- Cabeçalho da Página com Botões de Ação -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Contas Bancárias</h2>
+            <p class="text-muted small mb-0">Gestão das contas bancárias da empresa.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- Botão de Exportar / Imprimir PDF da Lista -->
+            <button onclick="window.print()" class="btn btn-outline-success rounded-2 px-3 d-flex align-items-center gap-2" style="color: #079b62; border-color: #079b62;">
+                <i class="fa-solid fa-file-pdf"></i> Exportar
+            </button>
+            <!-- Botão para aceder à tela de Operações Bancárias -->
+            <a asp-action="Operacoes" class="btn btn-outline-primary rounded-2 px-3 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-right-left"></i> Operações Bancárias
+            </a>
+            <!-- Botão de Registar Nova Conta -->
+            <a asp-action="Criar" class="btn btn-success rounded-2 px-3 d-flex align-items-center gap-2 text-white" style="background-color: #079b62; border-color: #079b62;">
+                <i class="fa-solid fa-plus"></i> Registar Nova Conta
+            </a>
+        </div>
+    </div>
+
+    <!-- Cartão com a Tabela e Cabeçalho Oficial para Impressão -->
+    <div id="fichaContas" class="card shadow-sm border-0 rounded-4 bg-white p-4">
+        <div class="card-body p-2">
+
+            <!-- CABEÇALHO OFICIAL DO DOCUMENTO (Visível apenas na impressão/PDF) -->
+            <div class="d-none d-print-flex justify-content-between align-items-center pb-4 mb-4 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 text-white" style="width: 50px; height: 50px; background-color: #079b62; font-size: 24px;">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0" style="color: #079b62; letter-spacing: -0.5px;">Cred</h4>
+                        <span class="text-muted" style="font-size: 12px;">Sua gestão simplificada.</span>
+                    </div>
+                </div>
+                <div class="text-end small text-secondary">
+                    <div class="fw-semibold text-dark"><i class="fa-solid fa-location-dot me-1 text-success"></i> @nomeAgencia</div>
+                    <div>Emitido por: <span class="fw-bold text-dark">@nomeUtilizador</span></div>
+                    <div>Data: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+            </div>
+
+            <!-- Título do Relatório na Impressão -->
+            <div class="mb-3 d-none d-print-block">
+                <h4 class="fw-bold text-dark">Contas Bancárias</h4>
+            </div>
+
+            <!-- Tabela de Contas -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th>Banco</th>
+                            <th>Número da Conta</th>
+                            <th>NIB</th>
+                            <th>Titular</th>
+                            <!-- Visível no sistema, oculto no PDF -->
+                            <th class="d-print-none text-end">Saldo Atual</th>
+                            <th class="text-end no-print">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.ListaContas != null && Model.ListaContas.Any())
+                        {
+                            foreach (var conta in Model.ListaContas)
+                            {
+                                <tr>
+                                    <td class="fw-semibold text-dark">@conta.Banco</td>
+                                    <td>@conta.Conta</td>
+                                    <td>@conta.NIB</td>
+                                    <td>@conta.Titular</td>
+
+                                    <!-- Coluna do Saldo Real: Visível no ecrã, escondida no PDF -->
+                                    <td class="d-print-none fw-bold text-success text-end">
+                                        MT @conta.Saldo.ToString("N2")
+                                    </td>
+
+                                    <td class="text-end no-print">
+                                        <a asp-action="Editar" asp-route-id="@conta.Id" class="btn btn-outline-primary btn-sm rounded-2 px-2 py-1" title="Editar Conta">
+                                            <i class="fa-solid fa-pen-to-square"></i> Editar
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    Nenhuma conta bancária registada até ao momento.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- CSS Otimizado para Impressão e PDF -->
+<style>
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #fichaContas, #fichaContas * {
+            visibility: visible;
+        }
+
+        #fichaContas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none !important;
+            box-shadow: none !important;
+            background-color: #fff !important;
+        }
+
+        .no-print, .d-print-none, .sg-sidebar, .sg-topbar, .btn {
+            display: none !important;
+        }
+    }
+</style>

@@ -1,186 +1,282 @@
-﻿using Analise.Data;
-using Analise.Filters;
-using Analise.Models;
+﻿using Analise.Models;
 using Analise.Repositorio;
+using Analise.Helper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Win32;
+using System;
+using System.Threading.Tasks;
 
 namespace Analise.Controllers
 {
     public class ContaController : Controller
     {
-        private readonly IContaRepositorio _cargoRepositorio;
-        private readonly BancoContext _context;
-        public ContaController(BancoContext bancoContext, IContaRepositorio cargoRepositorio)
+        private readonly IContaRepositorio _contaRepositorio;
+        private readonly IMovimentoInternoRepositorio _movimentoRepositorio;
+        private readonly ISessao _sessao;
+
+        public ContaController(IContaRepositorio contaRepositorio, IMovimentoInternoRepositorio movimentoRepositorio, ISessao sessao)
         {
-            _cargoRepositorio = cargoRepositorio;
-            this._context = bancoContext;
+            _contaRepositorio = contaRepositorio;
+            _movimentoRepositorio = movimentoRepositorio;
+            _sessao = sessao;
         }
 
-        // GET: Criar
+        // GET: /Conta/Ver
+        public async Task<IActionResult> Ver()
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            var viewModel = new ContaViewModel
+            {
+                ListaContas = await _contaRepositorio.BuscarTodasAsync()
+            };
+
+            return View(viewModel);
+        }
+
+        // GET: /Conta/Criar
         public IActionResult Criar()
         {
-            var viewModel = new ContaViewModel
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            return View();
+        }
+
+        // POST: /Conta/Criar
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Criar(string banco, string conta, string nib, string titular)
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            if (string.IsNullOrWhiteSpace(banco) || string.IsNullOrWhiteSpace(conta) ||
+                string.IsNullOrWhiteSpace(nib) || string.IsNullOrWhiteSpace(titular))
             {
-                ContaNome = new ContaModel(),
-                ListaContas = _cargoRepositorio.BuscarTodos()
+                TempData["MensagemErro"] = "Por favor, preencha todos os campos obrigatórios da conta bancária.";
+                var modelErro = new ContaModel { Banco = banco, Conta = conta, NIB = nib, Titular = titular };
+                return View(modelErro);
+            }
+
+            var novaConta = new ContaModel
+            {
+                Banco = banco,
+                Conta = conta,
+                NIB = nib,
+                Titular = titular,
+                UsuarioId = usuarioLogado.Id,
+                DataCadastro = DateTimeOffset.Now
+            };
+
+            await _contaRepositorio.AdicionarAsync(novaConta);
+            TempData["MensagemSucesso"] = "Conta bancária registada com sucesso!";
+            return RedirectToAction("Ver");
+        }
+
+        // GET: /Conta/Editar/5
+        public async Task<IActionResult> Editar(int id)
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            var conta = await _contaRepositorio.BuscarPorIdAsync(id);
+            if (conta == null)
+            {
+                TempData["MensagemErro"] = "Conta bancária não encontrada.";
+                return RedirectToAction("Ver");
+            }
+
+            return View(conta);
+        }
+
+        // POST: /Conta/Editar
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Editar(int id, string banco, string conta, string nib, string titular)
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            if (string.IsNullOrWhiteSpace(banco) || string.IsNullOrWhiteSpace(conta) ||
+                string.IsNullOrWhiteSpace(nib) || string.IsNullOrWhiteSpace(titular))
+            {
+                TempData["MensagemErro"] = "Por favor, preencha todos os campos obrigatórios.";
+                var modelErro = new ContaModel { Id = id, Banco = banco, Conta = conta, NIB = nib, Titular = titular };
+                return View(modelErro);
+            }
+
+            var contaDB = await _contaRepositorio.BuscarPorIdAsync(id);
+            if (contaDB == null)
+            {
+                TempData["MensagemErro"] = "Conta bancária não encontrada para atualização.";
+                return RedirectToAction("Ver");
+            }
+
+            contaDB.Banco = banco;
+            contaDB.Conta = conta;
+            contaDB.NIB = nib;
+            contaDB.Titular = titular;
+
+            await _contaRepositorio.AtualizarAsync(contaDB);
+            TempData["MensagemSucesso"] = "Conta bancária atualizada com sucesso!";
+            return RedirectToAction("Ver");
+        }
+
+        // ==========================================
+        // MÉTODOS DE OPERAÇÕES BANCÁRIAS (DEPÓSITOS E TRANSFERÊNCIAS)
+        // ==========================================
+
+        // GET: /Conta/Operacoes
+        public async Task<IActionResult> Operacoes()
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            var viewModel = new OperacoesViewModel
+            {
+                ListaContas = await _contaRepositorio.BuscarTodasAsync(),
+                ListaMovimentos = await _movimentoRepositorio.BuscarTodosAsync()
             };
 
             return View(viewModel);
         }
 
-        // GET: Editar
-        public IActionResult Editar(int id)
+        // POST: /Conta/EfetuarDeposito
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EfetuarDeposito(OperacoesViewModel model)
         {
-            var cargoSelecionado = _cargoRepositorio.ListarPorId(id);
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
 
-            if (cargoSelecionado == null)
+            if (model.NovoDeposito == null || string.IsNullOrWhiteSpace(model.NovoDeposito.Descricao) ||
+                model.NovoDeposito.ContaDestinoId <= 0 || model.NovoDeposito.Credito <= 0)
             {
-                TempData["MensagemErro"] = "Não encontrado.";
-                return RedirectToAction("Criar");
+                TempData["MensagemErro"] = "Por favor, preencha todos os campos do depósito corretamente.";
+                model.ListaContas = await _contaRepositorio.BuscarTodasAsync();
+                model.ListaMovimentos = await _movimentoRepositorio.BuscarTodosAsync();
+                return View("Operacoes", model);
             }
-            
-            var viewModel = new ContaViewModel
+
+            var contaDestino = await _contaRepositorio.BuscarPorIdAsync(model.NovoDeposito.ContaDestinoId.Value);
+            if (contaDestino == null)
             {
-                ContaNome = new ContaModel(),
-                ListaContas = _cargoRepositorio.BuscarTodos()
+                TempData["MensagemErro"] = "Conta de destino não encontrada.";
+                return RedirectToAction("Operacoes");
+            }
+
+            var movimento = new MovimentoInternoModel
+            {
+                Descricao = model.NovoDeposito.Descricao,
+                Credito = model.NovoDeposito.Credito,
+                Debito = 0,
+                ContaOrigemId = model.NovoDeposito.ContaDestinoId,
+                ContaDestinoId = model.NovoDeposito.ContaDestinoId,
+                TipoOperacao = "Depósito",
+                UsuarioId = usuarioLogado.Id,
+                AgenciaId = usuarioLogado.AgenciaId,
+                DataCadastro = DateTimeOffset.Now
             };
+            await _movimentoRepositorio.AdicionarAsync(movimento);
 
-            return View(viewModel);
+            contaDestino.Credito += model.NovoDeposito.Credito;
+            //contaDestino.Saldo = contaDestino.Credito - contaDestino.Debito;
+            await _contaRepositorio.AtualizarAsync(contaDestino);
+
+            TempData["MensagemSucesso"] = "Depósito efetuado com sucesso!";
+            return RedirectToAction("Operacoes");
         }
+
+        // POST: /Conta/EfetuarTransferencia
         [HttpPost]
-        public IActionResult Criar(ContaViewModel viewModel)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EfetuarTransferencia(OperacoesViewModel model)
         {
-            try
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            if (model.NovaTransferencia == null || string.IsNullOrWhiteSpace(model.NovaTransferencia.Descricao) ||
+                model.NovaTransferencia.ContaOrigemId <= 0 || model.NovaTransferencia.ContaDestinoId <= 0 ||
+                model.NovaTransferencia.Credito <= 0)
             {
-                Console.WriteLine("Iniciando criação...");
-                Console.WriteLine("Valor recebido: " + viewModel?.ContaNome?.Nome);
-
-                if (ModelState.IsValid)
-                {
-                    Console.WriteLine("ModelState inválido. Erros:");
-                    foreach (var campo in ModelState)
-                    {
-                        foreach (var erro in campo.Value.Errors)
-                        {
-                            Console.WriteLine($"Erro no campo {campo.Key}: {erro.ErrorMessage}");
-                        }
-                    }
-
-                    viewModel.ListaContas = _cargoRepositorio.BuscarTodos();
-                    TempData["MensagemErro"] = "Dados inválidos! Verifique os campos e tente novamente.";
-                    return View(viewModel);
-                }
-
-                _cargoRepositorio.Adicionar(viewModel.ContaNome);
-                TempData["MensagemSucesso"] = "Registado com sucesso!";
-                return RedirectToAction("Criar");
+                TempData["MensagemErro"] = "Por favor, preencha todos os campos da transferência corretamente.";
+                model.ListaContas = await _contaRepositorio.BuscarTodasAsync();
+                model.ListaMovimentos = await _movimentoRepositorio.BuscarTodosAsync();
+                return View("Operacoes", model);
             }
-            catch (Exception erro)
-            {
-                Console.WriteLine("Erro ao criar: " + erro.Message);
-                viewModel.ListaContas = _cargoRepositorio.BuscarTodos();
-                TempData["MensagemErro"] = $"Erro ao registrar: {erro.Message}";
-                return View(viewModel);
-            }
-        }
 
-        // POST: Editar
-        [HttpPost]
-        public IActionResult Editar(ContaViewModel viewModel)
-        {
-            try
+            if (model.NovaTransferencia.ContaOrigemId == model.NovaTransferencia.ContaDestinoId)
             {
-                if (!ModelState.IsValid)
-                {
-                    _cargoRepositorio.Actualizar(viewModel.ContaNome);
-                    TempData["MensagemSucesso"] = "Actualizado com sucesso!";
-                    return RedirectToAction("Criar");
-                }
-                viewModel.ListaContas = _cargoRepositorio.BuscarTodos();
-                return View(viewModel);
+                TempData["MensagemErro"] = "A conta de origem e a conta de destino não podem ser a mesma.";
+                model.ListaContas = await _contaRepositorio.BuscarTodasAsync();
+                model.ListaMovimentos = await _movimentoRepositorio.BuscarTodosAsync();
+                return View("Operacoes", model);
             }
-            catch (Exception erro)
-            {
-                TempData["MensagemErro"] = $"Ops, erro ao actualizar. Detalhes: {erro.Message}";
-                return RedirectToAction("Editar");
-            }
-        }
 
-        public IActionResult Transferir()
-        {
-            var model = new TransferenciaViewModel
+            // Buscar as contas envolvidas
+            var contaOrigem = await _contaRepositorio.BuscarPorIdAsync(model.NovaTransferencia.ContaOrigemId.Value);
+            var contaDestino = await _contaRepositorio.BuscarPorIdAsync(model.NovaTransferencia.ContaDestinoId.Value);
+
+            if (contaOrigem == null || contaDestino == null)
             {
-                ListaContas = _context.Contas
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.Id.ToString(),
-                        Text = c.Nome
-                    }).ToList()
+                TempData["MensagemErro"] = "Conta de origem ou destino não encontrada.";
+                return RedirectToAction("Operacoes");
+            }
+
+            decimal valorTransferencia = model.NovaTransferencia.Credito;
+
+            // Validação de segurança de saldo no backend
+            if (contaOrigem.Saldo < valorTransferencia)
+            {
+                TempData["MensagemErro"] = "A conta de origem não possui saldo suficiente para esta transferência.";
+                model.ListaContas = await _contaRepositorio.BuscarTodasAsync();
+                model.ListaMovimentos = await _movimentoRepositorio.BuscarTodosAsync();
+                return View("Operacoes", model);
+            }
+
+            // 1º Movimento: Registo do Débito na Conta Origem
+            var movimentoDebito = new MovimentoInternoModel
+            {
+                Descricao = model.NovaTransferencia.Descricao,
+                Debito = valorTransferencia,
+                Credito = 0,
+                ContaOrigemId = contaOrigem.Id,
+                ContaDestinoId = contaDestino.Id,
+                TipoOperacao = "Transferência (Débito)",
+                UsuarioId = usuarioLogado.Id,
+                AgenciaId = usuarioLogado.AgenciaId,
+                DataCadastro = DateTimeOffset.Now
             };
+            await _movimentoRepositorio.AdicionarAsync(movimentoDebito);
 
-            return View(model);
-        }
-
-        [HttpPost]
-        public IActionResult Transferir(TransferenciaViewModel model)
-        {
-            if (model.ContaOrigemId == model.ContaDestinoId)
+            // 2º Movimento: Registo do Crédito na Conta Destino
+            var movimentoCredito = new MovimentoInternoModel
             {
-                ModelState.AddModelError("", "Conta origem e destino não podem ser iguais.");
-            }
+                Descricao = model.NovaTransferencia.Descricao,
+                Credito = valorTransferencia,
+                Debito = 0,
+                ContaOrigemId = contaOrigem.Id,
+                ContaDestinoId = contaDestino.Id,
+                TipoOperacao = "Transferência (Crédito)",
+                UsuarioId = usuarioLogado.Id,
+                AgenciaId = usuarioLogado.AgenciaId,
+                DataCadastro = DateTimeOffset.Now
+            };
+            await _movimentoRepositorio.AdicionarAsync(movimentoCredito);
 
-            if (model.Valor <= 0)
-            {
-                ModelState.AddModelError("", "Valor inválido.");
-            }
+            // Atualizar Conta Origem (Aumenta o Débito, Recalcula o Saldo)
+            contaOrigem.Debito += valorTransferencia;
+            //contaOrigem.Saldo = contaOrigem.Credito - contaOrigem.Debito;
+            await _contaRepositorio.AtualizarAsync(contaOrigem);
 
-            if (!ModelState.IsValid)
-            {
-                model.ListaContas = _context.Contas
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.Id.ToString(),
-                        Text = c.Nome
-                    }).ToList();
+            // Atualizar Conta Destino (Aumenta o Crédito, Recalcula o Saldo)
+            contaDestino.Credito += valorTransferencia;
+            //contaDestino.Saldo = contaDestino.Credito - contaDestino.Debito;
+            await _contaRepositorio.AtualizarAsync(contaDestino);
 
-                return View(model);
-            }
-
-            using var transaction = _context.Database.BeginTransaction();
-
-            try
-            {
-                var origem = _context.Contas.First(c => c.Id == model.ContaOrigemId);
-                var destino = _context.Contas.First(c => c.Id == model.ContaDestinoId);
-
-                if (origem.Saldo < model.Valor)
-                {
-                    ModelState.AddModelError("", "Saldo insuficiente.");
-                    return View(model);
-                }
-
-                // Debita origem
-                origem.Debito += model.Valor;
-
-                // Credita destino
-                destino.Credito += model.Valor;
-
-                _context.SaveChanges();
-
-                transaction.Commit();
-
-                TempData["MensagemSucesso"] = "Transferência realizada com sucesso!";
-                return RedirectToAction("Criar");
-            }
-            catch
-            {
-                transaction.Rollback();
-                TempData["MensagemErro"] = "Erro ao processar transferência.";
-                return RedirectToAction("Transferir");
-            }
+            TempData["MensagemSucesso"] = "Transferência efetuada com sucesso!";
+            return RedirectToAction("Operacoes");
         }
     }
 }

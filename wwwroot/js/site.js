@@ -31,7 +31,7 @@ function getDataTable(id)
         "paging": true,
         "searching": true,
         "oLanguage": {
-            "sEmptyTable": "Nenhum registo encontrado na tabela",
+            "sEmptyTable": "Nenhum dado encontrado!",
             "sInfo": "_START_ até _END_ de _TOTAL_",
             "sInfoEmpty": "0 até 0 de 0",
             "sInfoFiltered": "(_MAX_)",
@@ -40,7 +40,7 @@ function getDataTable(id)
             "sLengthMenu": "_MENU_",
             "sLoadingRecords": "Carregando...",
             "sProcessing": "Processando...",
-            "sZeroRecords": "Nenhum registo encontrado",
+            "sZeroRecords": "Nenhum dado encontrado!",
             "sSearch": "Pesquisar",
             "oAria": {
                 "sSortAscending": ": Ordenar colunas de forma ascendente",

@@ -9,36 +9,21 @@ namespace Analise.Data
         {
 
         }
-        public DbSet<UsuarioModel> Usuarios { get; set; }
+        
         public DbSet<AgenciaModel> Agencias { get; set; }
-        public DbSet<CargoModel> cargos { get; set; }
         public DbSet<EstadoModel> estados { get; set; }
-        public DbSet<TicketModel> Tickets { get; set; }
-        public DbSet<CadastroModel> Cadastros { get; set; }
-        public DbSet<ClienteModel> Clientes { get; set; }
-        public DbSet<CanalModel> Canais { get; set; }
-        public DbSet<ExtratoModel> Extratos { get; set; }
-        public DbSet<RecebimentoModel> Recebimentos { get; set; }
-        public DbSet<FechoModel> Fechos { get; set; }
-        public DbSet<TipoDespesaModel> TipoDespesas { get; set; }
-        public DbSet<TipoEntradaModel> TipoEntradas { get; set; }
-        public DbSet<TipoSaidaModel> TipoSaidas { get; set; }
-        public DbSet<TipoServicoModel> TipoServicos { get; set; }
-        public DbSet<EventoModel> Eventos { get; set; }
-        public DbSet<LinhaModel> Linhas { get; set; }
+        public DbSet<CargoModel> cargos { get; set; }
+        public DbSet<UsuarioModel> Usuarios { get; set; }
+        public DbSet<EntidadeModel> Entidades { get; set; }
+        public DbSet<PedidoModel> Pedidos { get; set; }
+        public DbSet<GarantiaModel> Garantias { get; set; }
+        public DbSet<IntervenienteModel> Intervenientes { get; set; }
+        public DbSet<ConfiguracaoModel> Configuracoes { get; set; }
         public DbSet<ContaModel> Contas { get; set; }
-        public DbSet<ContasCobrarModel> CobrarContas { get; set; }
-        public DbSet<ContasPagarModel> PagarContas { get; set; }
-        public DbSet<InventarioModel> Inventarios { get; set; }
-        public DbSet<EntradaModel> Entradas { get; set; }
-        public DbSet<SaidaModel> Saidas { get; set; }
-        public DbSet<TurmaModel> Turmas { get; set; }
-        public DbSet<ListaModel> Listas { get; set; }
-        public DbSet<AlunoModel> Alunos { get; set; }
-        public DbSet<LicaoModel> Licaos { get; set; }
-        public DbSet<AulaModel> Aulas { get; set; }
-        public DbSet<ParticipanteEventoModel> ParticipanteEventos { get; set; }
-        public DbSet<EntradaEventoModel> EntradaEventos { get; set; }
+        public DbSet<MovimentoInternoModel> MovimentosInternos { get; set; }
+        public DbSet<MovimentoExternoModel> MovimentosExternos { get; set; }
+        public DbSet<CustosAdmModel> CustosAdm { get; set; }
+        public DbSet<AmortizacaoModel> Amortizacoes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

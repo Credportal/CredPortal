@@ -1,0 +1,401 @@
+﻿@using Analise.Enuns
+@model EntidadeViewModel
+@{
+    ViewData["Title"] = "Editar Entidade";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="text-center">
+    @if (TempData["MensagemSucesso"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            <button type="button" class="btn btn-danger btn-sm close-alert" aria-label="Close">X</button>
+            @TempData["MensagemSucesso"]
+        </div>
+    }
+
+    @if (TempData["MensagemErro"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            <button type="button" class="btn btn-danger btn-sm close-alert" aria-label="Close">X</button>
+            @TempData["MensagemErro"]
+        </div>
+    }
+</div>
+
+<div class="container-fluid px-4 py-3">
+    <!-- Cabeçalho da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-solid text-dark mb-0">Editar Entidade</h2>
+        <a asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 fw-normal">
+            <i class="fa-solid fa-arrow-left me-1"></i> Voltar à Lista
+        </a>
+    </div>
+
+    <!-- Formulário Principal -->
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-4">
+            <form asp-controller="Entidade" asp-action="Editar" method="post" enctype="multipart/form-data">
+
+                <!-- Campo oculto para garantir que o ID da entidade é enviado na submissão -->
+                <input type="hidden" asp-for="EntidadeNome.Id" />
+
+                <!-- Campo oculto para enviar o TipoCliente quando o select está disabled -->
+                <input type="hidden" asp-for="EntidadeNome.TipoCliente" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row align-items-center mb-4">
+                    <!-- Avatar / Foto da Entidade -->
+                    <div class="col-md-2 text-center border-end">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center text-secondary mb-2" style="width: 80px; height: 80px; font-size: 32px;" id="avatarContainer">
+                            <i class="fa-solid fa-user-tie" id="avatarIcon"></i>
+                        </div>
+                    </div>
+
+                    <!-- Nome Completo / Razão Social e Estado -->
+                    <div class="col-md-10">
+                        <div class="row align-items-center">
+                            <div class="col-md-9">
+                                <label asp-for="EntidadeNome.Nome" id="lblNome" class="form-label fw-semibold text-secondary small text-uppercase">Nome Completo</label>
+                                <input type="text" asp-for="EntidadeNome.Nome" id="inputNome" class="form-control rounded-2" placeholder="Digite o nome completo" />
+                                <span asp-validation-for="EntidadeNome.Nome" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-3 text-md-end mt-3 mt-md-0">
+                                <label class="form-label fw-semibold text-secondary d-block">Estado</label>
+                                <div class="form-check form-switch d-inline-block">
+                                    <input class="form-check-input" type="checkbox" asp-for="EntidadeNome.Ativo" id="estadoSwitch" style="cursor: pointer; width: 45px; height: 22px;">
+                                    <label class="form-check-label ms-1 fw-medium" for="estadoSwitch">Ativo</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="text-muted opacity-25 my-4">
+
+                <!-- Secção: Identificação & Documentação -->
+                <h6 class="text-uppercase text-secondary fw-bold small mb-3">Identificação & Documentação</h6>
+
+                <div class="row g-3 mb-4">
+                    <!-- Tipo de Entidade (Desabilitado na edição para evitar conflitos de schema) -->
+                    <div class="col-md-4">
+                        <label asp-for="EntidadeNome.TipoCliente" class="form-label fw-semibold text-secondary small text-uppercase">Tipo de Entidade</label>
+                        <select asp-for="EntidadeNome.TipoCliente" id="selectTipoCliente" class="form-select rounded-2 bg-light" disabled>
+                            <option value="Individual">Individual</option>
+                            <option value="Empresarial">Empresarial</option>
+                        </select>
+                        <span class="text-muted" style="font-size: 11px;">O tipo de entidade não pode ser alterado.</span>
+                    </div>
+
+                    <!-- Género -->
+                    <div class="col-md-4">
+                        <label asp-for="EntidadeNome.Genero" class="form-label fw-semibold text-secondary small text-uppercase">Género</label>
+                        <select asp-for="EntidadeNome.Genero" id="selectGenero" class="form-select rounded-2">
+                            <option value="">Selecione...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Feminino">Feminino</option>
+                            <option value="N/A">Não Aplicável (Pessoa Jurídica)</option>
+                        </select>
+                        <span asp-validation-for="EntidadeNome.Genero" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Estado Civil -->
+                    <div class="col-md-4" id="divEstadoCivil">
+                        <label asp-for="EntidadeNome.EstadoCivil" class="form-label fw-semibold text-secondary small text-uppercase">Estado Civil</label>
+                        <select asp-for="EntidadeNome.EstadoCivil" id="selectEstadoCivil" class="form-select rounded-2">
+                            <option value="">Selecione...</option>
+                            <option value="Solteiro(a)">Solteiro(a)</option>
+                            <option value="Casado(a)">Casado(a)</option>
+                            <option value="Divorciado(a)">Divorciado(a)</option>
+                            <option value="Viúvo(a)">Viúvo(a)</option>
+                        </select>
+                        <span asp-validation-for="EntidadeNome.EstadoCivil" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Data de Nascimento / Constituição -->
+                    <div class="col-md-4">
+                        <label asp-for="EntidadeNome.Aniversario" id="lblAniversario" class="form-label fw-semibold text-secondary small text-uppercase">Data de Nascimento</label>
+                        <input type="date" asp-for="EntidadeNome.Aniversario" class="form-control rounded-2" />
+                        <span asp-validation-for="EntidadeNome.Aniversario" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Naturalidade / Sede -->
+                    <div class="col-md-4">
+                        <label asp-for="EntidadeNome.Naturalidade" id="lblNaturalidade" class="form-label fw-semibold text-secondary small text-uppercase">Naturalidade</label>
+                        <input type="text" asp-for="EntidadeNome.Naturalidade" id="inputNaturalidade" class="form-control rounded-2" placeholder="Ex: Maputo" />
+                        <span asp-validation-for="EntidadeNome.Naturalidade" class="text-danger small"></span>
+                    </div>
+
+                    <!-- NUIT -->
+                    <div class="col-md-4">
+                        <label asp-for="EntidadeNome.Nuit" class="form-label fw-semibold text-secondary small text-uppercase">NUIT</label>
+                        <input type="text" asp-for="EntidadeNome.Nuit" class="form-control rounded-2" placeholder="Digite o NUIT" />
+                        <span asp-validation-for="EntidadeNome.Nuit" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Tipo de Documento -->
+                    <div class="col-md-3">
+                        <label asp-for="EntidadeNome.Documento" class="form-label fw-semibold text-secondary small text-uppercase">Tipo de Documento</label>
+                        <select asp-for="EntidadeNome.Documento" id="selectTipoDocumento" class="form-select rounded-2" data-selected="@Model?.EntidadeNome?.Documento">
+                            <!-- Opções carregadas via JS -->
+                        </select>
+                        <span asp-validation-for="EntidadeNome.Documento" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Nr. Documento -->
+                    <div class="col-md-3">
+                        <label asp-for="EntidadeNome.NrDocumento" class="form-label fw-semibold text-secondary small text-uppercase">Nr. Documento</label>
+                        <input type="text" asp-for="EntidadeNome.NrDocumento" class="form-control rounded-2" placeholder="Ex: 123456789A" />
+                        <span asp-validation-for="EntidadeNome.NrDocumento" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Local de Emissão -->
+                    <div class="col-md-2">
+                        <label asp-for="EntidadeNome.LocalEmissao" class="form-label fw-semibold text-secondary small text-uppercase">Local Emissão</label>
+                        <input type="text" asp-for="EntidadeNome.LocalEmissao" class="form-control rounded-2" placeholder="Ex: Maputo" />
+                        <span asp-validation-for="EntidadeNome.LocalEmissao" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Emissão -->
+                    <div class="col-md-2">
+                        <label asp-for="EntidadeNome.Emissao" class="form-label fw-semibold text-secondary small text-uppercase">Data Emissão</label>
+                        <input type="date" asp-for="EntidadeNome.Emissao" class="form-control rounded-2" />
+                        <span asp-validation-for="EntidadeNome.Emissao" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Validade -->
+                    <div class="col-md-2">
+                        <label asp-for="EntidadeNome.Validade" class="form-label fw-semibold text-secondary small text-uppercase">Data Validade</label>
+                        <input type="date" asp-for="EntidadeNome.Validade" class="form-control rounded-2" />
+                        <span asp-validation-for="EntidadeNome.Validade" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Secção: Dados Profissionais (Apenas Individual) -->
+                <div id="secProfissional">
+                    <hr class="text-muted opacity-25 my-4">
+                    <h6 class="text-uppercase text-secondary fw-bold small mb-3">Dados Profissionais</h6>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label asp-for="EntidadeNome.Profissao" class="form-label fw-semibold text-secondary small text-uppercase">Profissão</label>
+                            <input type="text" asp-for="EntidadeNome.Profissao" class="form-control rounded-2" placeholder="Digite a profissão" />
+                            <span asp-validation-for="EntidadeNome.Profissao" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EntidadeNome.Cargo" class="form-label fw-semibold text-secondary small text-uppercase">Cargo</label>
+                            <input type="text" asp-for="EntidadeNome.Cargo" class="form-control rounded-2" placeholder="Digite o cargo" />
+                            <span asp-validation-for="EntidadeNome.Cargo" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EntidadeNome.LocalTrabalho" class="form-label fw-semibold text-secondary small text-uppercase">Local de Trabalho</label>
+                            <input type="text" asp-for="EntidadeNome.LocalTrabalho" class="form-control rounded-2" placeholder="Empresa ou instituição" />
+                            <span asp-validation-for="EntidadeNome.LocalTrabalho" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="text-muted opacity-25 my-4">
+
+                <!-- Secção: Filiação / Representação Legal -->
+                <h6 class="text-uppercase text-secondary fw-bold small mb-3" id="tituloFiliacaoRepresentacao">Filiação e Cônjuge / Representante</h6>
+
+                <div class="row g-3 mb-4">
+                    <!-- Pai (Apenas Individual) -->
+                    <div class="col-md-6" id="divPai">
+                        <label asp-for="EntidadeNome.Pai" class="form-label fw-semibold text-secondary small text-uppercase">Nome do Pai</label>
+                        <input type="text" asp-for="EntidadeNome.Pai" class="form-control rounded-2" placeholder="Nome completo do pai" />
+                        <span asp-validation-for="EntidadeNome.Pai" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Mãe (Apenas Individual) -->
+                    <div class="col-md-6" id="divMae">
+                        <label asp-for="EntidadeNome.Mae" class="form-label fw-semibold text-secondary small text-uppercase">Nome da Mãe</label>
+                        <input type="text" asp-for="EntidadeNome.Mae" class="form-control rounded-2" placeholder="Nome completo da mãe" />
+                        <span asp-validation-for="EntidadeNome.Mae" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Cônjuge / Representante Legal -->
+                    <div class="col-md-6">
+                        <label asp-for="EntidadeNome.Conjuge" id="lblConjuge" class="form-label fw-semibold text-secondary small text-uppercase">Nome do Cônjuge</label>
+                        <input type="text" asp-for="EntidadeNome.Conjuge" id="inputConjuge" class="form-control rounded-2" placeholder="Nome do cônjuge (se aplicável)" />
+                        <span asp-validation-for="EntidadeNome.Conjuge" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Telefone do Cônjuge / Representante Legal -->
+                    <div class="col-md-6">
+                        <label asp-for="EntidadeNome.TelefoneConjuge" id="lblTelefoneConjuge" class="form-label fw-semibold text-secondary small text-uppercase">Telefone do Cônjuge</label>
+                        <input type="text" asp-for="EntidadeNome.TelefoneConjuge" id="inputTelefoneConjuge" class="form-control rounded-2" placeholder="+258 84 000 0000" />
+                        <span asp-validation-for="EntidadeNome.TelefoneConjuge" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <hr class="text-muted opacity-25 my-4">
+
+                <!-- Secção: Localização e Contactos -->
+                <h6 class="text-uppercase text-secondary fw-bold small mb-3">Localização e Contacto</h6>
+
+                <div class="row g-3 mb-4">
+                    <!-- Endereço Completo -->
+                    <div class="col-md-6">
+                        <label asp-for="EntidadeNome.Endereco" class="form-label fw-semibold text-secondary small text-uppercase">Endereço Completo</label>
+                        <textarea asp-for="EntidadeNome.Endereco" class="form-control rounded-2" rows="4" placeholder="Digite o endereço completo"></textarea>
+                        <span asp-validation-for="EntidadeNome.Endereco" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="row g-3">
+                            <!-- Contacto Principal -->
+                            <div class="col-md-6">
+                                <label asp-for="EntidadeNome.Telefone" class="form-label fw-semibold text-secondary small text-uppercase">Contacto Principal</label>
+                                <input type="text" asp-for="EntidadeNome.Telefone" class="form-control rounded-2" placeholder="+258 84 123 4567" />
+                                <span asp-validation-for="EntidadeNome.Telefone" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Contacto Alternativo -->
+                            <div class="col-md-6">
+                                <label asp-for="EntidadeNome.Alternativo" class="form-label fw-semibold text-secondary small text-uppercase">Contacto Alternativo</label>
+                                <input type="text" asp-for="EntidadeNome.Alternativo" class="form-control rounded-2" placeholder="+258 82 123 4567" />
+                                <span asp-validation-for="EntidadeNome.Alternativo" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-12">
+                                <label asp-for="EntidadeNome.Email" class="form-label fw-semibold text-secondary small text-uppercase">Email</label>
+                                <input type="email" asp-for="EntidadeNome.Email" class="form-control rounded-2" placeholder="nome@email.com" />
+                                <span asp-validation-for="EntidadeNome.Email" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Submissão -->
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-4 fw-normal">Cancelar</a>
+                    <button type="submit" class="btn btn-success px-4 rounded-2 text-white fw-normal" style="background-color: #079b62; border-color: #079b62;">
+                        Salvar Alterações
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectTipo = document.getElementById("selectTipoCliente");
+            const selectDoc = document.getElementById("selectTipoDocumento");
+            const selectGenero = document.getElementById("selectGenero");
+            const divEstadoCivil = document.getElementById("divEstadoCivil");
+            const secProfissional = document.getElementById("secProfissional");
+            const divPai = document.getElementById("divPai");
+            const divMae = document.getElementById("divMae");
+
+            const lblNome = document.getElementById("lblNome");
+            const inputNome = document.getElementById("inputNome");
+            const lblAniversario = document.getElementById("lblAniversario");
+            const lblNaturalidade = document.getElementById("lblNaturalidade");
+            const inputNaturalidade = document.getElementById("inputNaturalidade");
+
+            const lblConjuge = document.getElementById("lblConjuge");
+            const inputConjuge = document.getElementById("inputConjuge");
+            const lblTelefoneConjuge = document.getElementById("lblTelefoneConjuge");
+            const inputTelefoneConjuge = document.getElementById("inputTelefoneConjuge");
+            const avatarIcon = document.getElementById("avatarIcon");
+            const tituloFiliacaoRepresentacao = document.getElementById("tituloFiliacaoRepresentacao");
+
+            const docsIndividual = [
+                { val: "", text: "Selecione..." },
+                { val: "BI", text: "BI (Bilhete de Identidade)" },
+                { val: "Passaporte", text: "Passaporte" },
+                { val: "Carta de Condução", text: "Carta de Condução" },
+                { val: "DIRE", text: "DIRE" }
+            ];
+
+            const docsEmpresarial = [
+                { val: "", text: "Selecione..." },
+                { val: "Certidão Permanente", text: "Certidão Permanente" },
+                { val: "Alvará / Licença", text: "Alvará / Licença de Exercício" },
+                { val: "Boletim da República", text: "Boletim da República (BR)" },
+                { val: "Estatutos", text: "Estatutos da Empresa" }
+            ];
+
+            function atualizarFormulario() {
+                const tipo = selectTipo.value;
+                const documentoAtual = selectDoc.getAttribute("data-selected");
+                selectDoc.innerHTML = "";
+
+                let listaDocs = (tipo === "Empresarial") ? docsEmpresarial : docsIndividual;
+                listaDocs.forEach(d => {
+                    const opt = new Option(d.text, d.val);
+                    if (d.val === documentoAtual) {
+                        opt.selected = true;
+                    }
+                    selectDoc.add(opt);
+                });
+
+                if (tipo === "Empresarial") {
+                    selectGenero.value = "N/A";
+                    selectGenero.disabled = true;
+
+                    divEstadoCivil.style.display = "none";
+                    secProfissional.style.display = "none";
+                    divPai.style.display = "none";
+                    divMae.style.display = "none";
+
+                    lblNome.innerText = "Razão Social / Nome da Empresa";
+                    inputNome.placeholder = "Digite a razão social da empresa";
+
+                    lblAniversario.innerText = "Data de Constituição";
+                    lblNaturalidade.innerText = "Cidade / Sede da Empresa";
+                    inputNaturalidade.placeholder = "Ex: Maputo";
+
+                    tituloFiliacaoRepresentacao.innerText = "Representação Legal";
+                    lblConjuge.innerText = "Nome do Representante Legal";
+                    inputConjuge.placeholder = "Nome completo do representante ou sócio";
+
+                    lblTelefoneConjuge.innerText = "Contacto do Representante Legal";
+                    inputTelefoneConjuge.placeholder = "+258 84 000 0000";
+
+                    avatarIcon.className = "fa-solid fa-building";
+                } else {
+                    selectGenero.disabled = false;
+                    if (selectGenero.value === "N/A") selectGenero.value = "";
+
+                    divEstadoCivil.style.display = "block";
+                    secProfissional.style.display = "block";
+                    divPai.style.display = "block";
+                    divMae.style.display = "block";
+
+                    lblNome.innerText = "Nome Completo";
+                    inputNome.placeholder = "Digite o nome completo";
+
+                    lblAniversario.innerText = "Data de Nascimento";
+                    lblNaturalidade.innerText = "Naturalidade";
+                    inputNaturalidade.placeholder = "Ex: Maputo";
+
+                    tituloFiliacaoRepresentacao.innerText = "Filiação e Cônjuge";
+                    lblConjuge.innerText = "Nome do Cônjuge";
+                    inputConjuge.placeholder = "Nome do cônjuge (se aplicável)";
+
+                    lblTelefoneConjuge.innerText = "Telefone do Cônjuge";
+                    inputTelefoneConjuge.placeholder = "+258 84 000 0000";
+
+                    avatarIcon.className = "fa-solid fa-user-tie";
+                }
+            }
+
+            atualizarFormulario(); // Inicializar ao carregar com os dados existentes
+        });
+    </script>
+}

@@ -1,1362 +1,544 @@
 ﻿@{
-    ViewData["Title"] = "Inicial";
+    ViewData["Title"] = "Painel de Controlo";
+    Layout = "_Layout";
+
+    // var vendas = new[]
+    // {
+    //     new { Mes = "Jan", Valor = 1650000 },
+    //     new { Mes = "Fev", Valor = 1950000 },
+    //     new { Mes = "Mar", Valor = 2150000 },
+    //     new { Mes = "Abr", Valor = 2400000 },
+    //     new { Mes = "Mai", Valor = 2800000 },
+    //     new { Mes = "Jun", Valor = 2450000 }
+    // };
+
+    // var vencimentos = new[]
+    // {
+    //     new { Cliente = "Transporte Mucavele", Ramo = "Automóvel", Data = "24 Out 2026", Premio = 45000m, Estado = "A renovar" },
+    //     new { Cliente = "Mundo Criativo", Ramo = "Multirriscos", Data = "28 Out 2026", Premio = 32500m, Estado = "Pendente" },
+    //     new { Cliente = "J. Mahumane", Ramo = "Saúde", Data = "02 Nov 2026", Premio = 18900m, Estado = "A renovar" }
+    // };
+
+    // var pagamentos = new[]
+    // {
+    //     new { Cliente = "ABC Transportes", Referencia = "POL-2026-0182", Valor = 85000m, Dias = 12 },
+    //     new { Cliente = "Mundo Criativo", Referencia = "POL-2026-0204", Valor = 32500m, Dias = 5 },
+    //     new { Cliente = "J. Mahumane", Referencia = "POL-2026-0220", Valor = 18900m, Dias = 2 }
+    // };
 }
 
-<!-- 🔹 Bloco fixo no canto inferior esquerdo -->
-<div class="info-box" style="display: none;">
-    <p><strong>ID do Usuário:</strong> @(ViewBag.UsuarioId ?? "Não associado")</p>
-    <p><strong>ID da Agência:</strong> @(ViewBag.AgenciaId ?? "Não associado")</p>
-</div>
-
 <style>
-    .info-box {
-        position: fixed;
-        bottom: 65px;
-        left: 10px;
-        background-color: rgba(0, 0, 0, 0.8); /* Fundo escuro semi-transparente */
-        color: white; /* Texto branco */
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 14px;
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Botão estilo nav-link */
-    .btn-nav {
-        padding: 6px 14px;
-        border-radius: 10px;
-        display: inline-block;
-        width: 100%;
-        text-align: center;
-        font-weight: 600;
-        border: 1px solid rgba(70,200,120,0.03);
-        backdrop-filter: blur(6px);
-        background: rgba(133,146,141);
-        color: rgba(0,0,0);
-        cursor: pointer;
-        transition: background 0.3s ease, color 0.3s ease;
-    }
-
-        .btn-nav:hover {
-            background: rgba(255,255,255);
-            border: 1px solid rgba(133,146,141);
-            color: rgba(0,0,0);
-        }
-
-    .form-container {
-        width: 100%;
-        margin: 0;
-        padding: 0.5rem;
-        border: 0px solid #ccc;
-        border-radius: 10px;
-        background-color: rgba(248, 249, 250, 0);
-        box-sizing: border-box;
-    }
-
-    .form-group-spacing {
-        margin-bottom: 2rem;
-    }
-
-    /* reset simples */
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0
-    }
-
-    html, body {
-        height: 100%
-    }
-
-    /* fundo geral: imagem + gradientes sobrepostos */
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-        color: #e6f3ea;
-        background-color: #0b2818;
-        background: rgba(255,255,255);
-        background-size: cover, cover, cover;
-        background-position: center center;
-        background-repeat: no-repeat;
-        min-height: 100%;
-        padding-top: 80px; /* espaço para o header fixo */
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
-        /* efeito de overlay */
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            background: rgba(255,255,255);
-            mix-blend-mode: overlay;
-            filter: blur(6px);
-            z-index: 0;
-        }
-
-    /* layout do header */
-    .site-header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        background: rgba(26, 60, 46, 0); /* transparente + leve cor de base */
-        backdrop-filter: blur(6px); /* efeito vidro */
-        z-index: 1000;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .nav {
-        display: flex;
-        align-items: center;
-        padding: 4px 6px;
-    }
-
-    /* logotipo + nome */
-    .brand {
-        display: flex;
-        align-items: center;
-        font-weight: 700;
-    }
-    /* Wrapper para menu + botão no lado direito */
-    .menu-wrapper {
-        margin-left: auto; /* empurra tudo para a direita */
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    /* links (lado direito) */
-    .nav-links {
-        list-style: none;
-        display: flex;
-        gap: 18px;
-        margin: 0;
-        padding: 0;
-    }
-
-        /* submenu oculto por padrão */
-        .nav-links .submenu {
-            display: none;
-            position: absolute;
-            background: transparent; /* fundo transparente */
-            list-style: none;
-            padding: 10px 0;
-            margin-top: 4px;
-            min-width: 140px;
-            backdrop-filter: blur(6px); /* efeito vidro */
-        }
-
-            /* links dentro do submenu */
-            .nav-links .submenu li a {
-                display: block;
-                padding: 6px 12px;
-                color: black; /* verde claro */
-                text-decoration: none;
-                border-radius: 4px;
-                transition: background 0.3s ease, color 0.3s ease;
-            }
-
-                .nav-links .submenu li a:hover {
-                    background: rgba(255,255,255,0.05); /* leve efeito hover */
-                }
-
-        /* mostrar submenu ao passar o mouse (desktop) */
-        .nav-links li.has-submenu:hover > .submenu {
-            display: block;
-        }
-
-        /* para posicionar corretamente */
-        .nav-links li.has-submenu {
-            position: relative;
-        }
-
-    /* RESPONSIVO */
-    @@media (max-width: 768px) {
-        .nav-links .submenu {
-            position: relative;
-            display: none;
-            background: transparent; /* fundo transparente */
-            padding: 0;
-            left: 10%; /* posiciona à direita do item pai */
-            margin: 0;
-            min-width: 0;
-        }
-
-        .nav-links li.has-submenu.active > .submenu {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .nav-links .submenu li a {
-            color: black; /* verde claro */
-        }
-    }
-
-    .nav-links a {
-        color: rgba(0,0,0); /* cor do texto */
-        text-decoration: none;
-        padding: 6px 10px;
-        border-radius: 6px;
-        background: transparent; /* fundo transparente */
-        transition: background 0.3s ease, color 0.3s ease;
-    }
-
-        /* efeito hover leve sem fundo sólido */
-        .nav-links a:hover {
-            background: rgba(255,255,255,0.5); /* leve efeito sobre o fundo */
-            color: rgba(0,0,0); /* mantém o texto legível */
-        }
-
-    /* botão hamburguer */
-    .menu-toggle {
-        display: none;
-        margin-left: auto; /* 🔹 empurra o botão para o canto direito */
-        font-size: 26px;
-        background: transparent; /* fundo transparente */
-        border: none;
-        color: rgba(0,0,0);
-        cursor: pointer;
-    }
-
-    /* responsividade */
-    @@media (max-width: 800px) {
-        .menu-toggle {
-            display: block;
-        }
-
-        .nav-links {
-            display: none;
-            position: absolute;
-            top: 60px;
-            left: 0;
-            background: rgba(250,250,250,0.5); /* fundo transparente */
-            flex-direction: column;
-            width: 200px;
-            padding: 18px;
-            gap: 10px;
-            border-radius: 0 0 8px 8px;
-        }
-
-            .nav-links.active {
-                display: flex;
-            }
-    }
-
-
-    .btn {
-        padding: 10px 18px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 600;
-        display: inline-block;
-        border: 1px solid rgba(255,255,255,0.06);
-        backdrop-filter: blur(6px);
-    }
-
-    .btn:hover {
-        background: rgba(255,255,255,0.05);
-        color: #fff;
-    }
-
-        .btn.primary {
-            background: linear-gradient(90deg, rgba(70,200,120), rgba(50,160,90));
-            color: #eaffef;
-        }
-
-        .btn.ghost {
-            background: transparent;
-            color: rgba(0,0,0);
-            border: 1px solid rgba(133,146,141);
-        }
-
-        .btn.ghost2 {
-            background: transparent;
-            color: rgba(0,0,0);
-            border: 1px solid rgba(0,64,0);
-        }
-
-        .btn.ghost3 {
-            background: transparent;
-            color: rgba(0,0,0);
-            border: 1px solid rgba(72,0,120);
-        }
-
-        .btn.ghost4 {
-            background: transparent;
-            color: rgba(0,0,0);
-            border: 1px solid rgba(64,64,0);
-        }
-        .btn.ghost5 {
-            background: transparent;
-            color: rgba(0,0,0);
-            border: 1px solid rgba(64,0,0);
-        }
-
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }   
-    /* textbox */
-    .textbox {
-        padding: 6px 14px;
-        border-radius: 10px;
-        font-weight: 400;
-        border: 1px solid rgba(133,146,141);
-        backdrop-filter: blur(6px);
-        background: transparent;
-        color: rgba(0,0,0);
-        font-family: inherit;
-        font-size: 16px;
-        width: 100%;
-        box-sizing: border-box;
-        transition: all 0.3s ease;
-    }
-
-        /* placeholder */
-        .textbox::placeholder {
-            color: rgba(255,255,255,0.3);
-        }
-
-        /* foco */
-        .textbox:focus {
-            outline: none;
-            border: 1px solid #48c878;
-            box-shadow: 0 0 12px rgba(72,200,120,0.3);
-        }
-
-    /* autocomplete transparente Chrome/Safari */
-    input.textbox:-webkit-autofill,
-    input.textbox:-webkit-autofill:hover,
-    input.textbox:-webkit-autofill:focus,
-    input.textbox:-webkit-autofill:active {
-        -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
-        -webkit-text-fill-color: rgba(0,0,0) !important;
-        transition: background-color 5000s ease-in-out 0s;
-    }
-
-    /* autocomplete transparente Firefox */
-    input.textbox:-moz-autofill {
-        box-shadow: 0 0 0px 1000px transparent inset !important;
-        -moz-text-fill-color: rgba(0,0,0) !important;
-    }
-
-    .hero {
-        min-height: 72vh;
-        display: flex;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-        padding: 4px 4px;
-    }
-
-    .hero-inner {
-        max-width: 1100px;
-        width: 100%;
-        margin: 0 auto;
-        padding: 2px;
-        position: relative;
-        z-index: 3;
-    }
-
-    .hero h1 {
-        font-size: 48px;
-        line-height: 1.02;
-        margin-bottom: 2px;
-        color: rgba(0,0,0,0.45);
-        text-shadow: 0 6px 22px rgba(2,10,6,0.5);
-    }
-
-    .hero .accent {
-        color: #48c878;
-    }
-
-    .lead {
-        color: rgba(25,25,25,0.8);
-        margin-bottom: 18px
-    }
-
-    .hero-cta {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 22px;
-        flex-wrap: wrap; /* permite que os botões quebrem linha */
-        gap: 10px; /* espaço entre os botões */
-    }
-
-    @@media (max-width:900px) {
-        .hero h1 {
-            font-size: 32px
-        }
-
-        .nav-links {
-            display: none
-        }
-
-        .hero {
-            padding: 5px
-        }
-
-        .cards {
-            flex-direction: column
-        }
-    }
-
-   /*  .hero-inner::after {
-        content: "";
-        position: absolute;
-        right: -5px;
-        top: 40px;
-        width: 420px;
-        height: 420px;
-        border-radius: 50%;
-        border: 3px solid rgba(255,255,255,0.03);
-        box-shadow: 0 30px 90px rgba(0,0,0,0.45), inset 0 0 40px rgba(80,200,120,0.03);
-        z-index: 1;
-        pointer-events: none;
-    } */
-
-    /* cards */
-    .cards {
-        display: flex;
-        gap: 14px;
-        margin-top: 18px;
-    }
-
-    .card {
-        min-width: 200px;
-        padding: 14px;
+    .sg-card {
+        background: #fff;
+        border: 1px solid #e8edf3;
         border-radius: 12px;
-        background: linear-gradient(180deg, rgba(2,10,6,0.2), rgba(2,10,6,1));
-        box-shadow: 0 8px 24px rgba(2,10,6,0.45);
-        backdrop-filter: blur(6px);
-        color: #dff7e8;
-    }
-    /* link verde */
-    .link-green {
-        color: black;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-        transition: color 0.3s ease;
-    }
-
-        .link-green:hover {
-            color: rgba(2,10,6,1);
-        }
-
-    .form-check-input {
-        appearance: none;
-        -webkit-appearance: none;
-        background-color: white;
-        border: 2px solid black;
-        width: 18px;
-        height: 18px;
-        border-radius: 3px;
-        cursor: pointer;
-        position: relative;
-        transition: all 0.2s ease;
-    }
-
-        /* Quando o checkbox estiver marcado */
-        .form-check-input:checked {
-            background-color: black;
-            border-color: black;
-        }
-
-            /* Adiciona o símbolo de check (✓) dentro */
-            .form-check-input:checked::after {
-                content: '✓';
-                color: white;
-                font-size: 13px;
-                position: absolute;
-                top: 0;
-                left: 3px;
-            }
-
-    label {
-        color: #000; /* preto */
-    }
-
-    .card-box {
-        width: 360px;
-        background: #1c1f24;
         padding: 20px;
-        border-radius: 14px;
-        border-left: 4px solid #27ff60;
-        color: white;
-        position: relative;
-        font-family: Arial, sans-serif;
-        display: inline-block;
-        margin: 15px;
-    }
-
-    .card-box2 {
-        width: 360px;
-        background: #1c1f24;
-        padding: 20px;
-        border-radius: 14px;
-        border-left: 4px solid rgba(255,242, 0);
-        color: white;
-        position: relative;
-        font-family: Arial, sans-serif;
-        display: inline-block;
-        margin: 15px;
-    }
-
-    .card-box3 {
-        width: 360px;
-        background: #1c1f24;
-        padding: 20px;
-        border-radius: 14px;
-        border-left: 4px solid rgba(231,90,90);
-        color: white;
-        position: relative;
-        font-family: Arial, sans-serif;
-        display: inline-block;
-        margin: 15px;
-    }
-
-    .card-box4 {
-        width: 360px;
-        background: #1c1f24;
-        padding: 20px;
-        border-radius: 14px;
-        border-left: 4px solid rgba(0,162,232);
-        color: white;
-        position: relative;
-        font-family: Arial, sans-serif;
-        display: inline-block;
-        margin: 15px;
-    }
-
-    .card-box5 {
-        width: 360px;
-        background: #1c1f24;
-        padding: 20px;
-        border-radius: 14px;
-        border-left: 4px solid rgba(239,136,190);
-        color: white;
-        position: relative;
-        font-family: Arial, sans-serif;
-        display: inline-block;
-        margin: 15px;
-    }
-
-    .card-box6 {
-        width: 360px;
-        background: #1c1f24;
-        padding: 20px;
-        border-radius: 14px;
-        border-left: 4px solid rgba(36,99,99);
-        color: white;
-        position: relative;
-        font-family: Arial, sans-serif;
-        display: inline-block;
-        margin: 15px;
-    }
-
-    .card-header {
-    font-size: 18px;
-    margin-bottom: 12px;
-    opacity: .85;
-    }
-
-
-    .card-value {
-        font-size: 28px;
-        font-weight: bold;
-        margin-bottom: 6px;
-        color: #27ff60;
-    }
-
-    .card-value2 {
-        font-size: 28px;
-        font-weight: bold;
-        margin-bottom: 6px;
-        color: rgba(255,242, 0);
-    }
-
-    .card-value3 {
-        font-size: 28px;
-        font-weight: bold;
-        margin-bottom: 6px;
-        color: rgba(231,90,90);
-    }
-
-    .card-value4 {
-        font-size: 28px;
-        font-weight: bold;
-        margin-bottom: 6px;
-        color: rgba(0,162,232);
-    }
-
-    .card-value5 {
-        font-size: 28px;
-        font-weight: bold;
-        margin-bottom: 6px;
-        color: rgba(239,136,190);
-    }
-
-    .card-value6 {
-        font-size: 28px;
-        font-weight: bold;
-        margin-bottom: 6px;
-        color: rgba(36,99,99);
-    }
-
-    .card-sub {
-    font-size: 14px;
-    color: #9df7b8;
-    }
-
-    .card-sub2 {
-        font-size: 14px;
-        color: rgba(255,242, 0);
-    }
-
-    .card-sub3 {
-        font-size: 14px;
-        color: rgba(231,90,90);
-    }
-
-    .card-sub4 {
-        font-size: 14px;
-        color: rgba(0,162,232);
-    }
-
-    .card-sub5 {
-        font-size: 14px;
-        color: rgba(239,136,190);
-    }
-
-    .card-sub6 {
-        font-size: 14px;
-        color: rgba(36,99,99);
-    }
-
-    .card-icon {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 22px;
-    color: #32ff77;
-    }
-
-    .card-icon2 {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 22px;
-        color: rgba(255,242, 0);
-    }
-
-    .card-icon3 {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 22px;
-        color: rgba(231,90,90);
-    }
-
-    .card-icon4 {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 22px;
-        color: rgba(0,162,232);
-    }
-
-    .card-icon5 {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 22px;
-        color: rgba(239,136,190);
-    }
-
-    .card-icon6 {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 22px;
-        color: rgba(36,99,99);
-    }
-    .card-box-container{display:flex;flex-wrap:wrap;gap:20px;}
-    @@media(max-width:600px)
-    {
-        .card-box{width:100%;padding:15px;}
-        .card-value{font-size:22px;}
-        .card-header{font-size:16px;}
-        .card-sub{font-size:13px;}
-    }
-
-    .cards-container {
-        display: flex;
-        justify-content: center; /* Centraliza horizontalmente */
-        align-items: flex-start; /* Opcional: alinha ao topo */
-        flex-wrap: wrap; /* Permite quebrar para próxima linha */
-        gap: 20px; /* Espaço entre os cards */
-        width: 100%;
-        margin: 0 auto;
-        padding: 20px 0;
-        text-align: center; /* Centraliza o texto dentro dos cards */
-    }
-
-    #grafEntradasAno {
-        width: 100% !important;
-        max-width: 100%;
-    }
-
-
-    /* MENU LATERAL RETRÁTIL */
-    .side-menu {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 260px;
         height: 100%;
-        background: rgba(20, 40, 30, 0.90);
-        color: white;
-        backdrop-filter: blur(8px);
-        padding-top: 70px;
-        transform: translateX(-100%);
-        transition: transform .3s ease;
-        z-index: 2000;
-        box-shadow: 3px 0 12px rgba(0,0,0,0.4);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
     }
 
-        .side-menu.open {
-            transform: translateX(0);
+    .sg-kpi-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #e7f7ef;
+        color: #079b62;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+        .sg-kpi-icon-wrapper.orange {
+            background: #fff3e4;
+            color: #ed900c;
         }
 
-        .side-menu .menu-header {
-            position: absolute;
-            top: 10px;
-            left: 0;
-            width: 100%;
-            padding: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+    .sg-filter-select {
+        background: #fff;
+        border: 1px solid #e8edf3;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 13px;
+        color: #4a5568;
+        outline: none;
+    }
+
+    .sg-badge-status {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+        .sg-badge-status.renovar {
+            background: #fff3e4;
+            color: #ed900c;
         }
 
-    .menu-title {
-        font-size: 20px;
+        .sg-badge-status.pendente {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .sg-badge-dias {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 2px 8px;
+        border-radius: 6px;
         font-weight: 700;
+        font-size: 12px;
     }
 
-    .close-btn {
-        font-size: 26px;
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
+    .sg-partner-box {
+        border: 1px solid #e8edf3;
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+        font-weight: 700;
+        background: #fff;
+        font-size: 13px;
     }
-
-    .side-menu-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-        .side-menu-list li {
-            margin: 6px 0;
-        }
-
-        .side-menu-list a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 18px;
-            text-decoration: none;
-            color: #e6f3ea;
-            font-weight: 500;
-            transition: background .2s;
-        }
-
-            .side-menu-list a:hover {
-                background: rgba(255,255,255,0.1);
-            }
-
-    /* BOTÃO FLOTANTE → ABRIR MENU */
-    .side-menu-toggle {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        background: rgba(70,200,120);
-        color: black;
-        border: none;
-        font-size: 22px;
-        padding: 12px 16px;
-        border-radius: 12px;
-        cursor: pointer;
-        box-shadow: 3px 3px 10px rgba(0,0,0,0.4);
-        z-index: 2100;
-    }
-
-    /* Estilo geral do menu */
-    /* Estilo geral do menu */
-    #menuLateral ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        color: black;
-        font-family: Arial, sans-serif;
-    }
-
-        /* Links como botões transparentes */
-        #menuLateral ul li a {
-            display: block;
-            padding: 10px 15px;
-            margin-bottom: 6px;
-            text-decoration: none;
-            color: black;
-            background: transparent; /* fundo transparente */
-            border: none; /* sem borda */
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            font-size: 15px;
-            cursor: pointer;
-        }
-
-            /* Hover */
-            #menuLateral ul li a:hover {
-                background: rgba(0, 123, 255, 0.1); /* leve destaque azul */
-                color: #007bff;
-            }
-
-    /* Itens com submenu */
-    #menuLateral .has-submenu > a {
-        font-weight: bold;
-    }
-
-    /* Submenu */
-    #menuLateral .submenu {
-        padding-left: 15px;
-    }
-
-        #menuLateral .submenu li a {
-            font-size: 14px;
-        }
-
-            #menuLateral .submenu li a:hover {
-                background: rgba(0, 123, 255, 0.1);
-                color: #007bff;
-            }
 </style>
 
-<button id="btnMenuLateral"
-        style="
-            position: fixed;
-            top: 60px;
-            left: 15px;
-            z-index: 2000;
-            font-size: 26px;
-            background: rgba(255,255,255,0.4);
-            border: 1px solid rgba(0,0,0,0.3);
-            backdrop-filter: blur(5px);
-            color: black;
-            padding: 6px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-        ">
-    ☰
-</button>
+<!-- TÍTULO E FILTROS SUPERIORES -->
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1 fs-3">Painel de Controlo</h2>
+        <div class="text-secondary small">Visão geral do desempenho da carteira de crédito</div>
+    </div>
 
-<!-- MENU LATERAL -->
-<div id="menuLateral"
-     style="
-        position: fixed;
-        top: 120px;
-        left: -260px;
-        width: 240px;
-        height: calc(100% - 60px);
-        background: rgba(255,255,255,0.5);
-        backdrop-filter: blur(10px);
-        border-right: 1px solid rgba(0,0,0,0.15);
-        transition: left 0.3s ease;
-        z-index: 1500;
-        padding: 20px;
-        border-radius: 0 10px 10px 0;
-        overflow-y: auto;
-     ">
-
-    <ul style="list-style:none; padding:0; margin:0; color:black;">
-        <li><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
-
-        <li class="has-submenu">
-            <a href="javascript:void(0);" class="submenu-toggle">Operações ▾</a>
-            <ul class="submenu" style="display:none; list-style:none; padding-left:15px;">
-               
-                @if (ViewBag.EstadoDia == 1)
-                {
-                    <li><a asp-controller="Entrada" asp-action="Criar">Entradas</a></li>
-                    <li><a asp-controller="Saida" asp-action="Criar">Saídas</a></li>
+   @*  <div class="d-flex flex-wrap gap-2 align-items-center">
+        <select class="sg-filter-select"><option>Este mês</option></select>
+        <span class="text-secondary small ms-2">Pagamentos Feitos</span>
+        <select class="sg-filter-select"><option>Todos</option></select>
+        <span class="text-secondary small ms-2">Ramo</span>
+        <select class="sg-filter-select"><option>Todos</option></select>
+        <span class="text-secondary small ms-2">Agência</span>
+        <select class="sg-filter-select"><option>Todas</option></select>
+        <span class="text-secondary small ms-2">Estado dos processo</span>
+        <select class="sg-filter-select"><option>Todos</option></select>
+    </div> *@
+</div>
+<!-- CARDS KPI SUPERIORES -->
+<div class="row g-3 mb-4 row-cols-1 row-cols-md-2 row-cols-xl-3 row-cols-xxl-6">
+    <div class="col">
+        <div class="sg-card d-flex align-items-center gap-3 bg-white p-3 shadow-sm rounded-4 border-0 h-100">
+            <div class="sg-kpi-icon-wrapper text-success fs-3"><i class="fa-solid fa-cart-shopping"></i></div>
+            <div>
+                <div class="text-secondary small">Desembolso do mês <i class="fa-regular fa-circle-question ms-1"></i></div>
+                <div class="fw-bold fs-5 text-dark">
+                    MT @(((decimal)(ViewBag.TotalDesembolsosMes ?? 0)).ToString("N2"))
+                </div>
+                @{
+                    decimal variacao = ViewBag.VariacaoDesembolsos ?? 0;
+                    string classeCor = variacao >= 0 ? "text-success" : "text-danger";
+                    string iconeSeta = variacao >= 0 ? "fa-arrow-up" : "fa-arrow-down";
+                    string sinal = variacao >= 0 ? "+" : "";
                 }
-
-                <li><a asp-controller="Inventario" asp-action="Criar">Inventário</a></li>
-                <li><a asp-controller="ContasCobrar" asp-action="Criar">Contas a cobrar</a></li>
-                <li><a asp-controller="ContasPagar" asp-action="Criar">Contas a pagar</a></li>
-            </ul>
-        </li>
-
-        @if (ViewBag.Perfil == Analise.Enuns.PerfilEnum.Admin)
-        {
-            <li class="has-submenu">
-                <a href="javascript:void(0);" class="submenu-toggle">Saldos ▾</a>
-                <ul class="submenu" style="display:none; list-style:none; padding-left:15px;">
-                    <li><a asp-controller="Conta" asp-action="Criar">Contas</a></li>
-                    <li><a asp-controller="Linha" asp-action="Criar">Linhas</a></li>
-                    <li><a asp-controller="Agencia" asp-action="Index">Tabernáculos</a></li>
-                </ul>
-            </li>
-
-            <li class="has-submenu">
-                <a href="javascript:void(0);" class="submenu-toggle">Ajustes ▾</a>
-                <ul class="submenu" style="display:none; list-style:none; padding-left:15px;">
-                    <li><a asp-controller="Cargo" asp-action="Criar">Cargos</a></li>
-                    <li><a asp-controller="Estado" asp-action="Criar">Estados</a></li>
-                    <li><a asp-controller="TipoDespesa" asp-action="Criar">Despesas</a></li>
-                    <li><a asp-controller="TipoServico" asp-action="Criar">Serviços</a></li>
-                    <li><a asp-controller="TipoEntrada" asp-action="Criar">Entradas</a></li>
-                    <li><a asp-controller="TipoSaida" asp-action="Criar">Saídas</a></li>
-                    <li><a asp-controller="Usuario" asp-action="Index">Usuários</a></li>
-                </ul>
-            </li>
-        }
-        
-
-        <li><a asp-controller="Cadastro" asp-action="Criar">Pessoas</a></li>
-        <li><a asp-controller="Entrada" asp-action="RelatorioEntradas">Relatórios</a></li>        
-        <li><a asp-controller="AlterarSenha" asp-action="Index">Senha</a></li>
-        @if (ViewBag.EstadoDia == null)
-        {
-            <!-- 🔓 ABRIR DIA -->
-            <li>
-                <form asp-controller="Home" asp-action="AbrirDia" method="post" style="display:inline;">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-link p-0 m-0">
-                        Abrir o dia
-                    </button>
-                </form>
-            </li>
-        }
-        else if (ViewBag.EstadoDia == 1)
-        {
-            <!-- 🔒 FECHAR DIA -->
-            <li>
-                <form asp-controller="Home" asp-action="FecharDia" method="post" style="display:inline;">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-link p-0 m-0 text-danger">
-                        Fechar o dia
-                    </button>
-                </form>
-            </li>
-        }
-        <!-- EstadoId == 2 → não mostra nada -->
-        <li><a asp-controller="Login" asp-action="Sair">Sair</a></li>
-    </ul>
-
-</div>
-
-
-<!-- Card Dashboard ASP.NET MVC -->
-<div class="cards-container">
-        <div class="card-box">
-            <div class="card-header">Linha Corrente</div>
-            <div class="card-value">MZN  @ViewBag.TotalLinhaCorrente</div>
-            <div class="card-sub">Valor existente na linha corrente hoje</div>
-            <div class="card-icon">
-                <i class="fa fa-bar-chart"></i>
+                <div class="@classeCor small fw-semibold" style="font-size: 11px;">
+                    <i class="fa-solid @iconeSeta me-1"></i>@sinal@variacao.ToString("N1")% <span class="text-muted fw-normal">vs. mês anterior</span>
+                </div>
             </div>
-        </div>
-
-        <div class="card-box">
-            <div class="card-header">Linha Construção</div>
-            <div class="card-value">MZN  @ViewBag.TotalLinhaConstrucao</div>
-            <div class="card-sub">Valor existente na linha construção hoje</div>
-            <div class="card-icon">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box2">
-            <div class="card-header">Caixa</div>
-            <div class="card-value2">MZN  @ViewBag.TotalContaCaixa</div>
-            <div class="card-sub2">Valor existente em caixa hoje</div>
-            <div class="card-icon2">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box2">
-            <div class="card-header">Conta BCI 1</div>
-            <div class="card-value2">MZN  @ViewBag.TotalContaBci1</div>
-            <div class="card-sub2">Valor existente na conta BCI 1 hoje</div>
-            <div class="card-icon2">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box2">
-            <div class="card-header">Conta BCI 2</div>
-            <div class="card-value2">MZN  @ViewBag.TotalContaBci2</div>
-            <div class="card-sub2">Valor existente na conta BCI 2 hoje</div>
-            <div class="card-icon2">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box2">
-            <div class="card-header">M-Pesa</div>
-            <div class="card-value2">MZN  @ViewBag.TotalContaMpesa</div>
-            <div class="card-sub2">Valor existente no M-Pesa hoje</div>
-            <div class="card-icon2">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box2">
-            <div class="card-header">Global</div>
-            <div class="card-value2">MZN  @ViewBag.TotalContaGeral</div>
-            <div class="card-sub2">Valor total existente hoje</div>
-            <div class="card-icon2">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box3">
-            <div class="card-header">Tabernáculo de Maputo</div>
-            <div class="card-value3">MZN  @ViewBag.TotaltabernaculoMaputo</div>
-            <div class="card-sub3">Valor total existente hoje</div>
-            <div class="card-icon3">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box3">
-            <div class="card-header">Tabernáculo de Manhiça</div>
-            <div class="card-value3">MZN  @ViewBag.TotaltabernaculoManhica</div>
-            <div class="card-sub3">Valor total existente hoje</div>
-            <div class="card-icon3">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box3">
-            <div class="card-header">Tabernáculo de Romão</div>
-            <div class="card-value3">MZN  @ViewBag.TotaltabernaculoRomao</div>
-            <div class="card-sub3">Valor total existente hoje</div>
-            <div class="card-icon3">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box3">
-            <div class="card-header">Tabernáculo de Mahubo</div>
-            <div class="card-value3">MZN  @ViewBag.TotaltabernaculoMahubo</div>
-            <div class="card-sub3">Valor total existente hoje</div>
-            <div class="card-icon3">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box3">
-            <div class="card-header">Tabernáculo de Maguaza</div>
-            <div class="card-value3">MZN  @ViewBag.TotaltabernaculoMaguaza</div>
-            <div class="card-sub3">Valor total existente hoje</div>
-            <div class="card-icon3">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box3">
-            <div class="card-header">Tabernáculo de 3 de Fevereiro</div>
-            <div class="card-value3">MZN  @ViewBag.TotaltabernaculoFevereiro</div>
-            <div class="card-sub3">Valor total existente hoje</div>
-            <div class="card-icon3">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box3">
-            <div class="card-header">Tabernáculo de Maluana</div>
-            <div class="card-value3">MZN  @ViewBag.TotaltabernaculoMaluana</div>
-            <div class="card-sub3">Valor total existente hoje</div>
-            <div class="card-icon3">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>       
-
-        <div class="card-box3">
-            <div class="card-header">Tabernáculo de Malhampsene</div>
-            <div class="card-value3">MZN  @ViewBag.TotaltabernaculoMalhampsene</div>
-            <div class="card-sub3">Valor total existente hoje</div>
-            <div class="card-icon3">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>   
-
-        <div class="card-box4">
-            <div class="card-header">Oferta</div>
-            <div class="card-value4">MZN  @ViewBag.TotalEntradaOfertaHoje (Hoje)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaOfertaMes (Mês)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaOfertaAno (Ano)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaOfertaGlobal (Global)</div>
-            <div class="card-icon4">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box4">
-            <div class="card-header">Dízimo</div>
-            <div class="card-value4">MZN  @ViewBag.TotalEntradaDizimoHoje (Hoje)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaDizimoMes (Mês)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaDizimoAno (Ano)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaDizimoGlobal (Global)</div>
-            <div class="card-icon4">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box4">
-            <div class="card-header">Escola Dominical</div>
-            <div class="card-value4">MZN  @ViewBag.TotalEntradaDominicalHoje (Hoje)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaDominicalMes (Mês)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaDominicalAno (Ano)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaDominicalGlobal (Global)</div>
-            <div class="card-icon4">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box4">
-            <div class="card-header">Oferta Especial</div>
-            <div class="card-value4">MZN  @ViewBag.TotalEntradaEspecialHoje (Hoje)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaEspecialMes (Mês)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaEspecialAno (Ano)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaEspecialGlobal (Global)</div>
-            <div class="card-icon4">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box4">
-            <div class="card-header">Construção</div>
-            <div class="card-value4">MZN  @ViewBag.TotalEntradaConstrucaoHoje (Hoje)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaConstrucaoSemana (Semana)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaConstrucaoMes (Mês)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaConstrucaoAno (Ano)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaConstrucaoGlobal (Global)</div>
-            <div class="card-icon4">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box4">
-            <div class="card-header">Reembolso</div>
-            <div class="card-value4">MZN  @ViewBag.TotalEntradaReembolsoHoje (Hoje)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaReembolsoMes (Mês)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaReembolsoAno (Ano)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaReembolsoGlobal (Global)</div>
-            <div class="card-icon4">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box4">
-            <div class="card-header">Entradas Totais</div>
-            <div class="card-value4">MZN  @ViewBag.TotalEntradaHoje (Hoje)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaMes (Mês)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaAno (Ano)</div>
-            <div class="card-sub4">MZN  @ViewBag.TotalEntradaGlobal (Global)</div>
-            <div class="card-icon4">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box5">
-            <div class="card-header">Saídas Correntes</div>
-            <div class="card-value5">MZN  @ViewBag.TotalSaidaCorrenteHoje (Hoje)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaCorrenteMes (Mês)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaCorrenteAno (Ano)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaCorrenteGlobal (Global)</div>
-            <div class="card-icon5">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box5">
-            <div class="card-header">Saídas Construção</div>
-            <div class="card-value5">MZN  @ViewBag.TotalSaidaConstrucaoHoje (Hoje)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaConstrucaoMes (Mês)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaConstrucaoAno (Ano)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaConstrucaoGlobal (Global)</div>
-            <div class="card-icon5">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box5">
-            <div class="card-header">Saídas para empréstimos</div>
-            <div class="card-value5">MZN  @ViewBag.TotalSaidaEmprestimoHoje (Hoje)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaEmprestimoMes (Mês)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaEmprestimoAno (Ano)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaEmprestimoGlobal (Global)</div>
-            <div class="card-icon5">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box5">
-            <div class="card-header">Saídas Totais</div>
-            <div class="card-value5">MZN  @ViewBag.TotalSaidaHoje (Hoje)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaMes (Mês)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaAno (Ano)</div>
-            <div class="card-sub5">MZN  @ViewBag.TotalSaidaGlobal (Global)</div>
-            <div class="card-icon5">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box6">
-            <div class="card-header">Contas a Receber</div>
-            <div class="card-value6">MZN  @ViewBag.TotalReceber</div>
-            <div class="card-sub6">Valores a serem pagos ao Tabernáculo</div>
-            <div class="card-icon6">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box6">
-            <div class="card-header">Contas a Pagar</div>
-            <div class="card-value6">MZN  @ViewBag.TotalPagar</div>
-            <div class="card-sub6">Valores a serem pagos pelo Tabernáculo</div>
-            <div class="card-icon6">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>
-
-        <div class="card-box6">
-            <div class="card-header">Material e Equipamento</div>
-            <div class="card-value6">MZN  @ViewBag.TotalInventario</div>
-            <div class="card-sub6">Relação do inventário com avaliação</div>
-            <div class="card-icon6">
-                <i class="fa fa-bar-chart"></i>
-            </div>
-        </div>       
-</div>
-<div class="cards-container">
-    <div class="card-box4">
-        <div class="card-header">Entradas Totais</div>
-        <div class="card-sub4">MZN @ViewBag.TotalEntradaAno (Global)</div>
-
-        <div style="width: 100%; margin: 0 auto;">
-            <canvas id="grafEntradasAno" style="width: 100% !important; height: 300px;"></canvas>
         </div>
     </div>
 
-    <div class="card-box5">
-        <div class="card-header">Saídas Totais</div>
-        <div class="card-sub5">MZN @ViewBag.TotalSaidaAno (Global)</div>
+    <!-- Pagamentos Previstos do Mês -->
+    <div class="col">
+        <div class="sg-card d-flex align-items-center gap-3 bg-white p-3 shadow-sm rounded-4 border-0 h-100">
+            <div class="sg-kpi-icon-wrapper text-primary fs-3"><i class="fa-solid fa-file-circle-check"></i></div>
+            <div>
+                <div class="text-secondary small">Pagamentos Previstos do Mês <i class="fa-regular fa-circle-question ms-1"></i></div>
+                <div class="fw-bold fs-5 text-dark">
+                    MT @(((decimal)(ViewBag.PagamentosPrevistosMes ?? 0)).ToString("N2"))
+                </div>
+                @{
+                    decimal varPrevistos = ViewBag.VariacaoPrevistos ?? 0;
+                    string corPrev = varPrevistos >= 0 ? "text-success" : "text-danger";
+                    string iconePrev = varPrevistos >= 0 ? "fa-arrow-up" : "fa-arrow-down";
+                    string sinalPrev = varPrevistos >= 0 ? "+" : "";
+                }
+                <div class="@corPrev small fw-semibold" style="font-size: 11px;">
+                    <i class="fa-solid @iconePrev me-1"></i>@sinalPrev@varPrevistos.ToString("N1")% <span class="text-muted fw-normal">vs. mês anterior</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Gráfico das saídas -->
-        <div style="width: 100%; margin: 0 auto;">
-            <canvas id="grafSaidasAno" style="width: 100% !important; height: 300px;"></canvas>
+    <!-- Pagamentos Pendentes do Mês -->
+    <div class="col">
+        <div class="sg-card d-flex align-items-center gap-3 bg-white p-3 shadow-sm rounded-4 border-0 h-100">
+            <div class="sg-kpi-icon-wrapper text-warning fs-3"><i class="fa-solid fa-coins"></i></div>
+            <div>
+                <div class="text-secondary small">Pagamentos Pendentes do Mês <i class="fa-regular fa-circle-question ms-1"></i></div>
+                <div class="fw-bold fs-5 text-dark">
+                    MT @(((decimal)(ViewBag.PagamentosPendentesMes ?? 0)).ToString("N2"))
+                </div>
+                @{
+                    decimal varPendentes = ViewBag.VariacaoPendentes ?? 0;
+                    string corPend = varPendentes >= 0 ? "text-success" : "text-danger";
+                    string iconePend = varPendentes >= 0 ? "fa-arrow-up" : "fa-arrow-down";
+                    string sinalPend = varPendentes >= 0 ? "+" : "";
+                }
+                <div class="@corPend small fw-semibold" style="font-size: 11px;">
+                    <i class="fa-solid @iconePend me-1"></i>@sinalPend@varPendentes.ToString("N1")% <span class="text-muted fw-normal">vs. mês anterior</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carteira Vigente -->
+    <div class="col">
+        <div class="sg-card d-flex align-items-center gap-3 bg-white p-3 shadow-sm rounded-4 border-0 h-100">
+            <div class="sg-kpi-icon-wrapper text-success fs-3"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <div class="text-secondary small">Carteira Vigente <i class="fa-regular fa-circle-question ms-1"></i></div>
+                <div class="fw-bold fs-5 text-dark">
+                    MT @(((decimal)(ViewBag.CarteiraVigente ?? 0)).ToString("N2"))
+                </div>
+                @{
+                    decimal varCarteira = ViewBag.VariacaoCarteiraVigente ?? 0;
+                    string corCart = varCarteira >= 0 ? "text-success" : "text-danger";
+                    string iconeCart = varCarteira >= 0 ? "fa-arrow-up" : "fa-arrow-down";
+                    string sinalCart = varCarteira >= 0 ? "+" : "";
+                }
+                <div class="@corCart small fw-semibold" style="font-size: 11px;">
+                    <i class="fa-solid @iconeCart me-1"></i>@sinalCart@varCarteira.ToString("N1")% <span class="text-muted fw-normal">vs. mês anterior</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clientes (Total e Ativos) -->
+    <div class="col">
+        <div class="sg-card d-flex align-items-center gap-3 bg-white p-3 shadow-sm rounded-4 border-0 h-100">
+            <div class="sg-kpi-icon-wrapper text-info fs-3"><i class="fa-solid fa-users"></i></div>
+            <div>
+                <div class="text-secondary small">Clientes <i class="fa-regular fa-circle-question ms-1"></i></div>
+                <div class="fw-bold fs-5 text-dark">
+                    <span class="text-dark">@(ViewBag.ClientesTotaisCount ?? 0)</span>
+                    <span class="text-muted fw-normal fs-6">/</span>
+                    <span class="text-success">@(ViewBag.ClientesVigentesCount ?? 0)</span>
+                </div>
+                <div class="text-muted small" style="font-size: 11px;">
+                    <span>Geral / Ativos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carteira em Mora -->
+    <div class="col">
+        <div class="sg-card d-flex align-items-center gap-3 bg-white p-3 shadow-sm rounded-4 border-0 h-100">
+            <div class="sg-kpi-icon-wrapper text-danger fs-3"><i class="fa-solid fa-wallet"></i></div>
+            <div>
+                <div class="text-secondary small">Carteira em Mora <i class="fa-regular fa-circle-question ms-1"></i></div>
+                <div class="fw-bold fs-5 text-dark">
+                    MT @(((decimal)(ViewBag.CarteiraEmMora ?? 0)).ToString("N2"))
+                </div>
+                <div class="text-secondary small" style="font-size: 11px;">
+                    <span class="fw-bold text-dark">@(ViewBag.QuantidadeCobrancasMora ?? 0)</span> cobranças pendentes
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- GRÁFICOS PRINCIPAIS -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-xl-7">
+        <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark m-0">Evolução da Carteira Vigente</h6>
+                <div class="d-flex gap-2 align-items-center">
+                    <select class="form-select form-select-sm sg-filter-select"><option>MT</option></select>
+                    <i class="fa-solid fa-ellipsis-vertical text-muted"></i>
+                </div>
+            </div>
+            <div style="height: 260px;"><canvas id="sgVendasChart"></canvas></div>
+        </div>
+    </div>
 
-<script>
-    // Meses
-    const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-        "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    <div class="col-12 col-xl-5">
+        <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark m-0">Operações Chave</h6>
+                <i class="fa-solid fa-ellipsis-vertical text-muted"></i>
+            </div>
+            <div style="height: 260px;"><canvas id="sgRamosChart"></canvas></div>
+        </div>
+    </div>
+</div>
 
-    // Valores vindos do ViewBag
-    const valores = [
-    @string.Join(",", ((List<decimal>)ViewBag.EntradasMesValores))
-        ];
+<div class="row g-3 mb-4">
+    <!-- Vencimentos próximos -->
+    <div class="col-12 col-xl-6">
+        <div class="sg-card p-0">
+            <div class="p-3 d-flex justify-content-between align-items-center border-bottom">
+                <h6 class="fw-bold text-dark m-0"><i class="fa-regular fa-calendar me-2 text-success"></i>Vencimentos próximos</h6>
+                <a asp-controller="Amortizacao" asp-action="Index" class="text-success text-decoration-none fw-bold small">Ver todos <i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle m-0" style="font-size: 13px;">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th class="ps-3 border-0">Cliente</th>
+                            <th class="border-0">Valor por pagar</th>
+                            <th class="border-0">Vencimento</th>
+                            <th class="border-0 text-center">Atraso</th>
+                            <th class="border-0">Contacto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var vencimentosProximosList = ViewBag.VencimentosProximos as List<Analise.Models.AmortizacaoModel>;
+                        }
+                        @if (vencimentosProximosList != null && vencimentosProximosList.Any())
+                        {
+                            foreach (var item in vencimentosProximosList)
+                            {
+                                int diasAtraso = (item.Vencimento.Date - DateTime.Today).Days;
+                                decimal valorTotal = item.PrincipalPorPagar + item.JuroPorPagar + item.MultaPorPagar;
+                                <tr>
+                                    <td class="ps-3 fw-semibold text-dark">
+                                        <i class="fa-solid fa-user text-success me-2"></i>@(item.Pedido?.Entidade?.Nome ?? "N/D")
+                                    </td>
+                                    <td class="fw-semibold">MT @valorTotal.ToString("N2")</td>
+                                    <td>@item.Vencimento.ToString("dd MMM yyyy")</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1">
+                                            @diasAtraso dias
+                                        </span>
+                                    </td>
+                                    <td>@(item.Pedido?.Entidade?.Telefone ?? "N/D")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-3">Sem vencimentos próximos registados.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-2 text-center border-top">
+                <a asp-controller="Amortizacao" asp-action="Index" class="text-success text-decoration-none fw-bold small">Ver todos <i class="fa-solid fa-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
 
-    // Criação do gráfico
-    const ctx = document.getElementById('grafEntradasAno').getContext('2d');
+    <!-- Pagamentos pendentes -->
+    <div class="col-12 col-xl-6">
+        <div class="sg-card p-0">
+            <div class="p-3 d-flex justify-content-between align-items-center border-bottom">
+                <h6 class="fw-bold text-dark m-0"><i class="fa-regular fa-credit-card me-2 text-success"></i>Pagamentos pendentes</h6>
+                <a asp-controller="Amortizacao" asp-action="Index" class="text-success text-decoration-none fw-bold small">Ver todos <i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle m-0" style="font-size: 13px;">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th class="ps-3 border-0">Cliente</th>
+                            <th class="border-0">Valor por pagar</th>
+                            <th class="border-0">Vencimento</th>
+                            <th class="border-0 text-center">Atraso</th>
+                            <th class="border-0">Contacto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var pagamentosPendentesList = ViewBag.PagamentosPendentes as List<Analise.Models.AmortizacaoModel>;
+                        }
+                        @if (pagamentosPendentesList != null && pagamentosPendentesList.Any())
+                        {
+                            foreach (var item in pagamentosPendentesList)
+                            {
+                                int diasAtraso = (DateTime.Today - item.Vencimento.Date).Days;
+                                decimal valorTotal = item.PrincipalPorPagar + item.JuroPorPagar + item.MultaPorPagar;
+                                <tr>
+                                    <td class="ps-3 fw-semibold text-dark">
+                                        <i class="fa-solid fa-user text-danger me-2"></i>@(item.Pedido?.Entidade?.Nome ?? "N/D")
+                                    </td>
+                                    <td class="fw-semibold">MT @valorTotal.ToString("N2")</td>
+                                    <td>@item.Vencimento.ToString("dd MMM yyyy")</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger-subtle text-danger px-2 py-1 fw-bold">
+                                            +@diasAtraso dias
+                                        </span>
+                                    </td>
+                                    <td>@(item.Pedido?.Entidade?.Telefone ?? "N/D")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-3">Nenhum pagamento pendente em atraso.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-2 text-center border-top">
+                <a asp-controller="Amortizacao" asp-action="Index" class="text-success text-decoration-none fw-bold small">Ver todos <i class="fa-solid fa-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: meses,
-            datasets: [{
-                label: 'Entradas mensais',
-                data: valores,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true }
-            }
-        }
-    });
+<!-- CANAIS E LINHAS DE CRÉDITO -->
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0 h-100">
+            <h6 class="fw-bold text-dark mb-3">Meios de pagamento</h6>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
 
-    //Saidas
+                <!-- M-Pesa -->
+                <div class="sg-partner-box px-3 py-2 border rounded-3 bg-white d-flex align-items-center gap-2 shadow-sm">
+                    <span class="badge bg-danger rounded-circle p-1" style="width: 8px; height: 8px;"></span>
+                    <span class="fw-bold text-danger" style="font-size: 13px;">M-Pesa</span>
+                </div>
 
-    const valoresSaidas = [
-    @string.Join(",", ((List<decimal>)ViewBag.SaidasMesValores))
-        ];
+                <!-- E-Mola -->
+                <div class="sg-partner-box px-3 py-2 border rounded-3 bg-white d-flex align-items-center gap-2 shadow-sm">
+                    <span class="badge rounded-circle p-1" style="width: 8px; height: 8px; background-color: #ff6600;"></span>
+                    <span class="fw-bold" style="color: #ff6600; font-size: 13px;">E-Mola</span>
+                </div>
 
-    const ctxSaidas = document.getElementById('grafSaidasAno').getContext('2d');
+                <!-- BCI -->
+                <div class="sg-partner-box px-3 py-2 border rounded-3 bg-white d-flex align-items-center gap-2 shadow-sm">
+                    <span class="badge rounded-circle p-1" style="width: 8px; height: 8px; background-color: #ff7700;"></span>
+                    <span class="fw-bold" style="color: #ff7700; font-size: 13px;">BCI</span>
+                </div>
 
-    new Chart(ctxSaidas, {
-        type: 'bar',
-        data: {
-            labels: meses,
-            datasets: [{
-                label: 'Saídas mensais',
-                data: valoresSaidas,
-                borderWidth: 1,
-                backgroundColor: 'rgba(255, 99, 132, 0.6)' // opcional: cor diferente das entradas
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true }
-            }
-        }
-    });
+                <!-- Millennium bim -->
+                <div class="sg-partner-box px-3 py-2 border rounded-3 bg-white d-flex align-items-center gap-2 shadow-sm">
+                    <span class="badge rounded-circle p-1" style="width: 8px; height: 8px; background-color: #8b0000;"></span>
+                    <span class="fw-bold" style="color: #8b0000; font-size: 12px;">Millennium</span>
+                </div>
 
-    const btnMenu = document.getElementById("btnMenuLateral");
-    const menu = document.getElementById("menuLateral");
-    let aberto = false;
+                <!-- Standard Bank -->
+                <div class="sg-partner-box px-3 py-2 border rounded-3 bg-white d-flex align-items-center gap-2 shadow-sm">
+                    <span class="badge rounded-circle p-1" style="width: 8px; height: 8px; background-color: #002D62;"></span>
+                    <span class="fw-bold" style="color: #002D62; font-size: 12px;">Standard Bank</span>
+                </div>
 
-    btnMenu.onclick = function () {
-        if (!aberto) {
-            menu.style.left = "0px";
-            aberto = true;
-        } else {
-            menu.style.left = "-260px";
-            aberto = false;
-        }
-    };
+                <!-- Absa -->
+                <div class="sg-partner-box px-3 py-2 border rounded-3 bg-white d-flex align-items-center gap-2 shadow-sm">
+                    <span class="badge bg-danger rounded-circle p-1" style="width: 8px; height: 8px;"></span>
+                    <span class="fw-bold text-danger" style="font-size: 13px;">Absa</span>
+                </div>
 
-    // Submenus
-    const toggles = document.querySelectorAll(".submenu-toggle");
-    toggles.forEach(toggle => {
-        toggle.addEventListener("click", function () {
-            const submenu = this.nextElementSibling;
-            if (submenu.style.display === "none" || submenu.style.display === "") {
-                submenu.style.display = "block";
-            } else {
-                submenu.style.display = "none";
+                <!-- Caixa -->
+                <div class="sg-partner-box px-3 py-2 border rounded-3 bg-white d-flex align-items-center gap-2 shadow-sm">
+                    <span class="badge rounded-circle p-1" style="width: 8px; height: 8px; background-color: #004c99;"></span>
+                    <span class="fw-bold" style="color: #004c99; font-size: 12px;">Caixa</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0 h-100">
+            <h6 class="fw-bold text-dark mb-3">Linhas de Crédito</h6>
+            <div class="row g-2">
+                <!-- Micro -->
+                <div class="col">
+                    <div class="sg-partner-box d-flex align-items-center justify-content-center gap-2 py-2 px-2 border rounded-3 bg-light" style="font-size: 13px;">
+                        <i class="fa-solid fa-store text-success"></i> <span class="fw-semibold text-dark">Micro</span>
+                    </div>
+                </div>
+
+                <!-- Consumo -->
+                <div class="col">
+                    <div class="sg-partner-box d-flex align-items-center justify-content-center gap-2 py-2 px-2 border rounded-3 bg-light" style="font-size: 13px;">
+                        <i class="fa-solid fa-wallet text-warning"></i> <span class="fw-semibold text-dark">Consumo</span>
+                    </div>
+                </div>
+
+                <!-- Habitação -->
+                <div class="col">
+                    <div class="sg-partner-box d-flex align-items-center justify-content-center gap-2 py-2 px-2 border rounded-3 bg-light" style="font-size: 13px;">
+                        <i class="fa-solid fa-house text-primary"></i> <span class="fw-semibold text-dark">Habitação</span>
+                    </div>
+                </div>
+
+                <!-- PME -->
+                <div class="col">
+                    <div class="sg-partner-box d-flex align-items-center justify-content-center gap-2 py-2 px-2 border rounded-3 bg-light" style="font-size: 13px;">
+                        <i class="fa-solid fa-briefcase text-info"></i> <span class="fw-semibold text-dark">PME</span>
+                    </div>
+                </div>
+
+                <!-- Outras -->
+                <div class="col">
+                    <div class="sg-partner-box d-flex align-items-center justify-content-center py-2 px-2 border rounded-3 bg-light text-muted fw-semibold" style="font-size: 13px;">
+                        ... Outras
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const carteiraLabels = @Html.Raw(ViewBag.CarteiraLabels ?? "[]");
+        const carteiraValores = @Html.Raw(ViewBag.CarteiraValores ?? "[]");
+
+        new Chart(document.getElementById('sgVendasChart'), {
+            type: 'line',
+            data: {
+                labels: carteiraLabels,
+                datasets: [{
+                    label: 'Carteira Vigente (MT)',
+                    data: carteiraValores,
+                    borderColor: '#079b62',
+                    backgroundColor: 'rgba(7, 155, 98, 0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#079b62'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9' },
+                        ticks: { callback: v => (v / 1000) + 'k MT' }
+                    },
+                    x: { grid: { display: false } }
+                }
             }
         });
-    });
-</script>
+
+        new Chart(document.getElementById('sgRamosChart'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(ViewBag.OperacoesChaveLabels ?? "[]"),
+                datasets: [{
+                    data: @Html.Raw(ViewBag.OperacoesChaveValores ?? "[]"),
+                    backgroundColor: ['#079b62', '#3b82f6', '#f59e0b', '#20c997', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { usePointStyle: true, boxWidth: 8 }
+                    }
+                }
+            }
+        });
+    </script>
+}

@@ -1,533 +1,392 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.EntityFrameworkCore
+@inject Analise.Helper.ISessao SessaoUsuario
+@inject Analise.Data.BancoContext _context
+
+<!DOCTYPE html>
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-}
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>@ViewData["Title"] - NHC</title>
+    
+    // Obter os dados do utilizador autenticado
+    var usuario = SessaoUsuario.BuscarSessaoDoUsuario();
 
-        <link href="~/Content/Site.css" rel="stylesheet" />
-        <link rel="manifest" href="~/manifest.json" />
-        <meta name="theme-color" content="#0d6efd" />
-        <link rel="stylesheet" href="~/css/site.css" />
+    string nomeUtilizador = usuario?.Login ?? "Administrador";
 
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-        <link rel="stylesheet" href="~/Analise.styles.css" asp-append-version="true" />
-        <link href="https://cdn.datatables.net/v/dt/dt-2.2.1/datatables.min.css" rel="stylesheet">
+    string primeiraLetra = !string.IsNullOrEmpty(nomeUtilizador)
+        ? nomeUtilizador.Substring(0, 1).ToUpper()
+        : "A";
 
-        @RenderSection("Styles", required: false)
-    </head>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => console.log('Service Worker registrado:', reg))
-                    .catch(err => console.log('Erro no Service Worker:', err));
-            });
-        }
-    </script>
-    <body>
-        <div id="global-loader" style="display:none;">
-            <div class="loader-backdrop"></div>
-            <div class="loader-box">
-                <div class="spinner"></div>
-                <div class="loader-text">A processar...</div>
-            </div>
-        </div>
+    // Obter o ID da agência associado ao utilizador
+    var agenciaId = usuario?.AgenciaId;
 
-        <header class="site-header">
-            <nav class="nav">
-                @await Component.InvokeAsync("Menu")
-            </nav>
-        </header>
+    // Nome apresentado no menu lateral
+    string agenciaUtilizador = "Agência não identificada";
 
-        <div class="page-container">
-            <section class="page-body">
-                @RenderBody()
-            </section>
+    if (agenciaId != null)
+    {
+        var agencia = await _context.Agencias
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == agenciaId);
 
-            <footer class="footer">
-                &copy; 2025 - TopUp Go
-            </footer>
-        </div>
-
-       @*  <div class="page-body">
-            <main role="main" class="pb-3">
-                @RenderBody()
-            </main>
-        </div>
-        <footer class="border-top site-footer text-muted">
-            &copy; 2025 - Stely Business
-        </footer> *@
-
-        <script src="~/lib/jquery/dist/jquery.min.js"></script>
-        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.datatables.net/v/dt/dt-2.2.1/datatables.min.js"></script>
-        <script src="~/js/site.js" asp-append-version="true"></script>
-        @await RenderSectionAsync("Scripts", required: false)
-
-    <script>
-        function mostrarLoader() {
-            document.getElementById("global-loader").style.display = "block";
-        }
-
-        function esconderLoader() {
-            document.getElementById("global-loader").style.display = "none";
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-
-            // Loader ao submeter formulários
-            document.querySelectorAll("form").forEach(function (form) {
-                form.addEventListener("submit", function () {
-                    mostrarLoader();
-                });
-            });
-
-            // Loader ao clicar links
-            document.querySelectorAll("a").forEach(function (link) {
-                link.addEventListener("click", function () {
-
-                    if (link.classList.contains("submenu-toggle"))
-                        return;
-
-                    const href = link.getAttribute("href");
-                    if (!href || href.startsWith("javascript"))
-                        return;
-
-                    mostrarLoader();
-
-                    // 👇 Se abrir nova aba (PDF)
-                    if (link.getAttribute("target") === "_blank") {
-                        setTimeout(esconderLoader, 2000);
-                    }
-                });
-            });
-
-            // 👇 Quando voltar para a página
-            window.addEventListener("focus", function () {
-                esconderLoader();
-            });
-
-        });
-    </script>
-
-    </body>
-</html>
-
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      crossorigin="anonymous" />
-<style>
-   /* Botão estilo nav-link */
-    .btn-nav {
-        padding: 6px 14px;
-        border-radius: 10px;
-        display: inline-block;
-        width: 100%;
-        text-align: center;
-        font-weight: 600;
-        border: 1px solid rgba(70,200,120,0.03);
-        backdrop-filter: blur(6px);
-        background: rgba(133,146,141);
-        color: rgba(0,0,0);
-        cursor: pointer;
-        transition: background 0.3s ease, color 0.3s ease;
+        agenciaUtilizador = agencia?.Nome ?? "Agência não identificada";
     }
-
-        .btn-nav:hover {
-            background: rgba(255,255,255);
-            border: 1px solid rgba(133,146,141);
-            color: rgba(0,0,0);
-        }
-
-.form-container {
-    width: 100%;
-    margin: 0;
-    padding: 0.5rem;
-    border: 0px solid #ccc;
-    border-radius: 10px;
-    background-color: rgba(248, 249, 250, 0);
-    box-sizing: border-box;
 }
+<html lang="pt">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Cred</title>
 
-    .form-group-spacing {
-        margin-bottom: 2rem;
-    }
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html, body {
-            height: 100%;
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-        }
-
-        /* ============================
-           BODY E FUNDO
-        ============================ */
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            color: rgba(0,0,0);
-            background: rgba(255,255,255);
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            padding-bottom: 50px;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            background: rgba(255,255,255);
-            mix-blend-mode: overlay;
-            filter: blur(6px);
-            z-index: 0;
-        }
-
-    /* ============================
-       CONTEÚDO PRINCIPAL
-    ============================ */
-    .page-container {
-        display: flex;
-        flex-direction: column;
-        flex: 1; /* ocupa o espaço total disponível */
-        position: relative;
-        z-index: 1;
-        padding-bottom: 50px;
-    }
-
-    .page-body {
-        flex: 1; /* empurra o rodapé para o fim */
-        padding: 50px;
-    }
-
-    /* ============================
-       RODAPÉ
-    ============================ */
-    /* footer.footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            padding: 10px;
-            background: rgba(0,0,0,0);
-            color: #fff;
-        } */
-
-    footer.footer {
-        text-align: center;
-        padding: 1px;
-        background: transparent;
-        color: rgba(0,0,0);
-        margin-top: auto;
-    }
-
-/* layout do header */
-.site-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(26, 60, 46, 0);
-    backdrop-filter: blur(6px); 
-    z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);        
-}
-
-.nav {
-    display: flex;
-    align-items: center;
-    padding: 4px 6px;
-}
-
-/* logotipo + nome */
-.brand {
-    display: flex;
-    align-items: center;
-    font-weight: 700;
-}
-    /* Wrapper para menu + botão no lado direito */
-    .menu-wrapper {
-        margin-left: auto; /* empurra tudo para a direita */
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-/* links (lado direito) */
-.nav-links {
-    list-style: none;
-    display: flex;
-    gap: 18px;
-    margin: 0;
-    padding: 0;
-}
-
-        .nav-links a {
-            color: rgba(0,0,0,0.9); /* cor do texto */
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 6px;
-            background: transparent; /* fundo transparente */
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-            /* efeito hover leve sem fundo sólido */
-            .nav-links a:hover {
-                background: rgba(255,255,255,0.05); /* leve efeito sobre o fundo */
-                color: black; /* mantém o texto legível */
+    <style>
+            :root {
+                --sg-green: #079b62;
+                --sg-green-dark: #08784f;
+                --sg-bg: #f5f7fb;
+                --sg-text: #172b4d;
+                --sg-muted: #718096;
+                --sg-border: #e8edf3;
             }
 
-/* botão hamburguer */
-.menu-toggle {
-    display: none;
-    margin-left: auto; /* 🔹 empurra o botão para o canto direito */
-    font-size: 26px;
-        background: transparent; /* fundo transparente */
-    border: none;
-        color: black;
-    cursor: pointer;
-}
-.menu-wrapper {
-    margin-left: auto;   /* empurra botão + menu para a direita */
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-/* responsividade */
-@@media (max-width: 800px) {
-    .menu-toggle {
-        display: block;
-    }
+            body {
+                background-color: var(--sg-bg);
+                color: var(--sg-text);
+                font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+                margin: 0;
+                padding: 0;
+            }
 
-    .nav-links {
-        display: none;
-        position: absolute;
-        top: 60px;
-        left: 0;
-            background: rgba(0,0,0,0.75); /* fundo transparente */
-        flex-direction: column;
-        width: 200px;
-        padding: 18px;
-        gap: 10px;
-        border-radius: 0 0 8px 8px;
-    }
+            /* SIDEBAR FIXA COM TRANSIÇÃO */
+            .sg-sidebar {
+                width: 245px;
+                min-height: 100vh;
+                background: #fff;
+                border-right: 1px solid var(--sg-border);
+                padding: 24px 18px;
+                position: fixed;
+                left: 0;
+                top: 70px;
+                bottom: 0;
+                overflow-y: auto;
+                z-index: 1030;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                transition: transform 0.3s ease;
+            }
 
-    .nav-links.active {
-        display: flex;
-    }
-}
+            /* ESTADO RECOLHIDO DA SIDEBAR */
+            body.sidebar-collapsed .sg-sidebar {
+                transform: translateX(-100%);
+            }
 
-/* HERO */
-    .hero {
-        min-height: 72vh;
-        display: flex;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-        padding: 60px 40px;
-    }
+            .sg-brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 23px;
+                font-weight: 800;
+                color: var(--sg-green);
+                text-decoration: none;
+            }
 
-    .hero-inner {
-        max-width: 1100px;
-        width: 100%;
-        margin: 0 auto;
-        padding: 32px;
-        position: relative;
-        z-index: 3;
-    }
+                .sg-brand i {
+                    font-size: 29px;
+                }
 
-    .hero h1 {
-        font-size: 48px;
-        line-height: 1.02;
-        margin-bottom: 12px;
-        color: rgba(0,0,0,0.45);
-        text-shadow: 0 6px 22px rgba(2,10,6,0.5);
-    }
+            .sg-nav-link {
+                display: flex;
+                align-items: center;
+                gap: 13px;
+                padding: 13px 14px;
+                border-radius: 9px;
+                text-decoration: none;
+                color: #24415f;
+                font-weight: 600;
+                transition: .2s;
+                font-size: 14px;
+                white-space: nowrap;
+            }
 
-    .hero .accent {
-        color: #48c878;
-    }
+                .sg-nav-link i {
+                    width: 21px;
+                    text-align: center;
+                    font-size: 17px;
+                }
 
-    .lead {
-        color: rgba(25,25,25,0.8);
-        margin-bottom: 18px
-    }
+                .sg-nav-link:hover,
+                .sg-nav-link.active {
+                    color: #fff !important;
+                    background: var(--sg-green) !important;
+                }
 
-    .hero-cta {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 22px
-    }
+            /* TOPBAR FIXA */
+            .sg-topbar {
+                min-height: 68px;
+                padding: 14px 27px;
+                background: #fff;
+                border-bottom: 1px solid var(--sg-border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 15px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 70px;
+                z-index: 1040;
+            }
 
-    @@media (max-width:900px) {
-        .hero h1 {
-            font-size: 32px
-        }
+            /* CONTAINER PRINCIPAL COM TRANSIÇÃO DE MARGEM */
+            .sg-main-wrapper {
+                margin-left: 245px;
+                margin-top: 70px;
+                padding: 27px;
+                min-height: calc(100vh - 70px);
+                transition: margin-left 0.3s ease;
+            }
 
-        .nav-links {
-            display: none
-        }
+            /* EXPANDIR CONTEÚDO QUANDO A SIDEBAR ESTIVER FECHADA */
+            body.sidebar-collapsed .sg-main-wrapper {
+                margin-left: 0;
+            }
 
-        .hero {
-            padding: 30px
-        }
+            /* LOADER */
+            .loader-backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(255,255,255,0.7);
+                z-index: 9998;
+            }
 
-        .cards {
-            flex-direction: column
-        }
-    }
+            .loader-box {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 9999;
+                text-align: center;
+            }
 
-    .hero-inner::after {
-        content: "";
-        position: absolute;
-        right: -40px;
-        top: 40px;
-        width: 420px;
-        height: 420px;
-        border-radius: 50%;
-        border: 3px solid rgba(255,255,255,0.03);
-        box-shadow: 0 30px 90px rgba(0,0,0,0.45), inset 0 0 40px rgba(80,200,120,0.03);
-        z-index: 1;
-        pointer-events: none;
-    }
+            .spinner {
+                width: 40px;
+                height: 40px;
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid var(--sg-green);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 10px;
+            }
 
-    /* cards */
-    .cards {
-        display: flex;
-        gap: 14px;
-        margin-top: 18px;
-    }
+            @@keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
 
-    .card {
-        min-width: 200px;
-        padding: 14px;
-        border-radius: 12px;
-        background: linear-gradient(180deg, rgba(2,10,6,0.2), rgba(2,10,6,1));
-        box-shadow: 0 8px 24px rgba(2,10,6,0.45);
-        backdrop-filter: blur(6px);
-        color: #dff7e8;
-    }
-    /* link verde */
-    .link-green {
-        color: #48c878;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-        transition: color 0.3s ease;
-    }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+    </style>
+    @RenderSection("Styles", required: false)
+</head>
+<body class="sidebar-collapsed">
 
-    .btn {
-        padding: 10px 18px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 600;
-        display: inline-block;
-        border: 1px solid rgba(255,255,255,0.06);
-        backdrop-filter: blur(6px);
-    }
+    <div id="global-loader" style="display:none;">
+        <div class="loader-backdrop"></div>
+        <div class="loader-box">
+            <div class="spinner"></div>
+            <div class="fw-semibold text-secondary">A processar...</div>
+        </div>
+    </div>
 
-        .btn.primary {
-            background: linear-gradient(90deg, rgba(70,200,120), rgba(50,160,90));
-            color: #eaffef;
-        }
+    <!-- TOPO SUPERIOR -->
+    <header class="sg-topbar">
+        <div class="d-flex align-items-center gap-3">
+            <!-- BOTÃO PARA ESCONDER / MOSTRAR A BARRA LATERAL -->
+            <button class="btn btn-light rounded-circle p-2 border-0 shadow-sm" type="button" id="sidebarToggle" title="Alternar Menu Lateral" style="width: 38px; height: 38px;">
+                <i class="fa-solid fa-bars text-secondary"></i>
+            </button>
 
-        .btn.ghost {
-            background: transparent;
-            color: rgba(0,0,0);
-            border: 1px solid rgba(133,146,141);
-        }
+            <!-- LOGO CRED QUE MOSTRA A SIDEBAR E VOLTA AO PAINEL -->
+            <a asp-controller="Home" asp-action="Index" class="sg-brand" id="logoBrand">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Cred</span>
+            </a>
+        </div>
 
-/* textbox */
-    .textbox {
-        padding: 6px 14px;
-        border-radius: 10px;
-        font-weight: 400;
-        border: 1px solid rgba(133,146,141);
-        backdrop-filter: blur(6px);
-        background: transparent;
-        color: rgba(0,0,0);
-        font-family: inherit;
-        font-size: 16px;
-        width: 100%;
-        box-sizing: border-box;
-        transition: all 0.3s ease;
-    }
+        <div class="d-flex align-items-center gap-3">
+           @*  <div class="d-none d-md-block" style="width: 260px;">
+                <input type="search" id="sgSearch"
+                       class="form-control form-control-sm rounded-pill px-3"
+                       placeholder="Pesquisar cliente ou apólice...">
+            </div> *@
+            <div class="dropdown">
+                <button class="btn btn-light position-relative rounded-circle p-2" type="button" id="dropdownNotificacoes" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style="font-size: 8px;">
+                        @(ViewBag.TotalNotificacoesHoje ?? 0)
+                    </span>
+                </button>
 
-        /* placeholder */
-        .textbox::placeholder {
-            color: rgba(255,255,255,0.3);
-        }
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2" aria-labelledby="dropdownNotificacoes" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                    <li class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-dark small">Prestações a Vencer Hoje</span>
+                        <span class="badge bg-success rounded-pill">@(ViewBag.TotalNotificacoesHoje ?? 0)</span>
+                    </li>
 
-        /* foco */
-        .textbox:focus {
-            outline: none;
-            border: 1px solid #48c878;
-            box-shadow: 0 0 12px rgba(72,200,120,0.3);
-        }
+                    @{
+                        var notificacoes = ViewBag.PrestacoesHoje as List<Analise.Models.AmortizacaoModel>;
+                    }
 
-    /* autocomplete transparente Chrome/Safari */
-    input.textbox:-webkit-autofill,
-    input.textbox:-webkit-autofill:hover,
-    input.textbox:-webkit-autofill:focus,
-    input.textbox:-webkit-autofill:active {
-        -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
-        -webkit-text-fill-color: rgba(0,0,0) !important;
-        transition: background-color 5000s ease-in-out 0s;
-    }
+                    @if (notificacoes != null && notificacoes.Any())
+                    {
+                        foreach (var item in notificacoes)
+                        {
+                            <li>
+                                <a class="dropdown-item py-2 text-wrap small border-bottom" asp-controller="Pedido" asp-action="Pagamento" asp-route-id="@item.PedidoId">
+                                    <div class="fw-bold text-dark">
+                                        <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>
+                                        @(item.Pedido?.Entidade?.Nome ?? "Cliente")
+                                    </div>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        Prestação #@item.NR | Valor: <strong>MT @((item.PrincipalPorPagar + item.JuroPorPagar).ToString("N2"))</strong>
+                                    </div>
+                                </a>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="text-center py-3 text-muted small">
+                            Nenhuma prestação vence hoje.
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 13px;">
+                    @primeiraLetra
+                </div>
+                <span class="small fw-semibold d-none d-md-inline text-dark">@nomeUtilizador</span>
+                <i class="fa-solid fa-chevron-down small text-muted"></i>
+            </div>
+        </div>
+    </header>
 
-    /* autocomplete transparente Firefox */
-    input.textbox:-moz-autofill {
-        box-shadow: 0 0 0px 1000px transparent inset !important;
-        -moz-text-fill-color: rgba(0,0,0) !important;
-    }
+    <!-- MENU LATERAL -->
+    <aside class="sg-sidebar">
+        <div>
+            <nav class="d-flex flex-column gap-1">
+                <a asp-controller="Home" asp-action="Index" class="sg-nav-link @(currentController == "Painel" || currentController == "Home" ? "active" : "")">
+                    <i class="fa-solid fa-house fa-fw"></i> Painel
+                </a>
+                <a asp-controller="Conta" asp-action="Ver" class="sg-nav-link @(currentController == "Conta" ? "active" : "")">
+                    <i class="fa-solid fa-chart-line fa-fw"></i> Contas
+                </a>
+                <a asp-controller="Entidade" asp-action="Ver" class="sg-nav-link @(currentController == "Entidade" ? "active" : "")">
+                    <i class="fa-solid fa-user fa-fw"></i> Entidades
+                </a>
+                <a asp-controller="Simulador" asp-action="Index" class="sg-nav-link @(currentController == "Simulador" ? "active" : "")">
+                    <i class="fa-solid fa-calculator fa-fw"></i> Simulador
+                </a>
+                <a asp-controller="Pedido" asp-action="Ver" class="sg-nav-link @(currentController == "Pedido" ? "active" : "")">
+                    <i class="fa-solid fa-credit-card fa-fw"></i> Créditos
+                </a>
+                <a asp-controller="Relatorio" asp-action="Index" class="sg-nav-link @(currentController == "Relatorio" ? "active" : "")">
+                    <i class="fa-solid fa-chart-pie fa-fw"></i> Relatórios
+                </a>
+                <a asp-controller="Configuracao" asp-action="Index" class="sg-nav-link @(currentController == "Configuracao" ? "active" : "")">
+                    <i class="fa-solid fa-gear fa-fw"></i> Configurações
+                </a>
 
-.textbox.primary {
-    background: linear-gradient(90deg, rgba(70,200,120,0.18), rgba(50,160,90,0.14));
-    color: #fff;
-}
+                <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Criar" ? "active" : "")">
+                    <i class="fa-solid fa-users fa-fw"></i> Usuários
+                </a>
+                <a asp-controller="AlterarSenha" asp-action="Index" class="sg-nav-link @(currentController == "Index" ? "active" : "")">
+                    <i class="fa-solid fa-key fa-fw"></i> Alterar Senha
+                </a>
+            </nav>
+        </div>
 
-.textbox.ghost {
-    background: transparent;
-    color: #fff;
-    border: 1px solid rgba(230,243,234,0.08);
-}
+        <div>
+            <div class="p-3 rounded-3 mb-3" style="background: #f0faf5; border: 1px solid #e1f1e9;">
+                <i class="fa-solid fa-shield-halved text-success fs-3 mb-2"></i>
+                <div class="fw-bold text-dark small">Cred</div>
+                <div class="text-secondary" style="font-size: 11px;">Sua gestão simplificada.</div>
+            </div>
 
-.textbox:focus {
-    outline: none;
-    border: 1px solid #48c878;
-    box-shadow: 0 0 12px rgba(72,200,120,0.3);
-}
+            <div class="p-2 border rounded-3 bg-white d-flex align-items-center justify-content-between text-secondary small mb-3">
+                <span><i class="fa-solid fa-location-dot me-2 text-secondary"></i> @agenciaUtilizador</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
 
-/* link verde */
-.link-green {
-    color: #48c878;
-    font-weight: 600;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-    transition: color 0.3s ease;
-}
+            <div class="text-muted" style="font-size: 10px;">
+                &copy; @DateTime.Now.Year Cred, Lda.<br>Todos os direitos reservados.
+            </div>
+        </div>
+    </aside>
 
-.link-green:hover {
-    color: #32a060;
-}
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="sg-main-wrapper">
+        @RenderBody()
+    </main>
 
-</style>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+            function mostrarLoader() { document.getElementById("global-loader").style.display = "block"; }
+            function esconderLoader() { document.getElementById("global-loader").style.display = "none"; }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const sidebarToggle = document.getElementById("sidebarToggle");
+                const logoBrand = document.getElementById("logoBrand");
+                const body = document.body;
+
+                // Verifica o estado guardado no localStorage ao iniciar
+                const savedState = localStorage.getItem("sidebarState");
+                if (savedState === "expanded") {
+                    body.classList.remove("sidebar-collapsed");
+                } else if (savedState === "collapsed") {
+                    body.classList.add("sidebar-collapsed");
+                }
+
+                // Alternar sidebar com o botão de hambúrguer
+                if (sidebarToggle) {
+                    sidebarToggle.addEventListener("click", function () {
+                        body.classList.toggle("sidebar-collapsed");
+                        if (body.classList.contains("sidebar-collapsed")) {
+                            localStorage.setItem("sidebarState", "collapsed");
+                        } else {
+                            localStorage.setItem("sidebarState", "expanded");
+                        }
+                    });
+                }
+
+                // Ao clicar no logo Cred, força a abertura da sidebar e define o estado como expandido
+                if (logoBrand) {
+                    logoBrand.addEventListener("click", function () {
+                        body.classList.remove("sidebar-collapsed");
+                        localStorage.setItem("sidebarState", "expanded");
+                    });
+                }
+
+                document.querySelectorAll("form").forEach(f => f.addEventListener("submit", mostrarLoader));
+                document.querySelectorAll("a").forEach(l => l.addEventListener("click", function () {
+                    if (l.getAttribute("target") === "_blank" || l.getAttribute("href")?.startsWith("#")) return;
+                    mostrarLoader();
+                }));
+                window.addEventListener("focus", esconderLoader);
+            });
+    </script>
+</body>
+</html>

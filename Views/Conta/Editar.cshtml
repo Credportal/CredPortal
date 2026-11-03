@@ -1,335 +1,16 @@
-﻿@model ContaViewModel
+﻿@model Analise.Models.ContaModel
 @{
-    ViewData["Title"] = "Editar conta";
+    ViewData["Title"] = "Editar Conta Bancária";
 }
-<style>
-    .form-container {
-        width: 100%;
-        padding: 0.1rem;
-        border: 1px solid #ccc;
-        border-radius: 10px; /* opcional: remove o arredondamento se quiser bordas quadradas */
-        box-sizing: border-box; /* garante que padding não estoure a largura */
-        background-color: rgba(248, 249, 250, 0);
-    }
-    /*
-                .custom-border {
-                    border-bottom: 2px solid black;
-                    padding: 0.25rem;
-                } */
-
-    .form-group-spacing {
-        margin-bottom: 2rem; /* Triplo do padrão (~1.33rem) */
-    }
-
-    #table-usuarios {
-        table-layout: auto !important;
-        width: auto !important;
-    }
-
-        #table-usuarios th,
-        #table-usuarios td {
-            white-space: nowrap; /* impede quebra de linha */
-            font-size: 12px; /* já reduz o tamanho da fonte */
-            padding: 4px 8px; /* opcional: deixa a célula mais compacta */
-            color: #fff; /* branco */
-        }
-
-        #table-usuarios thead th {
-            color: #e9fff1; /* branco esverdeado */
-            font-weight: 600;
-        }
-
-    .icon-mini {
-        font-size: 1.05rem; /* ~12px */
-    }
-
-        .icon-mini:hover {
-            border-color: #fff; /* borda branca no hover */
-            cursor: pointer; /* muda o cursor para indicar clique */
-        }
-
-    .botao-transparente {
-        background-color: transparent;
-        border: 1px solid transparent;
-        color: #fff; /* cor do ícone branco */
-    }
-
-        .botao-transparente:hover {
-            border-color: #fff; /* cor do ícone branco */
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-    /* reset simples */
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
-
-    html, body {
-        height: 100%;
-    }
-
-
-    /* BOTÃO NAV */
-    .btn-nav {
-        padding: 6px 14px;
-        border-radius: 10px;
-        display: inline-block;
-        width: 100%;
-        text-align: center;
-        font-weight: 600;
-        border: 1px solid rgba(230,243,234,0.3);
-        backdrop-filter: blur(6px);
-        background: linear-gradient(90deg, rgba(70,200,120,0.1), rgba(50,160,90,0.14));
-        color: #fff;
-        cursor: pointer;
-        transition: background 0.3s ease, color 0.3s ease;
-    }
-
-        .btn-nav:hover {
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-        }
-
-    /* Formulário */
-    .form-container {
-        width: 100%;
-        margin: 0;
-        padding: 0.5rem;
-        border-radius: 10px;
-        background-color: transparent;
-        box-sizing: border-box;
-    }
-
-    .form-group-spacing {
-        margin-bottom: 2rem;
-    }
-
-    /* HERO (conteúdo em primeiro plano) */
-    .hero {
-        min-height: 72vh;
-        display: flex;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-        padding: 60px 40px;
-    }
-
-    .hero-inner {
-        max-width: 1100px;
-        width: 100%;
-        margin: 0 auto;
-        padding: 32px;
-        position: relative;
-        z-index: 3;
-    }
-
-    .hero h1 {
-        font-size: 48px;
-        line-height: 1.02;
-        margin-bottom: 12px;
-        color: #e9fff1;
-        text-shadow: 0 6px 22px rgba(2,10,6,0.5);
-    }
-
-    .hero .accent {
-        color: #48c878;
-    }
-
-    .lead {
-        color: rgba(230,243,234,0.8);
-        margin-bottom: 18px;
-    }
-
-    .hero-cta {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 22px;
-    }
-
-    .btn {
-        padding: 10px 18px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 600;
-        display: inline-block;
-        border: 1px solid rgba(255,255,255,0.06);
-        backdrop-filter: blur(6px);
-    }
-
-        .btn:hover {
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-        }
-
-        .btn.primary {
-            background: linear-gradient(90deg, rgba(70,200,120,0.18), rgba(50,160,90,0.14));
-            color: #eaffef;
-        }
-
-            .btn.primary:hover {
-                background: rgba(70,200,120,0.18);
-                color: #fff;
-            }
-
-        .btn.ghost {
-            background: transparent;
-            color: rgba(230,243,234,0.9);
-            border: 1px solid rgba(230,243,234,0.08);
-        }
-
-            .btn.ghost:hover {
-                background: rgba(255,255,255,0.05);
-                color: #fff;
-            }
-
-    /* cards */
-    .cards {
-        display: flex;
-        gap: 14px;
-        margin-top: 18px;
-    }
-
-    .card {
-        min-width: 200px;
-        padding: 14px;
-        border-radius: 12px;
-        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));
-        box-shadow: 0 8px 24px rgba(2,10,6,0.45);
-        backdrop-filter: blur(6px);
-        color: #dff7e8;
-    }
-
-    /* rodapé */
-    .site-footer {
-        padding: 24px;
-        text-align: center;
-        color: rgba(200,230,210,0.6);
-    }
-
-    /* responsividade simples */
-    @@media (max-width:900px) {
-        .hero h1 {
-            font-size: 32px;
-        }
-
-        .nav-links {
-            display: none;
-        }
-
-        .hero {
-            padding: 30px;
-        }
-
-        .cards {
-            flex-direction: column;
-        }
-    }
-
-    /* textbox */
-    .textbox {
-        padding: 6px 14px;
-        border-radius: 10px;
-        font-weight: 400;
-        border: 1px solid rgba(255,255,255,0.06);
-        backdrop-filter: blur(6px);
-        background: transparent;
-        color: #fff;
-        font-family: inherit;
-        font-size: 16px;
-        width: 100%;
-        box-sizing: border-box;
-        transition: all 0.3s ease;
-    }
-
-        /* placeholder */
-        .textbox::placeholder {
-            color: rgba(255,255,255,0.5);
-        }
-
-        /* foco */
-        .textbox:focus {
-            outline: none;
-            border: 1px solid #48c878;
-            box-shadow: 0 0 12px rgba(72,200,120,0.3);
-        }
-
-    /* autocomplete transparente Chrome/Safari */
-    input.textbox:-webkit-autofill,
-    input.textbox:-webkit-autofill:hover,
-    input.textbox:-webkit-autofill:focus,
-    input.textbox:-webkit-autofill:active {
-        -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
-        -webkit-text-fill-color: #fff !important;
-        transition: background-color 5000s ease-in-out 0s;
-    }
-
-    /* autocomplete transparente Firefox */
-    input.textbox:-moz-autofill {
-        box-shadow: 0 0 0px 1000px transparent inset !important;
-        -moz-text-fill-color: #fff !important;
-    }
-
-    /* link verde */
-    .link-green {
-        color: #48c878;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-        transition: color 0.3s ease;
-    }
-
-        .link-green:hover {
-            color: #32a060;
-        }
-
-    /* Combobox estilo igual ao textbox */
-    .selectbox {
-        padding: 6px 14px;
-        border-radius: 10px;
-        font-weight: 400;
-        border: 1px solid rgba(255,255,255,0.06);
-        backdrop-filter: blur(6px);
-        background: transparent;
-        color: #fff;
-        font-family: inherit;
-        font-size: 16px;
-        width: 100%;
-        box-sizing: border-box;
-        transition: all 0.3s ease;
-        appearance: none; /* remove a setinha padrão */
-        -webkit-appearance: none; /* Safari/Chrome */
-        -moz-appearance: none; /* Firefox */
-        cursor: pointer;
-    }
-
-        /* Ícone de seta customizado */
-        .selectbox::-ms-expand {
-            display: none; /* remove seta no IE */
-        }
-
-        /* Opções do dropdown */
-        .selectbox option {
-            background-color: rgba(20, 20, 20, 0.95); /* fundo escuro */
-            color: #fff; /* texto branco */
-        }
-
-        /* Foco */
-        .selectbox:focus {
-            outline: none;
-            border: 1px solid #48c878;
-            box-shadow: 0 0 12px rgba(72,200,120,0.3);
-        }
-</style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<div class="text-center">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
 
+<div class="text-center">
     @if (TempData["MensagemSucesso"] != null)
     {
         <div class="alert alert-success" role="alert">
-            <button type="button" class="btn btn-danger btn-sm close-alert" arial-label="Close">X</button>
+            <button type="button" class="btn btn-danger btn-sm close-alert" aria-label="Close">X</button>
             @TempData["MensagemSucesso"]
         </div>
     }
@@ -337,56 +18,64 @@
     @if (TempData["MensagemErro"] != null)
     {
         <div class="alert alert-danger" role="alert">
-            <button type="button" class="btn btn-danger btn-sm close-alert" arial-label="Close">X</button>
+            <button type="button" class="btn btn-danger btn-sm close-alert" aria-label="Close">X</button>
             @TempData["MensagemErro"]
         </div>
     }
 </div>
 
-<div class="form-container">
-
-    <div class="text-center mb-4">
-        <h1 class="fs-3 custom-border d-inline-block">Editar conta</h1>
-    </div>
-    <form asp-controller="Conta" asp-action="Editar" method="post" class="form-horizontal">
-        <input type="hidden" asp-for="ContaNome.Id" />
-
-        <div class="row form-group-spacing align-items-center">
-            <div class="row form-group-spacing">
-                <label class="col-12 col-sm-4 col-form-label text-sm-end">Nome</label>
-                <div class="col-12 col-sm-6">
-                    <input type="text" asp-for="ContaNome.Nome" class="textbox" placeholder="Digite o nome" />
-                    @Html.ValidationMessageFor(x => x.ContaNome.Nome)
-                </div>
-            </div>
-
-           @*  <div class="row form-group-spacing">
-                <label class="col-12 col-sm-4 col-form-label text-sm-end">Crédito</label>
-                <div class="col-12 col-sm-6">
-                    <input type="number" asp-for="ContaNome.Credito" class="textbox" placeholder="Digite o valor" />
-                    @Html.ValidationMessageFor(x => x.ContaNome.Credito)
-                </div>
-            </div>
-
-            <div class="row form-group-spacing">
-                <label class="col-12 col-sm-4 col-form-label text-sm-end">Débito</label>
-                <div class="col-12 col-sm-6">
-                    <input type="number" asp-for="ContaNome.Debito" class="textbox" placeholder="Digite o valor" />
-                    @Html.ValidationMessageFor(x => x.ContaNome.Debito)
-                </div>
-            </div> *@
-            <div class="row form-group-spacing">
-                <label class="col-12 col-sm-4 col-form-label text-sm-end">Saldo</label>
-                <div class="col-12 col-sm-6">
-                    <input type="number" asp-for="ContaNome.Saldo" class="textbox" readonly />
-                    @Html.ValidationMessageFor(x => x.ContaNome.Saldo)
-                </div>
-            </div>
-            <!-- Botão ocupa 4 colunas -->
-            <div class="d-flex justify-content-between mt-5">
-                <a class="btn ghost" asp-controller="Conta" asp-action="Criar" role="button">Voltar</a>
-                <button type="submit" class="btn primary">Salvar alterações</button>
-            </div>
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Editar Conta Bancária</h2>
+            <p class="text-muted small mb-0">Atualize os dados da conta institucional no sistema.</p>
         </div>
-    </form>
+        <a asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Voltar à Lista
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+        <div class="card-body p-4">
+            <form asp-action="Editar" method="post" id="formEditarConta">
+                @Html.AntiForgeryToken()
+
+                <!-- Campo oculto para enviar o ID da conta -->
+                <input type="hidden" name="id" value="@Model?.Id" />
+
+                <div class="row g-3">
+                    <!-- Banco -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-secondary">Banco</label>
+                        <input type="text" name="banco" value="@Model?.Banco" class="form-control rounded-2 shadow-sm" placeholder="Ex: Standard Bank, BCI, Moza..." required />
+                    </div>
+
+                    <!-- Número da Conta -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-secondary">Número da Conta</label>
+                        <input type="text" name="conta" value="@Model?.Conta" class="form-control rounded-2 shadow-sm" placeholder="Ex: 3322020000" required />
+                    </div>
+
+                    <!-- NIB -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-secondary">NIB</label>
+                        <input type="text" name="nib" value="@Model?.NIB" class="form-control rounded-2 shadow-sm" placeholder="Ex: 0120 0000 0000 0000" required />
+                    </div>
+
+                    <!-- Titular -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-secondary">Titular da Conta</label>
+                        <input type="text" name="titular" value="@Model?.Titular" class="form-control rounded-2 shadow-sm" placeholder="Ex: Nael Microcrédito E.I." required />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a asp-action="Ver" class="btn btn-light px-4 rounded-2 text-secondary border">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-4 rounded-2 text-white fw-normal" style="background-color: #0d6efd; border-color: #0d6efd;">
+                        <i class="fa-solid fa-check me-1"></i> Guardar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>

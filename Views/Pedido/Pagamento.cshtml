@@ -1,0 +1,261 @@
+﻿@model Analise.Models.PedidoModel
+@{
+    ViewData["Title"] = "Registar Pagamento do Pedido";
+    var listaAmortizacoes = ViewBag.ListaAmortizacoes as List<Analise.Models.AmortizacaoModel> ?? new List<Analise.Models.AmortizacaoModel>();
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="container-fluid px-4 py-3">
+    <!-- Cabeçalho da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Registar Pagamento - Pedido #@(Model.Id)</h2>
+            <p class="text-muted small mb-0">Gestão de Reembolsos, Distribuição Automática por Antiguidade e Contas</p>
+        </div>
+        <a asp-controller="Pedido" asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Voltar à Lista de Pedidos
+        </a>
+    </div>
+
+    <!-- Alertas -->
+    @if (TempData["MensagemSucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["MensagemSucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["MensagemErro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["MensagemErro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Informações da Entidade e Resumo -->
+    <div class="card shadow-sm border-0 rounded-4 bg-white mb-4">
+        <div class="card-body p-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-8">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Mutuário (Cliente)</span>
+                    <h5 class="fw-bold text-dark mb-0">@(Model.Entidade?.Nome) <span class="text-muted small">(ID: #@(Model.EntidadeId))</span></h5>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Código CRR</span>
+                    <h5 class="font-monospace fw-bold text-success mb-0" style="color: #079b62 !important;">@(Model.CRR.HasValue ? Model.CRR.Value.ToString("0") : "Não atribuído")</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULÁRIO DE PAGAMENTO -->
+    <form id="formPagamento" asp-controller="Pedido" asp-action="ProcessarPagamento" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="pedidoId" value="@(Model.Id)" />
+
+        <div class="row g-4 mb-4">
+            <!-- Coluna Esquerda: Valor do Depósito e Conta Bancária -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-wallet text-success me-2" style="color: #079b62 !important;"></i>Dados do Depósito / Recebimento</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Valor a Depositar / Recebido (MT)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-secondary fw-bold">MT</span>
+                            <input type="number" step="0.01" id="inputValorDeposito" name="valorDeposito" class="form-control rounded-2 shadow-sm fs-4 fw-bold text-success" placeholder="0.00" />
+                        </div>
+                        <small class="text-muted">O valor será distribuído automaticamente pelas prestações mais antigas (Ordem: Multa $\rightarrow$ Juro $\rightarrow$ Principal).</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Depositar na Conta Bancária</label>
+                        <select name="contaId" class="form-select rounded-2 shadow-sm" required>
+                            <option value="">Selecione a conta de destino...</option>
+                            @if (ViewBag.ListaContas != null)
+                            {
+                                foreach (var c in (List<ContaModel>)ViewBag.ListaContas)
+                                {
+                                    <option value="@(c.Id)">
+                                        @(c.Banco) - @(c.Conta) (@(c.Titular)) - Saldo Atual: MT @(c.Saldo.ToString("N2"))
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Resumo do Pagamento a Distribuir -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-3">RESUMO DA DISTRIBUIÇÃO</h5>
+                        <div class="mb-3 p-3 bg-light rounded-3 border">
+                            <span class="d-block text-secondary small text-uppercase fw-semibold">Total Geral em Dívida</span>
+                            <h4 class="fw-bold text-danger mb-0" id="lblTotalDivida">MT 0,00</h4>
+                        </div>
+                        <div class="mb-3 p-3 bg-light rounded-3 border">
+                            <span class="d-block text-secondary small text-uppercase fw-semibold">Valor Alocado pelo Depósito</span>
+                            <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;" id="lblTotalAlocado">MT 0,00</h4>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnConfirmarPagamento" class="btn btn-lg btn-success rounded-3 text-white fw-bold py-3 w-100 d-flex align-items-center gap-2 justify-content-center shadow-sm" style="background-color: #079b62; border-color: #079b62;" disabled>
+                        <i class="fa-solid fa-circle-check fs-4"></i> CONFIRMAR REGISTO DE PAGAMENTO
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABELA DO PLANO DE AMORTIZAÇÃO E MULTAS -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-table-list text-success me-2" style="color: #079b62 !important;"></i>
+                Plano de Amortização & Valores Pendentes (Prioridade por Antiguidade)
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 border rounded-3 overflow-hidden">
+                    <thead class="table-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="ps-3 py-2">Nr</th>
+                            <th class="py-2">Vencimento</th>
+                            <th class="py-2 text-end">Capital (Pendente)</th>
+                            <th class="py-2 text-end">Juro (Pendente)</th>
+                            <th class="py-2 text-center">Dias Atraso</th>
+                            <th class="py-2 text-end">Multa</th>
+                            <th class="py-2 text-end">Juro a Perdoar</th>
+                            <th class="py-2 text-end">Multa a Perdoar</th>
+                            <th class="py-2 text-end pe-3">Total a Pagar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (listaAmortizacoes.Any())
+                        {
+                            int index = 0;
+                            foreach (var item in listaAmortizacoes)
+                            {
+                                <tr class="linha-prestacao"
+                                    data-index="@index"
+                                    data-principal="@item.PrincipalPorPagar"
+                                    data-juro="@item.JuroPorPagar"
+                                    data-multa="@item.MultaPorPagar"
+                                    data-dias="@item.DiasAtraso">
+
+                                    <input type="hidden" name="Amortizacoes[@index].Id" value="@item.Id" />
+
+                                    <td class="ps-3 fw-semibold text-dark">@item.NR</td>
+                                    <td><span class="badge bg-light text-dark border px-2 py-1">@item.Vencimento.ToString("dd/MM/yyyy")</span></td>
+                                    <td class="text-end fw-semibold text-secondary">MT @item.PrincipalPorPagar.ToString("N2")</td>
+                                    <td class="text-end text-danger">MT @item.JuroPorPagar.ToString("N2")</td>
+                                    <td class="text-center">
+                                        <span class="badge @(item.DiasAtraso > 0 ? "bg-danger" : "bg-secondary")">@item.DiasAtraso dias</span>
+                                    </td>
+                                    <td class="text-end fw-bold text-warning">MT @item.MultaPorPagar.ToString("N2")</td>
+
+                                    <!-- Campos Editáveis para Perdão -->
+                                    <td class="text-end" style="width: 120px;">
+                                        <input type="number" step="0.01" name="Amortizacoes[@index].JuroAPerdoar" class="form-control form-control-sm text-end input-perdoar-juro" value="@item.JuroAPerdoar" min="0" max="@item.JuroPorPagar" />
+                                    </td>
+                                    <td class="text-end" style="width: 120px;">
+                                        <input type="number" step="0.01" name="Amortizacoes[@index].MultaAPerdoar" class="form-control form-control-sm text-end input-perdoar-multa" value="@item.MultaAPerdoar" min="0" max="@item.MultaPorPagar" />
+                                    </td>
+
+                                    <td class="text-end pe-3 fw-bold text-success col-total-prestacao" style="color: #079b62 !important;">
+                                        MT 0.00
+                                    </td>
+                                </tr>
+                                index++;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted small">Nenhum plano de amortização encontrado para este pedido.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputValorDeposito = document.getElementById("inputValorDeposito");
+            const lblTotalDivida = document.getElementById("lblTotalDivida");
+            const lblTotalAlocado = document.getElementById("lblTotalAlocado");
+            const btnConfirmarPagamento = document.getElementById("btnConfirmarPagamento");
+            const linhas = document.querySelectorAll(".linha-prestacao");
+
+            function formatarMT(valor) {
+                return "MT " + valor.toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function recalcularValores() {
+                let valorDeposito = parseFloat(inputValorDeposito.value) || 0;
+                let saldoDisponivel = valorDeposito;
+                let totalGeralDivida = 0;
+
+                linhas.forEach(linha => {
+                    let principal = parseFloat(linha.getAttribute("data-principal")) || 0;
+                    let juro = parseFloat(linha.getAttribute("data-juro")) || 0;
+                    let multa = parseFloat(linha.getAttribute("data-multa")) || 0;
+
+                    let inputJuroPerdoar = linha.querySelector(".input-perdoar-juro");
+                    let inputMultaPerdoar = linha.querySelector(".input-perdoar-multa");
+
+                    let juroPerdoar = parseFloat(inputJuroPerdoar.value) || 0;
+                    let multaPerdoar = parseFloat(inputMultaPerdoar.value) || 0;
+
+                    let juroLiquido = Math.max(0, juro - juroPerdoar);
+                    let multaLiquida = Math.max(0, multa - multaPerdoar);
+
+                    let totalPrestacao = principal + juroLiquido + multaLiquida;
+                    totalGeralDivida += totalPrestacao;
+
+                    // Distribuição priorizada por antiguidade: Multa -> Juro -> Principal
+                    let alocadoMulta = 0, alocadoJuro = 0, alocadoPrincipal = 0;
+
+                    if (saldoDisponivel > 0) {
+                        alocadoMulta = Math.min(saldoDisponivel, multaLiquida);
+                        saldoDisponivel -= alocadoMulta;
+                    }
+                    if (saldoDisponivel > 0) {
+                        alocadoJuro = Math.min(saldoDisponivel, juroLiquido);
+                        saldoDisponivel -= alocadoJuro;
+                    }
+                    if (saldoDisponivel > 0) {
+                        alocadoPrincipal = Math.min(saldoDisponivel, principal);
+                        saldoDisponivel -= alocadoPrincipal;
+                    }
+
+                    let totalAlocadoLinha = alocadoMulta + alocadoJuro + alocadoPrincipal;
+                    linha.querySelector(".col-total-prestacao").innerText = formatarMT(totalPrestacao);
+                });
+
+                let alocadoTotal = valorDeposito - saldoDisponivel;
+                lblTotalDivida.innerText = formatarMT(totalGeralDivida);
+                lblTotalAlocado.innerText = formatarMT(alocadoTotal);
+
+                if (valorDeposito > 0 && alocadoTotal > 0) {
+                    btnConfirmarPagamento.removeAttribute("disabled");
+                } else {
+                    btnConfirmarPagamento.setAttribute("disabled", "true");
+                }
+            }
+
+            inputValorDeposito.addEventListener("input", recalcularValores);
+            document.querySelectorAll(".input-perdoar-juro, .input-perdoar-multa").forEach(input => {
+                input.addEventListener("input", recalcularValores);
+            });
+
+            recalcularValores();
+        });
+    </script>
+}
