@@ -7,8 +7,12 @@ using Analise.Data;
 using Analise.Repositorio;
 using Analise.Helper;
 using Microsoft.Extensions.ObjectPool;
+using QuestPDF.Infrastructure; // Necessário para a licença do QuestPDF
 
 var builder = WebApplication.CreateBuilder(args);
+
+// REGISTAR LICENÇA DO QUESTPDF (Obrigatório para .NET 8)
+QuestPDF.Settings.License = LicenseType.Community;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -18,13 +22,13 @@ if (!builder.Environment.IsDevelopment())
     var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
     builder.WebHost.UseUrls($"http://*:{port}");
 }
+
 // SMTP
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SMTP"));
 
 // Serviços
 builder.Services.AddTransient<EmailService>();
 //builder.Services.AddTransient<TicketRepositorio>();
-
 builder.Services.AddControllersWithViews();
 
 // POSTGRESQL (IMPORTANTE)
@@ -32,7 +36,6 @@ builder.Services.AddDbContext<BancoContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
 builder.Services.AddScoped<IUsuarioRepositorio, UsuarioRepositorio>();
 builder.Services.AddScoped<ISessao, Sessao>();
 builder.Services.AddScoped<IEmail, Email>();
@@ -48,10 +51,9 @@ builder.Services.AddScoped<IMovimentoInternoRepositorio, MovimentoInternoReposit
 
 builder.Services.AddSession(o =>
 {
-    o.Cookie.HttpOnly=true;
-    o.Cookie.IsEssential=true;
+    o.Cookie.HttpOnly = true;
+    o.Cookie.IsEssential = true;
 });
-
 
 var app = builder.Build();
 
@@ -65,10 +67,9 @@ else
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthorization();
 app.UseSession();
 

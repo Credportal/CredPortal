@@ -2,8 +2,9 @@
 using Analise.Helper;
 using Analise.Models;
 using Analise.Repositorio;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -506,262 +507,279 @@ namespace Analise.Controllers
             string representanteLegal = "Velma Sara Frederico";
             string cargoRepresentante = "Administrador";
 
-            using (var memoryStream = new MemoryStream())
+            string numeroContrato = pedido.CRR.HasValue ? pedido.CRR.Value.ToString("0") : "S/N";
+
+            decimal valorFinal = pedido.ValorDesembolsado > 0 ? pedido.ValorDesembolsado : (pedido.ValorDecisao ?? pedido.Valor);
+            int prazoFinal = pedido.PrazoDecisao ?? pedido.Prazo;
+            decimal taxaFinal = pedido.TaxaDecisao ?? pedido.Taxa;
+            decimal custosAdmValor = valorFinal <= 10000 ? 200m : (valorFinal * 0.02m);
+            string textoPrazo = prazoFinal == 1 ? "1 mês" : $"{prazoFinal} meses";
+
+            string valorPorExtenso = ExtensoHelper.ConverterParaExtenso(valorFinal);
+            string custosExtenso = ExtensoHelper.ConverterParaExtenso(custosAdmValor);
+
+            decimal totalGarantiasCli = garantiasCliente != null ? garantiasCliente.Sum(g => g.ValorActual) : 0;
+            string totalGarantiasExtenso = ExtensoHelper.ConverterParaExtenso(totalGarantiasCli);
+
+            // Geração do PDF com QuestPDF
+            var document = Document.Create(container =>
             {
-                var document = new Document(PageSize.A4, 36, 36, 36, 36);
-                PdfWriter.GetInstance(document, memoryStream);
-                document.Open();
-
-                var fontTitulo = FontFactory.GetFont(FontFactory.TIMES_BOLD, 12);
-                var fontSubTitulo = FontFactory.GetFont(FontFactory.TIMES_BOLD, 10);
-                var fontTexto = FontFactory.GetFont(FontFactory.TIMES, 10);
-                var fontNegrito = FontFactory.GetFont(FontFactory.TIMES_BOLD, 10);
-
-                // Cabeçalho
-                document.Add(new Paragraph(nomeEmpresa, fontTitulo) { Alignment = Element.ALIGN_CENTER });
-                document.Add(new Paragraph($"E-mail: {emailEmpresa}\nCont. {contactosEmpresa} \nMaputo", FontFactory.GetFont(FontFactory.TIMES, 9)) { Alignment = Element.ALIGN_CENTER });
-                document.Add(new Paragraph("\nCONTRATO DE EMPRÉSTIMO", fontTitulo) { Alignment = Element.ALIGN_CENTER });
-
-                // Adicionando o número do contrato baseado no CRR
-                string numeroContrato = pedido.CRR.HasValue ? pedido.CRR.Value.ToString("0") : "S/N";
-                document.Add(new Paragraph($"Contrato N.º: {numeroContrato}", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-                document.Add(new Paragraph("\n"));
-
-                // Partes com nomes em negrito
-                Paragraph pOperador = new Paragraph();
-                pOperador.Alignment = Element.ALIGN_JUSTIFIED;
-                pOperador.Font = fontTexto;
-                pOperador.Add("\nEntre \n");
-                pOperador.Add(new Chunk(nomeEmpresa, fontNegrito));
-                pOperador.Add($", com sede no {sedeEmpresa}, representado neste acto por ");
-                pOperador.Add(new Chunk(representanteLegal, fontNegrito));
-                pOperador.Add($", na qualidade de ");
-                pOperador.Add(new Chunk(cargoRepresentante, fontNegrito));
-                pOperador.Add(", doravante designado por Operador.\n");
-                document.Add(pOperador);
-
-                var cli = pedido.Entidade;
-                string cliNaturalidade = cli?.Naturalidade ?? "Moçambique";
-                string cliResidencia = cli?.Endereco ?? "Maputo";
-                string cliDocTipo = cli?.Documento ?? "BI";
-                string cliDocNum = cli?.NrDocumento ?? "-";
-                string cliEmissao = cli?.Emissao?.ToString("dd-MM-yyyy") ?? "-";
-                string cliValidade = cli?.Validade?.ToString("dd-MM-yyyy") ?? "-";
-
-                Paragraph pMutuario = new Paragraph();
-                pMutuario.Alignment = Element.ALIGN_JUSTIFIED;
-                pMutuario.Font = fontTexto;
-                pMutuario.Add("E\n");
-                pMutuario.Add(new Chunk(cli?.Nome ?? "Mutuário", fontNegrito));
-                pMutuario.Add($", natural de {cliNaturalidade}, residente no {cliResidencia}, portador(a) de {cliDocTipo} n° {cliDocNum}, emitido aos {cliEmissao}, válido até {cliValidade}, doravante designado por Mutuário.\n");
-                document.Add(pMutuario);
-
-                if (intervenientes != null)
+                container.Page(page =>
                 {
-                    foreach (var inter in intervenientes)
+                    page.Size(PageSizes.A4);
+                    page.Margin(36);
+                    page.DefaultTextStyle(x => x.FontFamily("Times New Roman").FontSize(10));
+
+                    page.Content().Column(col =>
                     {
-                        var ent = inter.IntervenienteEntidade;
-                        string interNome = ent?.Nome ?? "Interveniente";
-                        string interNat = ent?.Naturalidade ?? "Moçambique";
-                        string interRes = ent?.Endereco ?? "Maputo";
-                        string interDocT = ent?.Documento ?? "BI";
-                        string interDocN = ent?.NrDocumento ?? "-";
-                        string interEmis = ent?.Emissao?.ToString("dd-MM-yyyy") ?? "-";
-                        string interVal = ent?.Validade?.ToString("dd-MM-yyyy") ?? "-";
+                        col.Spacing(8);
 
-                        Paragraph pInterv = new Paragraph();
-                        pInterv.Alignment = Element.ALIGN_JUSTIFIED;
-                        pInterv.Font = fontTexto;
-                        pInterv.Add("E\n");
-                        pInterv.Add(new Chunk(interNome, fontNegrito));
-                        pInterv.Add($", natural de {interNat}, residente no {interRes}, portador(a) de {interDocT} n° {interDocN}, emitido aos {interEmis}, válido até {interVal}, doravante designado por ");
-                        pInterv.Add(new Chunk(inter.Tipo, fontNegrito));
-                        pInterv.Add(".\n");
-                        document.Add(pInterv);
-                    }
-                }
+                        // Cabeçalho
+                        col.Item().AlignCenter().Text(nomeEmpresa).Bold().FontSize(12);
+                        col.Item().AlignCenter().Text($"E-mail: {emailEmpresa}\nCont. {contactosEmpresa} \nMaputo").FontSize(9);
+                        col.Item().PaddingTop(5).AlignCenter().Text("CONTRATO DE EMPRÉSTIMO").Bold().FontSize(12);
+                        col.Item().AlignCenter().Text($"Contrato N.º: {numeroContrato}").Bold().FontSize(10);
+                        col.Item().PaddingBottom(5);
 
-                document.Add(new Paragraph("\n"));
-
-                // Cláusulas
-                decimal valorFinal = pedido.ValorDesembolsado > 0 ? pedido.ValorDesembolsado : (pedido.ValorDecisao ?? pedido.Valor);
-                int prazoFinal = pedido.PrazoDecisao ?? pedido.Prazo;
-                decimal taxaFinal = pedido.TaxaDecisao ?? pedido.Taxa;
-
-                decimal custosAdmValor = valorFinal <= 10000 ? 200m : (valorFinal * 0.02m);
-
-                // Tratamento singular/plural para o prazo (mês vs meses)
-                string textoPrazo = prazoFinal == 1 ? "1 mês" : $"{prazoFinal} meses";
-
-                // Helper local simples para converter valores em extenso (PT)
-                string valorPorExtenso = ExtensoHelper.ConverterParaExtenso(valorFinal);
-                string custosExtenso = ExtensoHelper.ConverterParaExtenso(custosAdmValor);
-
-                document.Add(new Paragraph("PRIMEIRA\n(Valor do empréstimo)", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-                Paragraph pPrimeira = new Paragraph();
-                pPrimeira.Alignment = Element.ALIGN_JUSTIFIED;
-                pPrimeira.Font = fontTexto;
-                pPrimeira.Add("Pelo presente, concede-se ao mutuário o valor de ");
-                pPrimeira.Add(new Chunk($"{valorFinal:N2} MT", fontNegrito));
-                pPrimeira.Add($" ({valorPorExtenso}), a ser pago em ");
-                pPrimeira.Add(new Chunk(textoPrazo, fontNegrito));
-                pPrimeira.Add(" prestação mensal sobre o capital em dívida.\n");
-                document.Add(pPrimeira);
-
-                document.Add(new Paragraph("SEGUNDA\n(Taxas de juros)", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-                Paragraph pSegunda = new Paragraph();
-                pSegunda.Alignment = Element.ALIGN_JUSTIFIED;
-                pSegunda.Font = fontTexto;
-                pSegunda.Add("O empréstimo vence juros à taxa de ");
-                pSegunda.Add(new Chunk($"{taxaFinal:N2}%", fontNegrito));
-                pSegunda.Add(" mensal sobre o capital.\n");
-                document.Add(pSegunda);
-
-                document.Add(new Paragraph("TERCEIRA\n(Modo e lugar de reembolso)", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-                Paragraph pTerceira = new Paragraph();
-                pTerceira.Alignment = Element.ALIGN_JUSTIFIED;
-                pTerceira.Font = fontTexto;
-                pTerceira.Add("1. O mutuário aceita expressamente devolver o crédito dentro de ");
-                pTerceira.Add(new Chunk(textoPrazo, fontNegrito));
-                pTerceira.Add(", contados a partir da data do desembolso do crédito, bem como de acordo com o plano de pagamento em anexo no contrato.\n2. O mutuário compromete-se ainda, a efetuar os reembolsos do crédito nas contas enquadradas no plano de pagamento, apresentando o comprovativo do reembolso junto às instalações do operador, para que lhe seja passado o recibo que confirma a receção do valor pelo Operador.\n");
-                document.Add(pTerceira);
-
-                document.Add(new Paragraph("QUARTA\n(Custos administrativos)", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-                Paragraph pQuarta = new Paragraph();
-                pQuarta.Alignment = Element.ALIGN_JUSTIFIED;
-                pQuarta.Font = fontTexto;
-                pQuarta.Add("Os custos administrativos associados à operação de crédito, no valor de ");
-                pQuarta.Add(new Chunk($"{custosAdmValor:N2} MT", fontNegrito));
-                pQuarta.Add($" ({custosExtenso}), são da inteira responsabilidade do mutuário.\n");
-                document.Add(pQuarta);
-
-                document.Add(new Paragraph("QUINTA\n(Vencimento imediato)", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-                document.Add(new Paragraph("Pode ser considerado imediatamente vencido o presente contrato exigindo-se de imediato, o pagamento de todo o valor de capital e juros, ainda em dívida, bem como todos os outros encargos devidos pelo mutuário ao Operador por força deste empréstimo em caso de falta de pagamento pontual ou infração das cláusulas.\n", fontTexto));
-
-                document.Add(new Paragraph("SEXTA\n(Garantias do mutuário)", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-
-                decimal totalGarantiasCli = garantiasCliente != null ? garantiasCliente.Sum(g => g.ValorActual) : 0;
-                string totalGarantiasExtenso = ExtensoHelper.ConverterParaExtenso(totalGarantiasCli);
-
-                Paragraph pSexta = new Paragraph();
-                pSexta.Alignment = Element.ALIGN_JUSTIFIED;
-                pSexta.Font = fontTexto;
-                pSexta.Add("1. Para assegurar o reembolso do capital, juros e demais encargos inerentes ao empréstimo, o mutuário constitui garantias para o empréstimo recebido a favor de ");
-                pSexta.Add(new Chunk(nomeEmpresa, fontNegrito));
-                pSexta.Add(", no valor total de ");
-                pSexta.Add(new Chunk($"{totalGarantiasCli:N2} MT", fontNegrito));
-                pSexta.Add($" ({totalGarantiasExtenso}), que ficarão na posse do mutuário. Fazem parte integrante das garantias do cliente os seguintes bens:\n");
-                document.Add(pSexta);
-
-                // Tabela de Garantias do Cliente
-                if (garantiasCliente != null && garantiasCliente.Any())
-                {
-                    PdfPTable tableGcli = new PdfPTable(2) { WidthPercentage = 100 };
-                    tableGcli.SpacingBefore = 5f;
-                    tableGcli.SpacingAfter = 10f;
-                    tableGcli.SetWidths(new float[] { 75f, 25f });
-
-                    PdfPCell cellH1 = new PdfPCell(new Phrase("DESCRIÇÃO", fontNegrito)) { BackgroundColor = BaseColor.LIGHT_GRAY };
-                    PdfPCell cellH2 = new PdfPCell(new Phrase("VALOR", fontNegrito)) { BackgroundColor = BaseColor.LIGHT_GRAY, HorizontalAlignment = Element.ALIGN_RIGHT };
-                    tableGcli.AddCell(cellH1);
-                    tableGcli.AddCell(cellH2);
-
-                    foreach (var g in garantiasCliente)
-                    {
-                        PdfPCell cellDesc = new PdfPCell(new Phrase(g.Descricao, fontTexto));
-                        PdfPCell cellVal = new PdfPCell(new Phrase($"{g.ValorActual:N2} MT", fontTexto)) { HorizontalAlignment = Element.ALIGN_RIGHT };
-                        tableGcli.AddCell(cellDesc);
-                        tableGcli.AddCell(cellVal);
-                    }
-                    document.Add(tableGcli);
-                }
-
-                // Garantias dos Intervenientes
-                foreach (var inter in intervenientes)
-                {
-                    if (garantiasMap.ContainsKey(inter.IntervenienteID) && garantiasMap[inter.IntervenienteID].Any())
-                    {
-                        var gList = garantiasMap[inter.IntervenienteID];
-                        string nomeIntervEnt = inter.IntervenienteEntidade?.Nome ?? "Interveniente";
-
-                        Paragraph pGInterv = new Paragraph();
-                        pGInterv.Alignment = Element.ALIGN_JUSTIFIED;
-                        pGInterv.Font = fontTexto;
-                        pGInterv.Add("Ainda fazem parte integrante das garantias do crédito os seguintes bens do ");
-                        pGInterv.Add(new Chunk(inter.Tipo.ToLower(), fontNegrito));
-                        pGInterv.Add(" (");
-                        pGInterv.Add(new Chunk(nomeIntervEnt, fontNegrito));
-                        pGInterv.Add("):\n");
-                        document.Add(pGInterv);
-
-                        PdfPTable tableGInter = new PdfPTable(2) { WidthPercentage = 100 };
-                        tableGInter.SpacingBefore = 5f;
-                        tableGInter.SpacingAfter = 10f;
-                        tableGInter.SetWidths(new float[] { 75f, 25f });
-
-                        PdfPCell cellIH1 = new PdfPCell(new Phrase("DESCRIÇÃO", fontNegrito)) { BackgroundColor = BaseColor.LIGHT_GRAY };
-                        PdfPCell cellIH2 = new PdfPCell(new Phrase("VALOR", fontNegrito)) { BackgroundColor = BaseColor.LIGHT_GRAY, HorizontalAlignment = Element.ALIGN_RIGHT };
-                        tableGInter.AddCell(cellIH1);
-                        tableGInter.AddCell(cellIH2);
-
-                        foreach (var g in gList)
+                        // Operador e Mutuário
+                        col.Item().Text(text =>
                         {
-                            PdfPCell cellIDesc = new PdfPCell(new Phrase(g.Descricao, fontTexto));
-                            PdfPCell cellIVal = new PdfPCell(new Phrase($"{g.ValorActual:N2} MT", fontTexto)) { HorizontalAlignment = Element.ALIGN_RIGHT };
-                            tableGInter.AddCell(cellIDesc);
-                            tableGInter.AddCell(cellIVal);
+                            text.Justify();
+                            text.Span("\nEntre \n");
+                            text.Span(nomeEmpresa).Bold();
+                            text.Span($", com sede no {sedeEmpresa}, representado neste acto por ");
+                            text.Span(representanteLegal).Bold();
+                            text.Span($", na qualidade de ");
+                            text.Span(cargoRepresentante).Bold();
+                            text.Span(", doravante designado por Operador.\n");
+                        });
+
+                        var cli = pedido.Entidade;
+                        string cliNaturalidade = cli?.Naturalidade ?? "Moçambique";
+                        string cliResidencia = cli?.Endereco ?? "Maputo";
+                        string cliDocTipo = cli?.Documento ?? "BI";
+                        string cliDocNum = cli?.NrDocumento ?? "-";
+                        string cliEmissao = cli?.Emissao?.ToString("dd-MM-yyyy") ?? "-";
+                        string cliValidade = cli?.Validade?.ToString("dd-MM-yyyy") ?? "-";
+
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("E\n");
+                            text.Span(cli?.Nome ?? "Mutuário").Bold();
+                            text.Span($", natural de {cliNaturalidade}, residente no {cliResidencia}, portador(a) de {cliDocTipo} n° {cliDocNum}, emitido aos {cliEmissao}, válido até {cliValidade}, doravante designado por Mutuário.\n");
+                        });
+
+                        if (intervenientes != null)
+                        {
+                            foreach (var inter in intervenientes)
+                            {
+                                var ent = inter.IntervenienteEntidade;
+                                string interNome = ent?.Nome ?? "Interveniente";
+                                string interNat = ent?.Naturalidade ?? "Moçambique";
+                                string interRes = ent?.Endereco ?? "Maputo";
+                                string interDocT = ent?.Documento ?? "BI";
+                                string interDocN = ent?.NrDocumento ?? "-";
+                                string interEmis = ent?.Emissao?.ToString("dd-MM-yyyy") ?? "-";
+                                string interVal = ent?.Validade?.ToString("dd-MM-yyyy") ?? "-";
+
+                                col.Item().Text(text =>
+                                {
+                                    text.Justify();
+                                    text.Span("E\n");
+                                    text.Span(interNome).Bold();
+                                    text.Span($", natural de {interNat}, residente no {interRes}, portador(a) de {interDocT} n° {interDocN}, emitido aos {interEmis}, válido até {interVal}, doravante designado por ");
+                                    text.Span(inter.Tipo).Bold();
+                                    text.Span(".\n");
+                                });
+                            }
                         }
-                        document.Add(tableGInter);
-                    }
-                }
 
-                // Cláusulas finais
-                document.Add(new Paragraph("SÉTIMA\n(Arresto e venda dos bens)", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-                document.Add(new Paragraph("1. O presente penhor pode ser executado logo que, vencida qualquer obrigação que sirva de garantia, verifique-se mora no seu cumprimento.\n2. O Operador fica desde já autorizado a proceder à venda extrajudicial dos bens empenhados a quem melhor entender.\n", fontTexto));
+                        col.Item().PaddingTop(5);
 
-                document.Add(new Paragraph("OITAVA\n(Sanções)", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-                document.Add(new Paragraph("Caso se verifique falta de pagamento pontual das prestações, o mutuário aceita a aplicação de taxas de juros de mora diárias correspondentes a 2% sobre as prestações em atraso.\n", fontTexto));
+                        // Cláusula Primeira
+                        col.Item().AlignCenter().Text("PRIMEIRA\n(Valor do empréstimo)").Bold().FontSize(10);
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("Pelo presente, concede-se ao mutuário o valor de ");
+                            text.Span($"{valorFinal:N2} MT").Bold();
+                            text.Span($" ({valorPorExtenso}), a ser pago em ");
+                            text.Span(textoPrazo).Bold();
+                            text.Span(" prestação mensal sobre o capital em dívida.\n");
+                        });
 
-                document.Add(new Paragraph("NONA\n(Lei do foro)", fontSubTitulo) { Alignment = Element.ALIGN_CENTER });
-                document.Add(new Paragraph("Quaisquer diferendos relacionados com o presente contrato serão resolvidos amigavelmente ou, caso contrário, no Tribunal Judicial da Cidade local.\n", fontTexto));
+                        // Cláusula Segunda
+                        col.Item().AlignCenter().Text("SEGUNDA\n(Taxas de juros)").Bold().FontSize(10);
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("O empréstimo vence juros à taxa de ");
+                            text.Span($"{taxaFinal:N2}%").Bold();
+                            text.Span(" mensal sobre o capital.\n");
+                        });
 
-                // Assinaturas
-                document.Add(new Paragraph("\n\n"));
+                        // Cláusula Terceira
+                        col.Item().AlignCenter().Text("TERCEIRA\n(Modo e lugar de reembolso)").Bold().FontSize(10);
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span($"1. O mutuário aceita expressamente devolver o crédito dentro de ");
+                            text.Span(textoPrazo).Bold();
+                            text.Span(", contados a partir da data do desembolso do crédito, bem como de acordo com o plano de pagamento em anexo no contrato.\n2. O mutuário compromete-se ainda, a efetuar os reembolsos do crédito nas contas enquadradas no plano de pagamento, apresentando o comprovativo do reembolso junto às instalações do operador, para que lhe seja passado o recibo que confirma a receção do valor pelo Operador.\n");
+                        });
 
-                List<PdfPCell> celulasAssinatura = new List<PdfPCell>
-        {
-            new PdfPCell(new Phrase("_______________________\nAssinatura do Operador", fontTexto)) { Border = 0, HorizontalAlignment = Element.ALIGN_CENTER, PaddingBottom = 20f },
-            new PdfPCell(new Phrase("_______________________\nAssinatura do Mutuário", fontTexto)) { Border = 0, HorizontalAlignment = Element.ALIGN_CENTER, PaddingBottom = 20f }
-        };
+                        // Cláusula Quarta
+                        col.Item().AlignCenter().Text("QUARTA\n(Custos administrativos)").Bold().FontSize(10);
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("Os custos administrativos associados à operação de crédito, no valor de ");
+                            text.Span($"{custosAdmValor:N2} MT").Bold();
+                            text.Span($" ({custosExtenso}), são da inteira responsabilidade do mutuário.\n");
+                        });
 
-                if (intervenientes != null)
-                {
-                    foreach (var inter in intervenientes)
-                    {
-                        string nomeInter = inter.IntervenienteEntidade?.Nome ?? inter.Tipo;
-                        celulasAssinatura.Add(new PdfPCell(new Phrase($"_______________________\n{inter.Tipo} ({nomeInter})", fontTexto)) { Border = 0, HorizontalAlignment = Element.ALIGN_CENTER, PaddingBottom = 20f });
-                    }
-                }
+                        // Cláusula Quinta
+                        col.Item().AlignCenter().Text("QUINTA\n(Vencimento imediato)").Bold().FontSize(10);
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("Pode ser considerado imediatamente vencido o presente contrato exigindo-se de imediato, o pagamento de todo o valor de capital e juros, ainda em dívida, bem como todos os outros encargos devidos pelo mutuário ao Operador por força deste empréstimo em caso de falta de pagamento pontual ou infração das cláusulas.\n");
+                        });
 
-                PdfPTable tableAssinaturas = new PdfPTable(2) { WidthPercentage = 100 };
-                foreach (var cell in celulasAssinatura)
-                {
-                    tableAssinaturas.AddCell(cell);
-                }
+                        // Cláusula Sexta
+                        col.Item().AlignCenter().Text("SEXTA\n(Garantias do mutuário)").Bold().FontSize(10);
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("1. Para assegurar o reembolso do capital, juros e demais encargos inerentes ao empréstimo, o mutuário constitui garantias para o empréstimo recebido a favor de ");
+                            text.Span(nomeEmpresa).Bold();
+                            text.Span(", no valor total de ");
+                            text.Span($"{totalGarantiasCli:N2} MT").Bold();
+                            text.Span($" ({totalGarantiasExtenso}), que ficarão na posse do mutuário. Fazem parte integrante das garantias do cliente os seguintes bens:\n");
+                        });
 
-                if (celulasAssinatura.Count % 2 != 0)
-                {
-                    tableAssinaturas.AddCell(new PdfPCell(new Phrase("")) { Border = 0 });
-                }
+                        // Tabela de Garantias do Cliente
+                        if (garantiasCliente != null && garantiasCliente.Any())
+                        {
+                            col.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(75);
+                                    columns.RelativeColumn(25);
+                                });
 
-                document.Add(tableAssinaturas);
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background("#D3D3D3").Padding(4).Text("DESCRIÇÃO").Bold();
+                                    header.Cell().Background("#D3D3D3").Padding(4).AlignRight().Text("VALOR").Bold();
+                                });
 
-                document.Add(new Paragraph($"\nMaputo, {DateTime.Now:dd/MM/yyyy}", fontTexto) { Alignment = Element.ALIGN_CENTER });
+                                foreach (var g in garantiasCliente)
+                                {
+                                    table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(4).Text(g.Descricao);
+                                    table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(4).AlignRight().Text($"{g.ValorActual:N2} MT");
+                                }
+                            });
+                        }
 
-                document.Close();
-                byte[] bytes = memoryStream.ToArray();
-                return File(bytes, "application/pdf", $"Contrato_Emprestimo_Pedido_{pedido.Id}.pdf");
-            }
+                        // Garantias dos Intervenientes
+                        if (intervenientes != null)
+                        {
+                            foreach (var inter in intervenientes)
+                            {
+                                if (garantiasMap.ContainsKey(inter.IntervenienteID) && garantiasMap[inter.IntervenienteID].Any())
+                                {
+                                    var gList = garantiasMap[inter.IntervenienteID];
+                                    string nomeIntervEnt = inter.IntervenienteEntidade?.Nome ?? "Interveniente";
+
+                                    col.Item().PaddingTop(5).Text(text =>
+                                    {
+                                        text.Justify();
+                                        text.Span("Ainda fazem parte integrante das garantias do crédito os seguintes bens do ");
+                                        text.Span(inter.Tipo.ToLower()).Bold();
+                                        text.Span(" (");
+                                        text.Span(nomeIntervEnt).Bold();
+                                        text.Span("):\n");
+                                    });
+
+                                    col.Item().Table(table =>
+                                    {
+                                        table.ColumnsDefinition(columns =>
+                                        {
+                                            columns.RelativeColumn(75);
+                                            columns.RelativeColumn(25);
+                                        });
+
+                                        table.Header(header =>
+                                        {
+                                            header.Cell().Background("#D3D3D3").Padding(4).Text("DESCRIÇÃO").Bold();
+                                            header.Cell().Background("#D3D3D3").Padding(4).AlignRight().Text("VALOR").Bold();
+                                        });
+
+                                        foreach (var g in gList)
+                                        {
+                                            table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(4).Text(g.Descricao);
+                                            table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(4).AlignRight().Text($"{g.ValorActual:N2} MT");
+                                        }
+                                    });
+                                }
+                            }
+                        }
+
+                        // Cláusulas Finais
+                        col.Item().PaddingTop(5).AlignCenter().Text("SÉTIMA\n(Arresto e venda dos bens)").Bold().FontSize(10);
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("1. O presente penhor pode ser executado logo que, vencida qualquer obrigação que sirva de garantia, verifique-se mora no seu cumprimento.\n2. O Operador fica desde já autorizado a proceder à venda extrajudicial dos bens empenhados a quem melhor entender.\n");
+                        });
+
+                        col.Item().AlignCenter().Text("OITAVA\n(Sanções)").Bold().FontSize(10);
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("Caso se verifique falta de pagamento pontual das prestações, o mutuário aceita a aplicação de taxas de juros de mora diárias correspondentes a 2% sobre as prestações em atraso.\n");
+                        });
+
+                        col.Item().AlignCenter().Text("NONA\n(Lei do foro)").Bold().FontSize(10);
+                        col.Item().Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("Quaisquer diferendos relacionados com o presente contrato serão resolvidos amigavelmente ou, caso contrário, no Tribunal Judicial da Cidade local.\n");
+                        });
+
+                        // Assinaturas
+                        col.Item().PaddingTop(20);
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn();
+                                columns.RelativeColumn();
+                            });
+
+                            table.Cell().PaddingBottom(20).AlignCenter().Text("_______________________\nAssinatura do Operador");
+                            table.Cell().PaddingBottom(20).AlignCenter().Text("_______________________\nAssinatura do Mutuário");
+
+                            if (intervenientes != null)
+                            {
+                                foreach (var inter in intervenientes)
+                                {
+                                    string nomeInter = inter.IntervenienteEntidade?.Nome ?? inter.Tipo;
+                                    table.Cell().PaddingBottom(20).AlignCenter().Text($"_______________________\n{inter.Tipo} ({nomeInter})");
+                                }
+                            }
+                        });
+
+                        col.Item().PaddingTop(10).AlignCenter().Text($"Maputo, {DateTime.Now:dd/MM/yyyy}");
+                    });
+                });
+            });
+
+            byte[] bytes = document.GeneratePdf();
+            return File(bytes, "application/pdf", $"Contrato_Emprestimo_Pedido_{pedido.Id}.pdf");
         }
         // GET: /Pedido/Despacho (aceita opcionalmente id ou crr, ou ajustamos para aceitar id como ID do pedido)
         public async Task<IActionResult> Despacho(int id)
