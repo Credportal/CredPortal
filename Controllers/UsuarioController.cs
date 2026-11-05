@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Analise.Controllers
 {
+    [PaginaRestritaSomenteAdmin]
     public class UsuarioController : Controller
     {
         private readonly IUsuarioRepositorio _usuarioRepositorio;

@@ -28,6 +28,7 @@ namespace Analise.Data
         public DbSet<FechoDiarioRegisto> FechosDiariosRegistos { get; set; }
         public DbSet<FechoDiarioConta> FechosDiariosContas { get; set; }
         public DbSet<FechoDiarioGestor> FechosDiariosGestores { get; set; }
+        public DbSet<DiaControloModel> DiasControlo { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

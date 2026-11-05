@@ -313,6 +313,37 @@ namespace Cred.Migrations
                     b.ToTable("Despesas");
                 });
 
+            modelBuilder.Entity("Analise.Models.DiaControloModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DataAbertura")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DataFecho")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("DataReferencia")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("EstaAberto")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("UsuarioAberturaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioFechoId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DiasControlo");
+                });
+
             modelBuilder.Entity("Analise.Models.EntidadeModel", b =>
                 {
                     b.Property<int>("Id")

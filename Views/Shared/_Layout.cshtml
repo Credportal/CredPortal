@@ -310,9 +310,12 @@
                     <i class="fa-solid fa-gear fa-fw"></i> Configurações
                 </a> *@
 
-                <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Criar" ? "active" : "")">
-                    <i class="fa-solid fa-users fa-fw"></i> Usuários
-                </a>
+                @if (usuario != null && usuario.Perfil == Analise.Enuns.PerfilEnum.Admin)
+                {
+                    <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Usuario" ? "active" : "")">
+                        <i class="fa-solid fa-users fa-fw"></i> Usuários
+                    </a>
+                }
                 <a asp-controller="AlterarSenha" asp-action="Index" class="sg-nav-link @(currentController == "Index" ? "active" : "")">
                     <i class="fa-solid fa-key fa-fw"></i> Alterar Senha
                 </a>                
