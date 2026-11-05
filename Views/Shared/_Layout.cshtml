@@ -34,7 +34,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Cred</title>
+    <title>@ViewData["Title"] - CredMaster</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
@@ -216,8 +216,9 @@
 
             <!-- LOGO CRED QUE MOSTRA A SIDEBAR E VOLTA AO PAINEL -->
             <a asp-controller="Home" asp-action="Index" class="sg-brand" id="logoBrand">
-                <i class="fa-solid fa-shield-halved"></i>
-                <span>Cred</span>
+               @*  <i class="fa-solid fa-shield-halved"></i> *@
+                <span>Cash Pronto</span>
+                <div class="text-secondary" style="font-size: 11px;">Microcrédito E.I.</div>
             </a>
         </div>
 
@@ -287,38 +288,49 @@
                 <a asp-controller="Home" asp-action="Index" class="sg-nav-link @(currentController == "Painel" || currentController == "Home" ? "active" : "")">
                     <i class="fa-solid fa-house fa-fw"></i> Painel
                 </a>
-                <a asp-controller="Conta" asp-action="Ver" class="sg-nav-link @(currentController == "Conta" ? "active" : "")">
-                    <i class="fa-solid fa-chart-line fa-fw"></i> Contas
-                </a>
-                <a asp-controller="Entidade" asp-action="Ver" class="sg-nav-link @(currentController == "Entidade" ? "active" : "")">
-                    <i class="fa-solid fa-user fa-fw"></i> Entidades
-                </a>
                 <a asp-controller="Simulador" asp-action="Index" class="sg-nav-link @(currentController == "Simulador" ? "active" : "")">
                     <i class="fa-solid fa-calculator fa-fw"></i> Simulador
-                </a>
+                </a>                
+                <a asp-controller="Entidade" asp-action="Ver" class="sg-nav-link @(currentController == "Entidade" ? "active" : "")">
+                    <i class="fa-solid fa-user fa-fw"></i> Entidades
+                </a>               
                 <a asp-controller="Pedido" asp-action="Ver" class="sg-nav-link @(currentController == "Pedido" ? "active" : "")">
                     <i class="fa-solid fa-credit-card fa-fw"></i> Créditos
+                </a>
+                <a asp-controller="Despesa" asp-action="Index" class="sg-nav-link @(currentController == "Despesa" ? "active" : "")">
+                    <i class="fa-solid fa-receipt fa-fw"></i> Despesas
+                </a>
+                <a asp-controller="Conta" asp-action="Ver" class="sg-nav-link @(currentController == "Conta" ? "active" : "")">
+                    <i class="fa-solid fa-chart-line fa-fw"></i> Contas
                 </a>
                 <a asp-controller="Relatorio" asp-action="Index" class="sg-nav-link @(currentController == "Relatorio" ? "active" : "")">
                     <i class="fa-solid fa-chart-pie fa-fw"></i> Relatórios
                 </a>
-                <a asp-controller="Configuracao" asp-action="Index" class="sg-nav-link @(currentController == "Configuracao" ? "active" : "")">
+               @*  <a asp-controller="Configuracao" asp-action="Index" class="sg-nav-link @(currentController == "Configuracao" ? "active" : "")">
                     <i class="fa-solid fa-gear fa-fw"></i> Configurações
-                </a>
+                </a> *@
 
                 <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Criar" ? "active" : "")">
                     <i class="fa-solid fa-users fa-fw"></i> Usuários
                 </a>
                 <a asp-controller="AlterarSenha" asp-action="Index" class="sg-nav-link @(currentController == "Index" ? "active" : "")">
                     <i class="fa-solid fa-key fa-fw"></i> Alterar Senha
+                </a>                
+                <a asp-controller="FechoDiario" asp-action="RelatorioFecho" class="sg-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "FechoDiario" ? "active" : "")">
+                    <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho e Desempenho
                 </a>
+                <form asp-controller="Login" asp-action="TerminarSessao" method="post" class="d-inline">
+                    <button type="submit" class="dropdown-item text-danger py-2 d-flex align-items-center gap-2 border-0 bg-transparent w-100">
+                        <i class="fa-solid fa-right-from-bracket" style="width: 16px;"></i> Terminar Sessão
+                    </button>
+                </form>
             </nav>
         </div>
 
         <div>
             <div class="p-3 rounded-3 mb-3" style="background: #f0faf5; border: 1px solid #e1f1e9;">
                 <i class="fa-solid fa-shield-halved text-success fs-3 mb-2"></i>
-                <div class="fw-bold text-dark small">Cred</div>
+                <div class="fw-bold text-dark small">CredMaster</div>
                 <div class="text-secondary" style="font-size: 11px;">Sua gestão simplificada.</div>
             </div>
 
@@ -328,7 +340,7 @@
             </div>
 
             <div class="text-muted" style="font-size: 10px;">
-                &copy; @DateTime.Now.Year Cred, Lda.<br>Todos os direitos reservados.
+                &copy; @DateTime.Now.Year Nael Consultoria Lda.<br>Todos os direitos reservados.
             </div>
         </div>
     </aside>

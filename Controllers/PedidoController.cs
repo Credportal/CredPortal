@@ -1,20 +1,23 @@
 ﻿using Analise.Data;
+using Analise.Filters;
 using Analise.Helper;
 using Analise.Models;
 using Analise.Repositorio;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
     public class PedidoController : Controller
     {
         private readonly IPedidoRepositorio _pedidoRepositorio;
@@ -439,7 +442,7 @@ namespace Analise.Controllers
 
             return RedirectToAction("Ver", "Pedido");
         }
-        // GET: /Pedido/Documentos/5
+        [HttpGet]
         public async Task<IActionResult> Documentos(int id)
         {
             var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
@@ -467,19 +470,83 @@ namespace Analise.Controllers
 
             pedido.TotalGarantiasIntervenientes = totalGarantiasIntervenientes;
 
-            // 3. Carregar o Plano de Amortização gravado na tabela Amortizacoes
+            // 3. Tentar carregar o Plano de Amortização já gravado na tabela Amortizacoes
             var listaAmortizacoes = await _bancoContext.Amortizacoes
                 .Where(a => a.PedidoId == id)
                 .OrderBy(a => a.NR)
                 .ToListAsync();
 
-            // 4. Passar dados auxiliares via ViewBag para a View
+            // 4. SE NÃO EXISTIR PLANO GRAVADO (ex: Pedido Aprovado recentemente), GERAMOS NA HORA!
+            if (listaAmortizacoes == null || !listaAmortizacoes.Any())
+            {
+                DateTime dataReferencia;
+
+                // Regra de Negócio de Datas:
+                // - Vigente (4) ou Liquidado (5) -> Usa DataDesembolso
+                // - Aprovado (2) ou Outros -> Usa a Data Atual (DateTime.Today)
+                if (pedido.EstadoId == 4 || pedido.EstadoId == 5)
+                {
+                    dataReferencia = pedido.DataDesembolso.HasValue ? pedido.DataDesembolso.Value.DateTime : DateTime.Today;
+                }
+                else
+                {
+                    dataReferencia = DateTime.Today;
+                }
+
+                // Chame o seu método/serviço que calcula as prestações (exemplo de lógica de cálculo ou simulação)
+                // Se já tiver um simulador ou repositor de cálculo, invoque-o aqui para preencher a lista em memória:
+                listaAmortizacoes = GerarPlanoAmortizacaoTemporario(pedido, dataReferencia);
+            }
+
+            // 5. Passar dados auxiliares via ViewBag para a View
             ViewBag.GarantiasCliente = garantiasCliente;
             ViewBag.Intervenientes = intervenientes;
             ViewBag.GarantiasPorInterveniente = garantiasMap;
             ViewBag.ListaAmortizacoes = listaAmortizacoes;
 
             return View("Documento", pedido);
+        }
+
+        // Método auxiliar para gerar o plano em memória caso não esteja gravado na BD
+        private List<AmortizacaoModel> GerarPlanoAmortizacaoTemporario(PedidoModel pedido, DateTime dataInicio)
+        {
+            var lista = new List<AmortizacaoModel>();
+            decimal valor = pedido.ValorDecisao > 0 ? pedido.ValorDecisao.Value : pedido.Valor;
+            int prazo = (pedido.PrazoDecisao ?? 0) > 0 ? pedido.PrazoDecisao.Value : pedido.Prazo;
+            decimal taxaMensal = (pedido.TaxaDecisao > 0 ? pedido.TaxaDecisao.Value : pedido.Taxa) / 100m / 12m;
+            decimal prestacao = pedido.PrestacaoDecisao > 0 ? pedido.PrestacaoDecisao.Value : pedido.Prestacao;
+
+            if (prestacao <= 0 && prazo > 0 && valor > 0)
+            {
+                // Fórmula Price básica se a prestação não estiver definida
+                if (taxaMensal > 0)
+                    prestacao = valor * (taxaMensal * (decimal)Math.Pow((double)(1 + taxaMensal), prazo)) / ((decimal)Math.Pow((double)(1 + taxaMensal), prazo) - 1);
+                else
+                    prestacao = valor / prazo;
+            }
+
+            decimal capitalEmDivida = valor;
+
+            for (int i = 1; i <= prazo; i++)
+            {
+                decimal juro = capitalEmDivida * taxaMensal;
+                decimal principal = prestacao - juro;
+                capitalEmDivida -= principal;
+
+                lista.Add(new AmortizacaoModel
+                {
+                    NR = i,
+                    Vencimento = dataInicio.AddMonths(i),
+                    Prestacao = prestacao,
+                    Juro = juro,
+                    Principal = principal,
+                    SaldoDevedor = capitalEmDivida > 0 ? capitalEmDivida : 0,
+                    TotalPago = 0
+                    // Remova a linha 'TotalPorPagar = prestacao' se for apenas leitura no modelo
+                });
+            }
+
+            return lista;
         }
         // GET: /Pedido/GerarContratoPdf/5
         public async Task<IActionResult> GerarContratoPdf(int id)
@@ -500,12 +567,12 @@ namespace Analise.Controllers
             }
 
             // Dados fixos do operador conforme o modelo
-            string nomeEmpresa = "Nael Microcrédito E.I.";
-            string emailEmpresa = "naelmicrocredito@gmail.com";
-            string contactosEmpresa = "862357628 / 842357628";
-            string sedeEmpresa = "Bairro Agostinho Neto, na cidade de Maputo";
-            string representanteLegal = "Velma Sara Frederico";
-            string cargoRepresentante = "Administrador";
+            string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
+            string emailEmpresa = "cashprontoto@gmail.com";
+            string contactosEmpresa = "826255445";
+            string sedeEmpresa = "Maputo-Malanga, rua do Carpelo No. 77";
+            string representanteLegal = "Jaime Manuel Nhabanga";
+            string cargoRepresentante = "Representante Legal";
 
             string numeroContrato = pedido.CRR.HasValue ? pedido.CRR.Value.ToString("0") : "S/N";
 
@@ -513,7 +580,10 @@ namespace Analise.Controllers
             int prazoFinal = pedido.PrazoDecisao ?? pedido.Prazo;
             decimal taxaFinal = pedido.TaxaDecisao ?? pedido.Taxa;
             decimal custosAdmValor = valorFinal <= 10000 ? 200m : (valorFinal * 0.02m);
+
+            // CORREÇÃO AQUI: Definimos o prazo e se é "prestação mensal" ou "prestações mensais"
             string textoPrazo = prazoFinal == 1 ? "1 mês" : $"{prazoFinal} meses";
+            string textoPrestacao = prazoFinal == 1 ? "1 prestação mensal" : $"{prazoFinal} prestações mensais";
 
             string valorPorExtenso = ExtensoHelper.ConverterParaExtenso(valorFinal);
             string custosExtenso = ExtensoHelper.ConverterParaExtenso(custosAdmValor);
@@ -528,7 +598,7 @@ namespace Analise.Controllers
                 {
                     page.Size(PageSizes.A4);
                     page.Margin(36);
-                    page.DefaultTextStyle(x => x.FontFamily("Times New Roman").FontSize(10));
+                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(10));
 
                     page.Content().Column(col =>
                     {
@@ -551,7 +621,7 @@ namespace Analise.Controllers
                             text.Span(representanteLegal).Bold();
                             text.Span($", na qualidade de ");
                             text.Span(cargoRepresentante).Bold();
-                            text.Span(", doravante designado por Operador.\n");
+                            text.Span(", doravante designado por Operador.");
                         });
 
                         var cli = pedido.Entidade;
@@ -597,7 +667,7 @@ namespace Analise.Controllers
 
                         col.Item().PaddingTop(5);
 
-                        // Cláusula Primeira
+                        // Cláusula Primeira CORRIGIDA
                         col.Item().AlignCenter().Text("PRIMEIRA\n(Valor do empréstimo)").Bold().FontSize(10);
                         col.Item().Text(text =>
                         {
@@ -605,8 +675,8 @@ namespace Analise.Controllers
                             text.Span("Pelo presente, concede-se ao mutuário o valor de ");
                             text.Span($"{valorFinal:N2} MT").Bold();
                             text.Span($" ({valorPorExtenso}), a ser pago em ");
-                            text.Span(textoPrazo).Bold();
-                            text.Span(" prestação mensal sobre o capital em dívida.\n");
+                            text.Span(textoPrestacao).Bold();
+                            text.Span(" sobre o capital em dívida.\n");
                         });
 
                         // Cláusula Segunda
@@ -629,14 +699,14 @@ namespace Analise.Controllers
                             text.Span(", contados a partir da data do desembolso do crédito, bem como de acordo com o plano de pagamento em anexo no contrato.\n2. O mutuário compromete-se ainda, a efetuar os reembolsos do crédito nas contas enquadradas no plano de pagamento, apresentando o comprovativo do reembolso junto às instalações do operador, para que lhe seja passado o recibo que confirma a receção do valor pelo Operador.\n");
                         });
 
-                        // Cláusula Quarta
+                        // Cláusula Quarta                                     
                         col.Item().AlignCenter().Text("QUARTA\n(Custos administrativos)").Bold().FontSize(10);
                         col.Item().Text(text =>
                         {
                             text.Justify();
                             text.Span("Os custos administrativos associados à operação de crédito, no valor de ");
                             text.Span($"{custosAdmValor:N2} MT").Bold();
-                            text.Span($" ({custosExtenso}), são da inteira responsabilidade do mutuário.\n");
+                            text.Span($" ({custosExtenso}), encontram-se temporariamente isentos para o mutuário por decisão promocional e excepcional.\n");
                         });
 
                         // Cláusula Quinta
@@ -1098,7 +1168,7 @@ namespace Analise.Controllers
                 TempData["MensagemErro"] = "O valor do depósito deve ser superior a zero.";
                 return RedirectToAction("Pagamento", new { id = pedidoId });
             }
-
+            
             var pedido = await _bancoContext.Pedidos
                 .Include(p => p.Entidade)
                 .FirstOrDefaultAsync(p => p.Id == pedidoId);
@@ -1190,14 +1260,19 @@ namespace Analise.Controllers
                     return RedirectToAction("Pagamento", new { id = pedidoId });
                 }
 
-                // 3. Verificar se toda a dívida foi liquidada (Capital pendente total igual a 0 ou menor que uma margem infinitesimal)
+                // 3. Atualizar o Capital Pago no Pedido e verificar se a dívida foi totalmente liquidada
+                if (totalPrincipalPagoGeral > 0)
+                {
+                    pedido.CapitalPago += totalPrincipalPagoGeral;
+                }
+
                 bool dividaTotalLiquidada = amortizacoesDb.All(a => a.PrincipalPorPagar <= 0);
                 if (dividaTotalLiquidada)
                 {
                     pedido.EstadoId = 5; // Estado Liquidado
-                    pedido.CapitalPago = totalPrincipalPagoGeral;
-                    _bancoContext.Pedidos.Update(pedido);
                 }
+
+                _bancoContext.Pedidos.Update(pedido);
 
                 string nomeCliente = pedido.Entidade?.Nome ?? "Cliente";
                 string descricaoMovimento = $"Reembolso de Crédito: {nomeCliente} (Pedido #{pedidoId})";

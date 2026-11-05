@@ -12,6 +12,7 @@ using QuestPDF.Infrastructure; // Necessário para a licença do QuestPDF
 var builder = WebApplication.CreateBuilder(args);
 
 // REGISTAR LICENÇA DO QUESTPDF (Obrigatório para .NET 8)
+QuestPDF.Settings.UseSystemFonts = true;
 QuestPDF.Settings.License = LicenseType.Community;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -48,6 +49,8 @@ builder.Services.AddScoped<IPedidoRepositorio, PedidoRepositorio>();
 builder.Services.AddScoped<IConfiguracaoRepositorio, ConfiguracaoRepositorio>();
 builder.Services.AddScoped<IContaRepositorio, ContaRepositorio>();
 builder.Services.AddScoped<IMovimentoInternoRepositorio, MovimentoInternoRepositorio>();
+builder.Services.AddScoped<IDespesaRepositorio, DespesaRepositorio>();
+builder.Services.AddScoped<IFechoDiarioRepositorio, FechoDiarioRepositorio>();
 
 builder.Services.AddSession(o =>
 {

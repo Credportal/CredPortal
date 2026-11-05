@@ -1,6 +1,6 @@
 ﻿@model Analise.Models.LoginModel
 @{
-    ViewData["Title"] = "Acesso - Cred";
+    ViewData["Title"] = "Acesso - CredMaster";
     Layout = null; // Página autónoma sem o layout principal de dashboard
 }
 <!DOCTYPE html>
@@ -133,8 +133,8 @@
 
     <!-- BARRA SUPERIOR DE APOIO -->
     <div class="container-fluid py-3 px-4 d-flex justify-content-between align-items-center bg-white border-bottom">
-        <div class="fw-bold text-secondary" style="font-size: 15px;"><i class="fa-solid fa-shield-halved text-success me-2"></i>Cred</div>
-        <div class="text-secondary small"><i class="fa-solid fa-location-dot me-1 text-secondary"></i> Agência Maputo</div>
+        <div class="fw-bold text-secondary" style="font-size: 15px;"><i class="fa-solid fa-shield-halved text-success me-2"></i>CredMaster</div>
+        <div class="text-secondary small"><i class="fa-solid fa-location-dot me-1 text-secondary"></i>Maputo</div>
     </div>
 
     <!-- CORPO DO LOGIN -->
@@ -146,7 +146,7 @@
                 <div>
                     <a href="#" class="sg-brand">
                         <i class="fa-solid fa-shield-halved"></i>
-                        <span>Cred</span>
+                        <span>CredMaster</span>
                     </a>
                     <h2 class="fw-bold text-dark mb-2" style="font-size: 24px; line-height: 1.3;">Sua gestão simplificada.</h2>
                     <p class="text-muted small mb-2">Plataforma inteligente para o controlo integrado de operações, crédito e acompanhamento de clientes.</p>
@@ -156,14 +156,14 @@
                 </div>
 
                 <div class="text-muted" style="font-size: 11px;">
-                    &copy; @DateTime.Now.Year Cred, Lda. Todos os direitos reservados.
+                    &copy; @DateTime.Now.Year Nael Consultoria Lda. Todos os direitos reservados.
                 </div>
             </div>
 
             <!-- LADO DIREITO: FORMULÁRIO DE ENTRADA -->
             <div class="login-right">
                 <h3 class="fw-bold text-dark mb-1" style="font-size: 22px;">Acesse sua Conta</h3>
-                <p class="text-muted small mb-4">Entre com suas credenciais Cred.</p>
+                <p class="text-muted small mb-4">Entre com suas credenciais.</p>
 
                 <!-- MENSAGEM DE ERRO (CASO EXISTA) -->
                 @if (TempData["MensagemErro"] != null)

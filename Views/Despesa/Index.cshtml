@@ -1,0 +1,132 @@
+﻿@model Analise.Models.DespesaModel
+@{
+    ViewData["Title"] = "Gestão de Despesas";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<div class="container-fluid px-4 py-3">
+    <!-- Cabeçalho da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Gestão de Despesas</h2>
+            <p class="text-muted small mb-0">Registo e controlo de saídas financeiras da microcrédito</p>
+        </div>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+        </a>
+    </div>
+
+    <!-- Alertas -->
+    @if (TempData["MensagemSucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["MensagemSucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["MensagemErro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["MensagemErro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4 mb-5">
+        <!-- Formulário de Lançamento de Despesa -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+                <h5 class="fw-bold text-dark mb-3">
+                    <i class="fa-solid fa-plus-circle text-success me-2" style="color: #079b62 !important;"></i>
+                    Lançar Nova Despesa
+                </h5>
+
+                <form asp-controller="Despesa" asp-action="Criar" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Descrição da Despesa</label>
+                        <input type="text" asp-for="Descricao" class="form-control rounded-2 shadow-sm" placeholder="Ex: Compra de material de escritório" required />
+                        <span asp-validation-for="Descricao" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Valor (MT)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-secondary fw-bold">MT</span>
+                            <input type="number" step="0.01" asp-for="Valor" class="form-control rounded-end-2 shadow-sm" placeholder="0.00" required />
+                        </div>
+                        <span asp-validation-for="Valor" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary">Selecionar Conta de Origem</label>
+                        <select asp-for="ContaId" class="form-select rounded-2 shadow-sm" required>
+                            <option value="">Selecione a conta...</option>
+                            @if (ViewBag.ListaContas != null)
+                            {
+                                foreach (var c in (List<ContaModel>)ViewBag.ListaContas)
+                                {
+                                    <option value="@c.Id">
+                                        @c.Banco - @c.Conta (@c.Titular) - Saldo: MT @c.Saldo.ToString("N2")
+                                    </option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="ContaId" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-success rounded-3 text-white fw-bold py-3 w-100 d-flex align-items-center gap-2 justify-content-center shadow-sm" style="background-color: #079b62; border-color: #079b62;">
+                        <i class="fa-solid fa-circle-check fs-5"></i> Registar Despesa
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabela de Despesas Recentes (Sem opção de apagar) -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+                <h5 class="fw-bold text-dark mb-3">Histórico de Despesas Recentes</h5>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 border rounded-3 overflow-hidden">
+                        <thead class="table-light text-muted small">
+                            <tr>
+                                <th class="ps-3 py-2">Data</th>
+                                <th class="py-2">Descrição</th>
+                                <th class="py-2">Conta</th>
+                                <th class="py-2 text-end pe-3">Valor (MT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.ListaDespesas != null && ((List<DespesaModel>)ViewBag.ListaDespesas).Count > 0)
+                            {
+                                foreach (var d in (List<DespesaModel>)ViewBag.ListaDespesas)
+                                {
+                                    <tr>
+                                        <td class="ps-3 small text-muted">@d.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="fw-semibold text-dark">@d.Descricao</td>
+                                        <td class="small">@(d.Conta != null ? $"{d.Conta.Banco} - {d.Conta.Conta}" : "N/D")</td>
+                                        <td class="text-end fw-bold text-danger pe-3">MT @d.Valor.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted small">Nenhuma despesa registada até o momento.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -6,6 +6,7 @@ using System.Diagnostics.Contracts;
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
     [PaginaRestritaSomenteAdmin]
     public class AgenciaController : Controller
     {

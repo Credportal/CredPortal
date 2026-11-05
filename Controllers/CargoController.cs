@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
     [PaginaRestritaSomenteAdmin]
     public class CargoController : Controller
     {

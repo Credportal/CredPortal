@@ -2,14 +2,13 @@
 @{
     ViewData["Title"] = "Listagem de Contas Bancárias";
 
-    // Obtém os dados do utilizador logado de forma segura
+    // Obtém os dados do utilizador logado de forma segura    
     var usuarioLogado = SessaoUsuario.BuscarSessaoDoUsuario();
     string nomeUtilizador = usuarioLogado?.Login ?? "Administrador";
     string nomeAgencia = "Agência Maputo";
 }
 
 @inject Analise.Helper.ISessao SessaoUsuario
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
 
@@ -84,7 +83,7 @@
             <!-- Tabela de Contas -->
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light text-secondary small text-uppercase">
+                    <thead class="table-light text-secondary small">
                         <tr>
                             <th>Banco</th>
                             <th>Número da Conta</th>

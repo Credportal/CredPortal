@@ -279,6 +279,40 @@ namespace Cred.Migrations
                     b.ToTable("CustosAdm");
                 });
 
+            modelBuilder.Entity("Analise.Models.DespesaModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ContaId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int?>("UsuarioCadastroId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Valor")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContaId");
+
+                    b.HasIndex("UsuarioCadastroId");
+
+                    b.ToTable("Despesas");
+                });
+
             modelBuilder.Entity("Analise.Models.EntidadeModel", b =>
                 {
                     b.Property<int>("Id")
@@ -433,6 +467,173 @@ namespace Cred.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("estados");
+                });
+
+            modelBuilder.Entity("Analise.Models.FechoDiarioConta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Banco")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Conta")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Creditos")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Debitos")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("FechoDiarioRegistoId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("SaldoAbertura")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SaldoFecho")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Titular")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FechoDiarioRegistoId");
+
+                    b.ToTable("FechosDiariosContas");
+                });
+
+            modelBuilder.Entity("Analise.Models.FechoDiarioGestor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("DesembolsoMontante")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Dias15Capital")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Dias15Qtd")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Dias30Capital")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Dias30Qtd")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Dias7Capital")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Dias7Qtd")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FechoDiarioRegistoId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("GestorNome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("MoraHojeCapital")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MoraTotalCapital")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MoraTotalPercentual")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MoraTotalQtd")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QtdNovos")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QtdRep")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ReembolsoCapital")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ReembolsoQtd")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("VigenteCapital")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("VigenteQtd")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FechoDiarioRegistoId");
+
+                    b.ToTable("FechosDiariosGestores");
+                });
+
+            modelBuilder.Entity("Analise.Models.FechoDiarioRegisto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CarteiraVigenteNumero")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("CarteiraVigenteVolume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("DataFecho")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("DataHoraProcessamento")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("PedidosAprovadosNumero")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PedidosPendentesNumero")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalDesembolsosNumero")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalDesembolsosVolume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TotalDespesasNumero")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalDespesasVolume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TotalReembolsosNumero")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalReembolsosVolume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FechosDiariosRegistos");
                 });
 
             modelBuilder.Entity("Analise.Models.GarantiaModel", b =>
@@ -811,6 +1012,23 @@ namespace Cred.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("Analise.Models.DespesaModel", b =>
+                {
+                    b.HasOne("Analise.Models.ContaModel", "Conta")
+                        .WithMany()
+                        .HasForeignKey("ContaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Analise.Models.UsuarioModel", "UsuarioCadastro")
+                        .WithMany()
+                        .HasForeignKey("UsuarioCadastroId");
+
+                    b.Navigation("Conta");
+
+                    b.Navigation("UsuarioCadastro");
+                });
+
             modelBuilder.Entity("Analise.Models.EntidadeModel", b =>
                 {
                     b.HasOne("Analise.Models.UsuarioModel", "Usuario")
@@ -818,6 +1036,28 @@ namespace Cred.Migrations
                         .HasForeignKey("UsuarioId");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("Analise.Models.FechoDiarioConta", b =>
+                {
+                    b.HasOne("Analise.Models.FechoDiarioRegisto", "FechoRegisto")
+                        .WithMany("SaldosContas")
+                        .HasForeignKey("FechoDiarioRegistoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FechoRegisto");
+                });
+
+            modelBuilder.Entity("Analise.Models.FechoDiarioGestor", b =>
+                {
+                    b.HasOne("Analise.Models.FechoDiarioRegisto", "FechoRegisto")
+                        .WithMany("MapaDesempenho")
+                        .HasForeignKey("FechoDiarioRegistoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FechoRegisto");
                 });
 
             modelBuilder.Entity("Analise.Models.GarantiaModel", b =>
@@ -946,6 +1186,13 @@ namespace Cred.Migrations
                     b.Navigation("Agencia");
 
                     b.Navigation("Cargo");
+                });
+
+            modelBuilder.Entity("Analise.Models.FechoDiarioRegisto", b =>
+                {
+                    b.Navigation("MapaDesempenho");
+
+                    b.Navigation("SaldosContas");
                 });
 #pragma warning restore 612, 618
         }

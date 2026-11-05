@@ -2,29 +2,6 @@
     ViewData["Title"] = "Painel de Controlo";
     Layout = "_Layout";
 
-    // var vendas = new[]
-    // {
-    //     new { Mes = "Jan", Valor = 1650000 },
-    //     new { Mes = "Fev", Valor = 1950000 },
-    //     new { Mes = "Mar", Valor = 2150000 },
-    //     new { Mes = "Abr", Valor = 2400000 },
-    //     new { Mes = "Mai", Valor = 2800000 },
-    //     new { Mes = "Jun", Valor = 2450000 }
-    // };
-
-    // var vencimentos = new[]
-    // {
-    //     new { Cliente = "Transporte Mucavele", Ramo = "Automóvel", Data = "24 Out 2026", Premio = 45000m, Estado = "A renovar" },
-    //     new { Cliente = "Mundo Criativo", Ramo = "Multirriscos", Data = "28 Out 2026", Premio = 32500m, Estado = "Pendente" },
-    //     new { Cliente = "J. Mahumane", Ramo = "Saúde", Data = "02 Nov 2026", Premio = 18900m, Estado = "A renovar" }
-    // };
-
-    // var pagamentos = new[]
-    // {
-    //     new { Cliente = "ABC Transportes", Referencia = "POL-2026-0182", Valor = 85000m, Dias = 12 },
-    //     new { Cliente = "Mundo Criativo", Referencia = "POL-2026-0204", Valor = 32500m, Dias = 5 },
-    //     new { Cliente = "J. Mahumane", Referencia = "POL-2026-0220", Valor = 18900m, Dias = 2 }
-    // };
 }
 
 <style>
@@ -107,19 +84,8 @@
         <h2 class="fw-bold text-dark mb-1 fs-3">Painel de Controlo</h2>
         <div class="text-secondary small">Visão geral do desempenho da carteira de crédito</div>
     </div>
-
-   @*  <div class="d-flex flex-wrap gap-2 align-items-center">
-        <select class="sg-filter-select"><option>Este mês</option></select>
-        <span class="text-secondary small ms-2">Pagamentos Feitos</span>
-        <select class="sg-filter-select"><option>Todos</option></select>
-        <span class="text-secondary small ms-2">Ramo</span>
-        <select class="sg-filter-select"><option>Todos</option></select>
-        <span class="text-secondary small ms-2">Agência</span>
-        <select class="sg-filter-select"><option>Todas</option></select>
-        <span class="text-secondary small ms-2">Estado dos processo</span>
-        <select class="sg-filter-select"><option>Todos</option></select>
-    </div> *@
 </div>
+
 <!-- CARDS KPI SUPERIORES -->
 <div class="row g-3 mb-4 row-cols-1 row-cols-md-2 row-cols-xl-3 row-cols-xxl-6">
     <div class="col">
@@ -276,7 +242,6 @@
         <div class="sg-card p-0">
             <div class="p-3 d-flex justify-content-between align-items-center border-bottom">
                 <h6 class="fw-bold text-dark m-0"><i class="fa-regular fa-calendar me-2 text-success"></i>Vencimentos próximos</h6>
-                <a asp-controller="Amortizacao" asp-action="Index" class="text-success text-decoration-none fw-bold small">Ver todos <i class="fa-solid fa-chevron-right"></i></a>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle m-0" style="font-size: 13px;">
@@ -297,7 +262,8 @@
                         {
                             foreach (var item in vencimentosProximosList)
                             {
-                                int diasAtraso = (item.Vencimento.Date - DateTime.Today).Days;
+                                // CORREÇÃO AQUI: Invertido para mostrar os dias restantes em negativo (ex: -30 dias)
+                                int diasRestantes = (item.Vencimento.Date - DateTime.Today).Days;
                                 decimal valorTotal = item.PrincipalPorPagar + item.JuroPorPagar + item.MultaPorPagar;
                                 <tr>
                                     <td class="ps-3 fw-semibold text-dark">
@@ -307,7 +273,7 @@
                                     <td>@item.Vencimento.ToString("dd MMM yyyy")</td>
                                     <td class="text-center">
                                         <span class="badge bg-secondary-subtle text-secondary px-2 py-1">
-                                            @diasAtraso dias
+                                            -@diasRestantes dias
                                         </span>
                                     </td>
                                     <td>@(item.Pedido?.Entidade?.Telefone ?? "N/D")</td>
@@ -322,7 +288,7 @@
                 </table>
             </div>
             <div class="p-2 text-center border-top">
-                <a asp-controller="Amortizacao" asp-action="Index" class="text-success text-decoration-none fw-bold small">Ver todos <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                <a asp-controller="Conta" asp-action="Ver" class="text-success text-decoration-none fw-bold small">Ver todas <i class="fa-solid fa-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
@@ -332,7 +298,6 @@
         <div class="sg-card p-0">
             <div class="p-3 d-flex justify-content-between align-items-center border-bottom">
                 <h6 class="fw-bold text-dark m-0"><i class="fa-regular fa-credit-card me-2 text-success"></i>Pagamentos pendentes</h6>
-                <a asp-controller="Amortizacao" asp-action="Index" class="text-success text-decoration-none fw-bold small">Ver todos <i class="fa-solid fa-chevron-right"></i></a>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle m-0" style="font-size: 13px;">
@@ -376,10 +341,7 @@
                         }
                     </tbody>
                 </table>
-            </div>
-            <div class="p-2 text-center border-top">
-                <a asp-controller="Amortizacao" asp-action="Index" class="text-success text-decoration-none fw-bold small">Ver todos <i class="fa-solid fa-arrow-right ms-1"></i></a>
-            </div>
+            </div>           
         </div>
     </div>
 </div>

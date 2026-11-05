@@ -57,11 +57,7 @@ namespace Analise.Controllers
         {
             return View();
         }
-        public IActionResult Sair()
-        {
-            _sessao.RemoverSessaoDoUsuario();
-            return RedirectToAction("Index", "Login");
-        }
+       
         [HttpPost]
         public IActionResult Entrar(LoginModel loginModel)
         {
@@ -382,6 +378,14 @@ namespace Analise.Controllers
             TempData["MensagemSucesso"] = $"Senha redefinida com sucesso! A nova senha do utilizador é: {novaSenha}";
 
             return RedirectToAction("RedefinirSenha");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken] // Opcional, mas recomendado por segurança
+        public IActionResult TerminarSessao()
+        {
+            _sessao.RemoverSessaoDoUsuario();
+            return RedirectToAction("Index", "Login");
         }
     }
 }

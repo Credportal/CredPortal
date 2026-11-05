@@ -1,10 +1,12 @@
-﻿using Analise.Helper;
+﻿using Analise.Filters;
+using Analise.Helper;
 using Analise.Models;
 using Analise.Repositorio;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
     public class SimuladorController : Controller
     {
         private readonly ISessao _sessao;

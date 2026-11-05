@@ -1,7 +1,6 @@
 ﻿@model Analise.Models.PedidoModel
 @{
-    ViewData["Title"] = "Desembolso do Pedido";
-    bool custoPago = ViewBag.CustoPago != null && (bool)ViewBag.CustoPago;
+    ViewData["Title"] = "Despacho do Pedido";
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,8 +10,8 @@
     <!-- Cabeçalho da Página -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Desembolso do Pedido #@(Model.Id)</h2>
-            <p class="text-muted small mb-0">Atribuição de Contas Bancárias e Concretização do Desembolso</p>
+            <h2 class="fw-bold text-dark mb-1">Desembolso #@(Model.Id)</h2>
+            <p class="text-muted small mb-0">Desembolso do crédito</p>
         </div>
         <a asp-controller="Pedido" asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> Voltar à Lista de Pedidos
@@ -40,11 +39,11 @@
         <div class="card-body p-4">
             <div class="row g-3 align-items-center">
                 <div class="col-md-8">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Entidade Beneficiária / Cliente</span>
+                    <span class="d-block text-secondary small fw-semibold">Cliente</span>
                     <h5 class="fw-bold text-dark mb-0">@(Model.Entidade?.Nome) <span class="text-muted small">(ID: #@(Model.EntidadeId))</span></h5>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Código CRR</span>
+                    <span class="d-block text-secondary small fw-semibold">Número do Crédito (CRR)</span>
                     <h5 class="font-monospace fw-bold text-success mb-0" style="color: #079b62 !important;">@(Model.CRR.HasValue ? Model.CRR.Value.ToString("0") : "Não atribuído")</h5>
                 </div>
             </div>
@@ -53,167 +52,150 @@
 
             <div class="row g-4 text-center">
                 <div class="col-md-3 border-end">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Valor Aprovado (Decisão)</span>
+                    <span class="d-block text-secondary small fw-semibold">Valor Aprovado (Decisão)</span>
                     <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;" id="lblValorTotalAprovado">MT @(Model.ValorDecisao.HasValue ? Model.ValorDecisao.Value.ToString("N2") : "0,00")</h4>
                 </div>
                 <div class="col-md-3 border-end">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Taxa de Juro Aprovada</span>
+                    <span class="d-block text-secondary small fw-semibold">Taxa de Juro Aprovada</span>
                     <h4 class="fw-bold text-dark mb-0">@(Model.TaxaDecisao.HasValue ? Model.TaxaDecisao.Value.ToString("N2") : "0,00")% ao mês</h4>
                 </div>
                 <div class="col-md-3 border-end">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Prazo Aprovado</span>
+                    <span class="d-block text-secondary small fw-semibold">Prazo Aprovado</span>
                     <h4 class="fw-bold text-dark mb-0">@(Model.PrazoDecisao) Meses</h4>
                 </div>
                 <div class="col-md-3">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Prestação Mensal Aprovada</span>
+                    <span class="d-block text-secondary small fw-semibold">Prestação Mensal Aprovada</span>
                     <h4 class="fw-bold text-dark mb-0">MT @(Model.PrestacaoDecisao.HasValue ? Model.PrestacaoDecisao.Value.ToString("N2") : "0,00")</h4>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- VALIDAÇÃO DO CUSTO ADMINISTRATIVO -->
-    @if (!custoPago)
-    {
-        <div class="alert alert-warning border-0 shadow-sm rounded-4 p-5 mb-5 text-center bg-white">
-            <div class="mb-3">
-                <i class="fa-solid fa-triangle-exclamation text-warning fa-3x"></i>
-            </div>
-            <h4 class="fw-bold text-dark mb-2">Custos Administrativos Pendentes</h4>
-            <p class="text-muted mb-4">Para prosseguir com a atribuição de contas e concretização do desembolso, é obrigatório efetuar o registo e o pagamento da comissão administrativa.</p>
-            <button type="button" class="btn btn-primary px-4 py-3 rounded-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCustosAdm" style="background-color: #0d6efd; border-color: #0d6efd;">
-                <i class="fa-solid fa-file-invoice-dollar me-2"></i> REGISTAR E PAGAR CUSTOS ADMINISTRATIVOS
-            </button>
-        </div>
-    }
-    else
-    {
-        <!-- ÁREA DE SELEÇÃO DE CONTAS BANCÁRIAS PARA DESEMBOLSO -->
-        <h5 class="fw-bold text-dark mb-3">ATRIBUIÇÃO DE CONTAS BANCÁRIAS PARA DESEMBOLSO</h5>
+    <!-- ÁREA DE SELEÇÃO DE CONTAS BANCÁRIAS PARA DESEMBOLSO -->
+    <h5 class="fw-bold text-dark mb-3">Carregamento de desembolso</h5>
 
-        <div class="row g-4 mb-5">
-            <!-- Formulário de Adição de Contas (Valor primeiro, depois Conta) -->
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
-                    <form id="formDesembolso" asp-controller="Pedido" asp-action="ProcessarDesembolso" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@(Model.Id)" />
+    <div class="row g-4 mb-5">
+        <!-- Formulário de Adição de Contas (Valor primeiro, depois Conta) -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+                <form id="formDesembolso" asp-controller="Pedido" asp-action="ProcessarDesembolso" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@(Model.Id)" />
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold text-secondary">Valor a Desembolsar (MT)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-secondary fw-bold">MT</span>
-                                <input type="number" step="0.01" id="inputValorConta" class="form-control rounded-2 shadow-sm" placeholder="0.00" />
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Valor a Desembolsar (MT)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-secondary fw-bold">MT</span>
+                            <input type="number" step="0.01" id="inputValorConta" class="form-control rounded-2 shadow-sm" placeholder="0.00" />
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold text-secondary">Selecionar Conta Bancária (com Saldo Disponível)</label>
-                            <div class="input-group">
-                                <select id="selectConta" class="form-select rounded-2 shadow-sm">
-                                    <option value="">Selecione a conta...</option>
-                                    @if (ViewBag.ListaContas != null)
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Selecionar Conta (com Saldo Disponível)</label>
+                        <div class="input-group">
+                            <select id="selectConta" class="form-select rounded-2 shadow-sm">
+                                <option value="">Selecione a conta...</option>
+                                @if (ViewBag.ListaContas != null)
+                                {
+                                    foreach (var c in (List<ContaModel>)ViewBag.ListaContas)
                                     {
-                                        foreach (var c in (List<ContaModel>)ViewBag.ListaContas)
-                                        {
-                                            <option value="@(c.Id)" data-banco="@(c.Banco)" data-conta="@(c.Conta)" data-titular="@(c.Titular)" data-saldo="@(c.Saldo.ToString(System.Globalization.CultureInfo.InvariantCulture))">
-                                                @(c.Banco) - @(c.Conta) (@(c.Titular)) - Saldo Disp: MT @(c.Saldo.ToString("N2"))
-                                            </option>
-                                        }
+                                        <option value="@(c.Id)" data-banco="@(c.Banco)" data-conta="@(c.Conta)" data-titular="@(c.Titular)" data-saldo="@(c.Saldo.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                                            @(c.Banco) - @(c.Conta) (@(c.Titular)) - Saldo Disp: MT @(c.Saldo.ToString("N2"))
+                                        </option>
                                     }
-                                </select>
-                                <button type="button" id="btnAdicionarConta" class="btn btn-outline-success px-4 fw-semibold" style="color: #079b62; border-color: #079b62;">
-                                    <i class="fa-solid fa-plus me-1"></i> Adicionar Conta
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Tabela Dinâmica de Contas Adicionadas para Desembolso -->
-                        <div class="table-responsive mt-4">
-                            <table class="table table-hover align-middle mb-0 border rounded-3 overflow-hidden">
-                                <thead class="table-light text-muted small text-uppercase">
-                                    <tr>
-                                        <th class="ps-3 py-2">Banco / Conta</th>
-                                        <th class="py-2">Titular</th>
-                                        <th class="py-2 text-end">Valor Atribuído (MT)</th>
-                                        <th class="py-2 text-end pe-3">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbodyContasDesembolso">
-                                    <tr id="trVazio">
-                                        <td colspan="4" class="text-center py-3 text-muted small">Nenhuma conta adicionada para o desembolso ainda.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Painel de Controlo / Estado do Valor a Distribuir -->
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <h6 class="fw-bold text-dark mb-4">ESTADO DO DESEMBOLSO</h6>
-
-                        <div class="mb-3 p-3 bg-light rounded-3 border">
-                            <span class="d-block text-secondary small text-uppercase fw-semibold">Valor Total Aprovado</span>
-                            <h4 class="fw-bold text-dark mb-0">MT @(Model.ValorDecisao.HasValue ? Model.ValorDecisao.Value.ToString("N2") : "0,00")</h4>
-                        </div>
-
-                        <div class="mb-3 p-3 bg-light rounded-3 border">
-                            <span class="d-block text-secondary small text-uppercase fw-semibold">Valor Atribuído nas Contas</span>
-                            <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;" id="lblValorAtribuido">MT 0.00</h4>
-                        </div>
-
-                        <div class="mb-4 p-3 bg-light rounded-3 border">
-                            <span class="d-block text-secondary small text-uppercase fw-semibold">Valor Restante / Em Falta</span>
-                            <h4 class="fw-bold text-danger mb-0" id="lblValorRestante">MT @(Model.ValorDecisao.HasValue ? Model.ValorDecisao.Value.ToString("N2") : "0,00")</h4>
+                                }
+                            </select>
+                            <button type="button" id="btnAdicionarConta" class="btn btn-outline-success px-4 fw-semibold" style="color: #079b62; border-color: #079b62;">
+                                <i class="fa-solid fa-plus me-1"></i> Adicionar Conta
+                            </button>
                         </div>
                     </div>
 
-                    <div>
-                        <!-- Botão de Conclusão do Desembolso -->
-                        <button type="submit" form="formDesembolso" id="btnConfirmarDesembolso" class="btn btn-lg btn-success rounded-3 text-white fw-bold py-3 w-100 d-flex align-items-center gap-2 justify-content-center shadow-sm" style="background-color: #079b62; border-color: #079b62;" disabled>
-                            <i class="fa-solid fa-circle-check fs-4"></i> CONCLUIR DESEMBOLSO
-                        </button>
-                        <span class="d-block text-muted small text-center mt-2">O botão será ativado quando a soma das contas igualar exatamente o valor aprovado.</span>
+                    <!-- Tabela Dinâmica de Contas Adicionadas para Desembolso -->
+                    <div class="table-responsive mt-4">
+                        <table class="table table-hover align-middle mb-0 border rounded-3 overflow-hidden">
+                            <thead class="table-light text-muted small">
+                                <tr>
+                                    <th class="ps-3 py-2">Banco / Conta</th>
+                                    <th class="py-2">Titular</th>
+                                    <th class="py-2 text-end">Valor Atribuído (MT)</th>
+                                    <th class="py-2 text-end pe-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyContasDesembolso">
+                                <tr id="trVazio">
+                                    <td colspan="4" class="text-center py-3 text-muted small">Nenhuma conta adicionada para o desembolso ainda.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-                        <div class="mt-4 pt-3 border-top text-center">
-                            <a asp-controller="Pedido" asp-action="Ver" class="text-muted small text-decoration-underline">
-                                Cancelar e Voltar à Lista
-                            </a>
-                        </div>
+        <!-- Painel de Controlo / Estado do Valor a Distribuir -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <h6 class="fw-bold text-dark mb-4">Estado do desembolso</h6>
+
+                    <div class="mb-3 p-3 bg-light rounded-3 border">
+                        <span class="d-block text-secondary small fw-semibold">Valor Total Aprovado</span>
+                        <h4 class="fw-bold text-dark mb-0">MT @(Model.ValorDecisao.HasValue ? Model.ValorDecisao.Value.ToString("N2") : "0,00")</h4>
+                    </div>
+
+                    <div class="mb-3 p-3 bg-light rounded-3 border">
+                        <span class="d-block text-secondary small fw-semibold">Valor Atribuído nas Contas</span>
+                        <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;" id="lblValorAtribuido">MT 0.00</h4>
+                    </div>
+
+                    <div class="mb-4 p-3 bg-light rounded-3 border">
+                        <span class="d-block text-secondary small fw-semibold">Valor Restante / Em Falta</span>
+                        <h4 class="fw-bold text-danger mb-0" id="lblValorRestante">MT @(Model.ValorDecisao.HasValue ? Model.ValorDecisao.Value.ToString("N2") : "0,00")</h4>
+                    </div>
+                </div>
+
+                <div>
+                    <!-- Botão de Conclusão do Desembolso -->
+                    <button type="submit" form="formDesembolso" id="btnConfirmarDesembolso" class="btn btn-lg btn-success rounded-3 text-white fw-bold py-3 w-100 d-flex align-items-center gap-2 justify-content-center shadow-sm" style="background-color: #079b62; border-color: #079b62;" disabled>
+                        <i class="fa-solid fa-circle-check fs-4"></i> Despachar
+                    </button>
+                    <span class="d-block text-muted small text-center mt-2">O botão será activado quando a soma das contas for igual ao valor aprovado.</span>
+
+                    <div class="mt-4 pt-3 border-top text-center">
+                        <a asp-controller="Pedido" asp-action="Ver" class="text-muted small text-decoration-underline">
+                            Cancelar e Voltar à Lista
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- PLANO DE AMORTIZAÇÃO -->
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-            <h5 class="fw-bold text-dark mb-3">
-                <i class="fa-solid fa-table-list text-success me-2" style="color: #079b62 !important;"></i>
-                Plano de Amortização do Crédito
-            </h5>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle mb-0 border rounded-3 overflow-hidden">
-                    <thead class="table-light text-muted small text-uppercase">
-                        <tr>
-                            <th class="ps-3 py-2">Nr</th>
-                            <th class="py-2">Data de Vencimento</th>
-                            <th class="py-2 text-end">Prestação (MT)</th>
-                            <th class="py-2 text-end">Juro (MT)</th>
-                            <th class="py-2 text-end">Amortização (MT)</th>
-                            <th class="py-2 text-end pe-3">Capital em Dívida (MT)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyPlanoAmortizacao">
-                        <!-- Preenchido via JavaScript -->
-                    </tbody>
-                </table>
-            </div>
+    <!-- PLANO DE AMORTIZAÇÃO -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <h5 class="fw-bold text-dark mb-3">
+            <i class="fa-solid fa-table-list text-success me-2" style="color: #079b62 !important;"></i>
+            Plano de Amortização do Crédito
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0 border rounded-3 overflow-hidden">
+                <thead class="table-light text-muted small">
+                    <tr>
+                        <th class="ps-3 py-2">Nr</th>
+                        <th class="py-2">Data de Vencimento</th>
+                        <th class="py-2 text-end">Prestação (MT)</th>
+                        <th class="py-2 text-end">Juro (MT)</th>
+                        <th class="py-2 text-end">Amortização (MT)</th>
+                        <th class="py-2 text-end pe-3">Capital em Dívida (MT)</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyPlanoAmortizacao">
+                    <!-- Preenchido via JavaScript -->
+                </tbody>
+            </table>
         </div>
-    }
+    </div>
 </div>
 
 @section Scripts {
@@ -361,7 +343,6 @@
                 let saldoAttr = optionSelected.getAttribute("data-saldo") || "0";
                 let saldoDisponivel = parseFloat(saldoAttr.replace(",", ".")) || 0;
 
-                // Validação estrita de saldo suficiente na conta
                 if (valor > saldoDisponivel) {
                     alert(`A operação foi rejeitada. O valor introduzido (MT ${valor.toFixed(2)}) é superior ao saldo disponível na conta selecionada (MT ${saldoDisponivel.toFixed(2)}).`);
                     inputValorConta.focus();

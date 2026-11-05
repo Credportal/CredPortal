@@ -1,4 +1,5 @@
-﻿using Analise.Helper;
+﻿using Analise.Filters;
+using Analise.Helper;
 using Analise.Models;
 using Analise.Repositorio;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
     public class ConfiguracaoController : Controller
     {
         private readonly IConfiguracaoRepositorio _configuracaoRepositorio;

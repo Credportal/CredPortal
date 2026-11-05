@@ -7,6 +7,7 @@ using System.Diagnostics;
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
     public class HomeController : Controller
     {
         private readonly BancoContext _context;
@@ -78,12 +79,12 @@ namespace Analise.Controllers
             // 5. KPI 3: Carteira Vigente (Soma de Valor - PrincipalPago dos Pedidos)
             decimal carteiraVigenteAtual = _context.Pedidos
                 .AsEnumerable()
-                .Sum(p => p.Valor - p.CapitalPago);
+                .Sum(p => p.CapitalVigente);
 
             decimal carteiraVigenteAnterior = _context.Pedidos
                 .AsEnumerable()
                 .Where(p => p.DataCadastro < inicioMesAtual)
-                .Sum(p => p.Valor - p.CapitalPago);
+                .Sum(p => p.CapitalVigente);
 
             decimal variacaoCarteiraVigente = CalcularVariacao(carteiraVigenteAtual, carteiraVigenteAnterior);
 
@@ -212,5 +213,6 @@ namespace Analise.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
     }
 }

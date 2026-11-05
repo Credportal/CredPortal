@@ -7,6 +7,7 @@ using System.Net;
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
     public class EmailController : Controller
     {
         private readonly EmailService _emailService;

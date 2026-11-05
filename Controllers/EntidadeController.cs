@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
     public class EntidadeController : Controller
     {
         private readonly IEntidadeRepositorio _entidadeRepositorio;

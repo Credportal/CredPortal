@@ -44,11 +44,11 @@
         <div class="card-body p-4">
             <div class="row g-3 align-items-center">
                 <div class="col-md-6">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Entidade / Cliente</span>
+                    <span class="d-block text-secondary small fw-semibold">Entidade / Cliente</span>
                     <h5 class="fw-bold text-dark mb-0">@Model.NomeEntidade <span class="text-muted small">(ID: #@Model.EntidadeId)</span></h5>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Código CRR</span>
+                    <span class="d-block text-secondary small fw-semibold">Código CRR</span>
                     <h5 class="font-monospace fw-bold text-success mb-0" style="color: #079b62 !important;">@(Model.Crr.HasValue ? Model.Crr.Value.ToString("0") : "Não atribuído")</h5>
                 </div>
             </div>
@@ -111,19 +111,19 @@
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <span class="text-muted small text-uppercase fw-semibold">Total de Itens</span>
+                <span class="text-muted small fw-semibold">Total de Itens</span>
                 <h4 class="fw-bold text-dark mb-0 mt-1"><i class="fa-solid fa-list-check text-success me-2" style="color: #079b62 !important;"></i> @totalItens</h4>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <span class="text-muted small text-uppercase fw-semibold">Total Aquisição</span>
+                <span class="text-muted small fw-semibold">Total Aquisição</span>
                 <h4 class="fw-bold text-dark mb-0 mt-1">MT @somaAquisicao.ToString("N2")</h4>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <span class="text-muted small text-uppercase fw-semibold">Total Atual</span>
+                <span class="text-muted small fw-semibold">Total Atual</span>
                 <h4 class="fw-bold text-success mb-0 mt-1" style="color: #079b62 !important;">MT @somaActual.ToString("N2")</h4>
             </div>
         </div>
@@ -136,7 +136,7 @@
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-muted small text-uppercase">
+                <thead class="table-light text-muted small">
                     <tr>
                         <th class="ps-4 py-3">ID</th>
                         <th class="py-3">Tipo</th>

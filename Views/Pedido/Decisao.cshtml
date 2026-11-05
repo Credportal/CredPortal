@@ -23,11 +23,11 @@
         <div class="card-body p-4">
             <div class="row g-3 align-items-center">
                 <div class="col-md-8">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Entidade Principal / Cliente</span>
+                    <span class="d-block text-secondary small fw-semibold">Entidade Principal / Cliente</span>
                     <h5 class="fw-bold text-dark mb-0">@Model.Entidade?.Nome <span class="text-muted small">(ID: #@Model.EntidadeId)</span></h5>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Código CRR</span>
+                    <span class="d-block text-secondary small fw-semibold">Código CRR</span>
                     <h5 class="font-monospace fw-bold text-success mb-0" style="color: #079b62 !important;">@(Model.CRR.HasValue ? Model.CRR.Value.ToString("0") : "Não atribuído")</h5>
                 </div>
             </div>
@@ -36,19 +36,19 @@
 
             <div class="row g-4 text-center">
                 <div class="col-md-3 border-end">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Valor do Pedido Solicitado</span>
+                    <span class="d-block text-secondary small fw-semibold">Valor do Pedido Solicitado</span>
                     <h4 class="fw-bold text-dark mb-0">MT @Model.Valor.ToString("N2")</h4>
                 </div>
                 <div class="col-md-3 border-end">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Prazo Solicitado</span>
+                    <span class="d-block text-secondary small fw-semibold">Prazo Solicitado</span>
                     <h4 class="fw-bold text-dark mb-0">@Model.Prazo Meses</h4>
                 </div>
                 <div class="col-md-3 border-end">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Prestação Solicitada</span>
+                    <span class="d-block text-secondary small fw-semibold">Prestação Solicitada</span>
                     <h4 class="fw-bold text-dark mb-0">MT @Model.Prestacao.ToString("N2")</h4>
                 </div>
                 <div class="col-md-3">
-                    <span class="d-block text-secondary small text-uppercase fw-semibold">Estado do Pedido</span>
+                    <span class="d-block text-secondary small fw-semibold">Estado do Pedido</span>
                     <h4 class="fw-bold text-dark mb-0">
                         @switch (Model.EstadoId)
                         {
@@ -78,23 +78,23 @@
     </div>
 
     <!-- Resumo de Garantias e Intervenientes -->
-    <h5 class="fw-bold text-dark mb-3">RESUMO DE GARANTIAS E INTERVENIENTES</h5>
+    <h5 class="fw-bold text-dark mb-3">Resumo de Garantias e Intervenientes</h5>
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <span class="text-muted small text-uppercase fw-semibold">Garantia Atual do Cliente</span>
+                <span class="text-muted small fw-semibold">Garantia Atual do Cliente</span>
                 <h4 class="fw-bold text-dark mb-0 mt-1"><i class="fa-solid fa-user-shield text-success me-2" style="color: #079b62 !important;"></i> MT @Model.TotalGarantiasCliente.ToString("N2")</h4>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <span class="text-muted small text-uppercase fw-semibold">Garantias dos Intervenientes</span>
+                <span class="text-muted small fw-semibold">Garantias dos Intervenientes</span>
                 <h4 class="fw-bold text-dark mb-0 mt-1"><i class="fa-solid fa-users-shield text-success me-2" style="color: #079b62 !important;"></i> MT @Model.TotalGarantiasIntervenientes.ToString("N2")</h4>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <span class="text-muted small text-uppercase fw-semibold">Soma de Garantias</span>
+                <span class="text-muted small fw-semibold">Soma de Garantias</span>
                 <h4 class="fw-bold text-success mb-0 mt-1" style="color: #079b62 !important;">MT @Model.SomaTotalGarantias.ToString("N2")</h4>
             </div>
         </div>
@@ -103,11 +103,11 @@
     <!-- Tabela de Intervenientes (Agrupados com o Cliente) -->
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-5">
         <div class="card-header bg-white border-0 pt-4 px-4">
-            <h5 class="fw-bold text-dark mb-0">LISTA DE INTERVENIENTES (Agrupados com o Cliente)</h5>
+            <h5 class="fw-bold text-dark mb-0">Lista de Intervenientes (Agrupados com o Cliente)</h5>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-muted small text-uppercase">
+                <thead class="table-light text-muted small">
                     <tr>
                         <th class="ps-4 py-3">Grupo</th>
                         <th class="py-3">Nome</th>
@@ -158,24 +158,24 @@
     </div>
 
     <!-- Área de Decisão de Crédito -->
-    <h5 class="fw-bold text-dark mb-3">DECISÃO DE CRÉDITO</h5>
+    <h5 class="fw-bold text-dark mb-3">Decisão de Crédito</h5>
     <div class="row g-4 mb-5">
         <!-- Formulário de Decisão e Valores Aprovados -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
                 <div class="row g-3 align-items-center text-center">
                     <div class="col-md-3 border-end">
-                        <span class="d-block text-secondary small text-uppercase fw-semibold">Garantias Totais</span>
+                        <span class="d-block text-secondary small fw-semibold">Garantias Totais</span>
                         <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;">MT @Model.SomaTotalGarantias.ToString("N2")</h4>
                     </div>
                     <div class="col-md-1 fs-3 fw-bold text-secondary">=</div>
                     <div class="col-md-3 border-end">
-                        <span class="d-block text-secondary small text-uppercase fw-semibold">Cobertura de 150%</span>
+                        <span class="d-block text-secondary small fw-semibold">Cobertura de 150%</span>
                         <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;">MT @((Model.LimiteMaximoAprovacao * 1.5m).ToString("N2"))</h4>
                     </div>
                     <div class="col-md-1 fs-3 fw-bold text-secondary">=</div>
                     <div class="col-md-4">
-                        <span class="d-block text-secondary small text-uppercase fw-semibold">Limite Máximo de Aprovação</span>
+                        <span class="d-block text-secondary small fw-semibold">Limite Máximo de Aprovação</span>
                         <h4 class="fw-bold text-success mb-0" style="color: #079b62 !important;">MT @Model.LimiteMaximoAprovacao.ToString("N2")</h4>
                         <span class="text-muted small">(-/ 1.5)</span>
                     </div>
@@ -183,7 +183,7 @@
 
                 <hr class="my-4 text-muted" />
 
-                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-pen-to-square text-success me-2" style="color: #079b62 !important;"></i>VALORES DA APROVAÇÃO (INSERÇÃO MANUAL)</h6>
+                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-pen-to-square text-success me-2" style="color: #079b62 !important;"></i>Valores da Aprovação (Inserção Manual)</h6>
                 <form id="formDecisao" asp-controller="Pedido" asp-action="ProcessarDecisao" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.Id" />
@@ -223,11 +223,11 @@
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
                 <div>
-                    <h6 class="fw-bold text-dark mb-4">AÇÕES DA DECISÃO</h6>
+                    <h6 class="fw-bold text-dark mb-4">Ações da Decisão</h6>
 
                     <!-- Botão Principal de Aprovação (Em Destaque) -->
                     <button type="submit" form="formDecisao" name="decisao" value="Aprovar" class="btn btn-lg btn-success rounded-3 text-white fw-bold py-3 w-100 d-flex align-items-center gap-2 justify-content-center shadow-sm" style="background-color: #079b62; border-color: #079b62;">
-                        <i class="fa-solid fa-circle-check fs-4"></i> APROVAR PEDIDO
+                        <i class="fa-solid fa-circle-check fs-4"></i> Aprovar Pedido
                     </button>
                     <span class="d-block text-muted small text-center mt-2">Valida os dados inseridos e altera o estado para <strong>Aprovado</strong>.</span>
                 </div>
@@ -251,14 +251,14 @@
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-5" id="cardAmortizacao">
         <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
             <div>
-                <h5 class="fw-bold text-dark mb-1">PLANO DE AMORTIZAÇÃO PROJETADO (Aprovação)</h5>
+                <h5 class="fw-bold text-dark mb-1">Plano de Amortização Projetado (Aprovação)</h5>
                 <p class="text-muted small mb-0">Simulação automática calculada com base no valor, taxa e prazo inseridos.</p>
             </div>
             <span class="badge bg-light text-dark border font-monospace px-3 py-2" id="badgeTotalGeral">MT 0.00</span>
         </div>
         <div class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0">
-                <thead class="table-light text-muted small text-uppercase">
+                <thead class="table-light text-muted small">
                     <tr>
                         <th class="ps-4 py-3 text-center">Nº Prestação</th>
                         <th class="py-3">Capital Inicial</th>

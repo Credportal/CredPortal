@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
     public class AlterarSenhaController : Controller
     {
         private readonly IUsuarioRepositorio _usuarioRepositorio;

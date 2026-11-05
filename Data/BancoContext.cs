@@ -24,6 +24,10 @@ namespace Analise.Data
         public DbSet<MovimentoExternoModel> MovimentosExternos { get; set; }
         public DbSet<CustosAdmModel> CustosAdm { get; set; }
         public DbSet<AmortizacaoModel> Amortizacoes { get; set; }
+        public DbSet<DespesaModel> Despesas { get; set; }
+        public DbSet<FechoDiarioRegisto> FechosDiariosRegistos { get; set; }
+        public DbSet<FechoDiarioConta> FechosDiariosContas { get; set; }
+        public DbSet<FechoDiarioGestor> FechosDiariosGestores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -21,7 +21,7 @@
 
                 <!-- Seleção / Busca de Cliente / Entidade -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold text-secondary small text-uppercase">Cliente / Entidade</label>
+                    <label class="form-label fw-semibold text-secondary small">Cliente</label>
                     <div class="input-group">
                         <input type="text" id="txtCliente" class="form-control rounded-start-2" placeholder="Digite o nome ou selecione..." />
                         <button class="btn btn-outline-secondary dropdown-toggle rounded-end-2 px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #ced4da;">
@@ -46,7 +46,7 @@
 
                 <!-- Valor da Solicitação -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold text-secondary small text-uppercase">Valor da Solicitação (MT)</label>
+                    <label class="form-label fw-semibold text-secondary small">Valor da Solicitação (MT)</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light fw-bold text-secondary">MT</span>
                         <input type="number" id="txtValor" class="form-control rounded-end-2 fw-bold text-dark fs-5" placeholder="Ex: 50000" min="1000" step="1000">
@@ -55,17 +55,16 @@
 
                 <!-- Taxa de Juros Mensal -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold text-secondary small text-uppercase">Taxa de Juros Mensal (%)</label>
+                    <label class="form-label fw-semibold text-secondary small">Taxa de Juros Mensal (%)</label>
                     <div class="input-group">
                         <input type="number" id="txtTaxaMensal" class="form-control rounded-start-2" placeholder="Ex: 2.5" step="0.1">
                         <span class="input-group-text bg-light text-secondary">%</span>
-                    </div>
-                    <small class="text-muted" style="font-size: 11px;">(Cálculo baseado em Juros Compostos)</small>
+                    </div>                   
                 </div>
 
                 <!-- Prazo em Meses -->
                 <div class="mb-4">
-                    <label class="form-label fw-semibold text-secondary small text-uppercase">Prazo (Meses)</label>
+                    <label class="form-label fw-semibold text-secondary small">Prazo (Meses)</label>
                     <input type="number" id="txtPrazo" class="form-control rounded-2" placeholder="Ex: 12" min="1" max="120">
                 </div>
 
@@ -111,15 +110,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Método de Amortização -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold text-secondary small text-uppercase d-block">Método de Amortização</label>
-                    <div class="d-flex gap-2">
-                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-2 fw-normal" style="background-color: rgba(7, 155, 98, 0.1) !important; color: #079b62 !important;">Price (Compostos)</span>
-                        <span class="badge bg-light text-secondary border px-3 py-2 rounded-2 fw-normal">SAC</span>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -131,13 +121,13 @@
         </div>
         <div class="table-responsive" style="max-height: 350px;">
             <table class="table table-hover align-middle mb-0 text-nowrap" id="tabelaAmortizacao">
-                <thead class="table-light text-muted small text-uppercase sticky-top">
+                <thead class="table-light text-muted small sticky-top">
                     <tr>
-                        <th class="ps-3 py-3">Nº Parcela</th>
+                        <th class="ps-3 py-3">Nº</th>
                         <th class="py-3">Data Vencimento</th>
                         <th class="py-3">Valor da Parcela</th>
                         <th class="py-3">Capital</th>
-                        <th class="py-3">Juros (Compostos)</th>
+                        <th class="py-3">Juros</th>
                         <th class="text-end pe-3 py-3">Saldo Devedor</th>
                     </tr>
                 </thead>

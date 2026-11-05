@@ -1,15 +1,23 @@
 is_global = true
 build_property.TargetFramework = net8.0
-build_property.TargetFrameworkIdentifier = .NETCoreApp
-build_property.TargetFrameworkVersion = v8.0
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
 build_property.TargetPlatformMinVersion = 
 build_property.UsingMicrosoftNETSdkWeb = true
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
 build_property.ProjectTypeGuids = 
 build_property.InvariantGlobalization = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
 build_property.PlatformNeutralAssembly = 
 build_property.EnforceExtendedAnalyzerRules = 
-build_property.EntryPointFilePath = 
+build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v8.0
+build_property.EntryPointFilePath = 
 build_property.RootNamespace = Cred
 build_property.RootNamespace = Cred
 build_property.ProjectDir = C:\Cred\Analise\
@@ -67,6 +75,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29udGFcVmVyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Cred/Analise/Views/Despesa/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVzcGVzYVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Cred/Analise/Views/Email/Email.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1haWxcRW1haWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
@@ -95,8 +107,8 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXN0YWRvXEVkaXRhci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Cred/Analise/Views/Home/Index - Copy.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleCAtIENvcHkuY3NodG1s
+[C:/Cred/Analise/Views/FechoDiario/RelatorioFecho.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmVjaG9EaWFyaW9cUmVsYXRvcmlvRmVjaG8uY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Cred/Analise/Views/Home/Index.cshtml]
@@ -137,10 +149,6 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Cred/Analise/Views/Pedido/Documento.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGVkaWRvXERvY3VtZW50by5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Cred/Analise/Views/Pedido/Editar.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGVkaWRvXEVkaXRhci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Cred/Analise/Views/Pedido/Garantia.cshtml]
