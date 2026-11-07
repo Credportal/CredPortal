@@ -20,6 +20,7 @@ namespace Analise.Controllers
         {
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
             var agenciaId = HttpContext.Session.GetInt32("AgenciaId");
+            var perfil = HttpContext.Session.GetInt32("Perfil");
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Id == usuarioId);
 
             // Datas de referência para o mês atual e anterior

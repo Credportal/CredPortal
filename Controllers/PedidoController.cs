@@ -549,6 +549,7 @@ namespace Analise.Controllers
             return lista;
         }
         // GET: /Pedido/GerarContratoPdf/5
+        [HttpGet]
         public async Task<IActionResult> GerarContratoPdf(int id)
         {
             var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
@@ -568,28 +569,32 @@ namespace Analise.Controllers
 
             // Dados fixos do operador conforme o modelo
             string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
-            string emailEmpresa = "cashprontoto@gmail.com";
-            string contactosEmpresa = "826255445";
             string sedeEmpresa = "Maputo-Malanga, rua do Carpelo No. 77";
             string representanteLegal = "Jaime Manuel Nhabanga";
             string cargoRepresentante = "Representante Legal";
 
             string numeroContrato = pedido.CRR.HasValue ? pedido.CRR.Value.ToString("0") : "S/N";
+            string numeroProcesso = pedido.CRR.HasValue ? $"CP-{DateTime.Now:yyyyMMdd}-{pedido.CRR.Value}" : $"CP-{DateTime.Now:yyyyMMdd}-{pedido.Id}";
 
             decimal valorFinal = pedido.ValorDesembolsado > 0 ? pedido.ValorDesembolsado : (pedido.ValorDecisao ?? pedido.Valor);
             int prazoFinal = pedido.PrazoDecisao ?? pedido.Prazo;
             decimal taxaFinal = pedido.TaxaDecisao ?? pedido.Taxa;
             decimal custosAdmValor = valorFinal <= 10000 ? 200m : (valorFinal * 0.02m);
 
-            // CORREÇÃO AQUI: Definimos o prazo e se é "prestação mensal" ou "prestações mensais"
             string textoPrazo = prazoFinal == 1 ? "1 mês" : $"{prazoFinal} meses";
             string textoPrestacao = prazoFinal == 1 ? "1 prestação mensal" : $"{prazoFinal} prestações mensais";
 
             string valorPorExtenso = ExtensoHelper.ConverterParaExtenso(valorFinal);
             string custosExtenso = ExtensoHelper.ConverterParaExtenso(custosAdmValor);
 
+            // --- SOMA GLOBAL DE TODAS AS GARANTIAS (Cliente + Intervenientes) ---
             decimal totalGarantiasCli = garantiasCliente != null ? garantiasCliente.Sum(g => g.ValorActual) : 0;
-            string totalGarantiasExtenso = ExtensoHelper.ConverterParaExtenso(totalGarantiasCli);
+            decimal totalGarantiasInterv = garantiasMap.Values.SelectMany(gList => gList).Sum(g => g.ValorActual);
+            decimal totalGarantiasGeral = totalGarantiasCli + totalGarantiasInterv;
+            string totalGarantiasGeralExtenso = ExtensoHelper.ConverterParaExtenso(totalGarantiasGeral);
+
+            // Configurar cultura para português (meses corretos)
+            var culturaPt = new System.Globalization.CultureInfo("pt-PT");
 
             // Geração do PDF com QuestPDF
             var document = Document.Create(container =>
@@ -598,24 +603,48 @@ namespace Analise.Controllers
                 {
                     page.Size(PageSizes.A4);
                     page.Margin(36);
-                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(10));
+                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(10).FontColor("#172b4d"));
+
+                    // Rodapé padrão em todas as páginas
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("DOCUMENTO OFICIAL DE CONTRATO — ").FontSize(8).Italic().FontColor("#a0aec0");
+                        text.Span(nomeEmpresa).FontSize(8).Bold().FontColor("#718096");
+                    });
 
                     page.Content().Column(col =>
                     {
                         col.Spacing(8);
 
-                        // Cabeçalho
-                        col.Item().AlignCenter().Text(nomeEmpresa).Bold().FontSize(12);
-                        col.Item().AlignCenter().Text($"E-mail: {emailEmpresa}\nCont. {contactosEmpresa} \nMaputo").FontSize(9);
-                        col.Item().PaddingTop(5).AlignCenter().Text("CONTRATO DE EMPRÉSTIMO").Bold().FontSize(12);
-                        col.Item().AlignCenter().Text($"Contrato N.º: {numeroContrato}").Bold().FontSize(10);
-                        col.Item().PaddingBottom(5);
+                        // --- CABEÇALHO COM O NOVO LAYOUT VISUAL ---
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Cash Pronto").Bold().FontSize(22).FontColor("#079b62");
+                                c.Item().Text(nomeEmpresa).FontSize(9).FontColor("#718096");
+                            });
+
+                            row.ConstantItem(180).AlignRight().Column(c =>
+                            {
+                                c.Item().Text($"Data: {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic().AlignRight();
+                                c.Item().Text($"Nº Processo: {numeroProcesso}").Bold().FontSize(9).FontColor("#079b62").AlignRight();
+                            });
+                        });
+
+                        col.Item().PaddingVertical(4).LineHorizontal(1).LineColor("#079b62");
+
+                        // Título do Contrato em Bloco Verde
+                        col.Item().Background("#079b62").Padding(8).AlignCenter().Text($"CONTRATO DE EMPRÉSTIMO N.º {numeroContrato}")
+                            .Bold().FontSize(12).FontColor("#FFFFFF");
+
+                        col.Item().PaddingTop(5);
 
                         // Operador e Mutuário
                         col.Item().Text(text =>
                         {
                             text.Justify();
-                            text.Span("\nEntre \n");
+                            text.Span("Entre \n");
                             text.Span(nomeEmpresa).Bold();
                             text.Span($", com sede no {sedeEmpresa}, representado neste acto por ");
                             text.Span(representanteLegal).Bold();
@@ -631,12 +660,13 @@ namespace Analise.Controllers
                         string cliDocNum = cli?.NrDocumento ?? "-";
                         string cliEmissao = cli?.Emissao?.ToString("dd-MM-yyyy") ?? "-";
                         string cliValidade = cli?.Validade?.ToString("dd-MM-yyyy") ?? "-";
+                        string nomeCliente = cli?.Nome ?? "Mutuário";
 
                         col.Item().Text(text =>
                         {
                             text.Justify();
                             text.Span("E\n");
-                            text.Span(cli?.Nome ?? "Mutuário").Bold();
+                            text.Span(nomeCliente).Bold();
                             text.Span($", natural de {cliNaturalidade}, residente no {cliResidencia}, portador(a) de {cliDocTipo} n° {cliDocNum}, emitido aos {cliEmissao}, válido até {cliValidade}, doravante designado por Mutuário.\n");
                         });
 
@@ -667,7 +697,7 @@ namespace Analise.Controllers
 
                         col.Item().PaddingTop(5);
 
-                        // Cláusula Primeira CORRIGIDA
+                        // Cláusula Primeira
                         col.Item().AlignCenter().Text("PRIMEIRA\n(Valor do empréstimo)").Bold().FontSize(10);
                         col.Item().Text(text =>
                         {
@@ -717,7 +747,7 @@ namespace Analise.Controllers
                             text.Span("Pode ser considerado imediatamente vencido o presente contrato exigindo-se de imediato, o pagamento de todo o valor de capital e juros, ainda em dívida, bem como todos os outros encargos devidos pelo mutuário ao Operador por força deste empréstimo em caso de falta de pagamento pontual ou infração das cláusulas.\n");
                         });
 
-                        // Cláusula Sexta
+                        // Cláusula Sexta (Com somatório global de todas as garantias)
                         col.Item().AlignCenter().Text("SEXTA\n(Garantias do mutuário)").Bold().FontSize(10);
                         col.Item().Text(text =>
                         {
@@ -725,8 +755,8 @@ namespace Analise.Controllers
                             text.Span("1. Para assegurar o reembolso do capital, juros e demais encargos inerentes ao empréstimo, o mutuário constitui garantias para o empréstimo recebido a favor de ");
                             text.Span(nomeEmpresa).Bold();
                             text.Span(", no valor total de ");
-                            text.Span($"{totalGarantiasCli:N2} MT").Bold();
-                            text.Span($" ({totalGarantiasExtenso}), que ficarão na posse do mutuário. Fazem parte integrante das garantias do cliente os seguintes bens:\n");
+                            text.Span($"{totalGarantiasGeral:N2} MT").Bold();
+                            text.Span($" ({totalGarantiasGeralExtenso}), que ficarão na posse do mutuário. Fazem parte integrante das garantias do cliente os seguintes bens:\n");
                         });
 
                         // Tabela de Garantias do Cliente
@@ -820,36 +850,213 @@ namespace Analise.Controllers
                             text.Span("Quaisquer diferendos relacionados com o presente contrato serão resolvidos amigavelmente ou, caso contrário, no Tribunal Judicial da Cidade local.\n");
                         });
 
+                        // Local e Data centralizados antes das assinaturas
+                        col.Item().PaddingTop(20).AlignCenter().Text($"Maputo, aos {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic();
+
                         // Assinaturas
-                        col.Item().PaddingTop(20);
+                        col.Item().PaddingTop(15);
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
                                 columns.RelativeColumn();
+                                columns.ConstantColumn(30);
                                 columns.RelativeColumn();
                             });
 
-                            table.Cell().PaddingBottom(20).AlignCenter().Text("_______________________\nAssinatura do Operador");
-                            table.Cell().PaddingBottom(20).AlignCenter().Text("_______________________\nAssinatura do Mutuário");
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(15).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Assinatura do Operador").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).Text(nomeEmpresa).FontSize(8.5f).FontColor("#4a5568");
+                            });
+
+                            table.Cell();
+
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(15).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Assinatura do Mutuário").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).Text(nomeCliente).FontSize(8.5f).FontColor("#4a5568");
+                            });
 
                             if (intervenientes != null)
                             {
                                 foreach (var inter in intervenientes)
                                 {
                                     string nomeInter = inter.IntervenienteEntidade?.Nome ?? inter.Tipo;
-                                    table.Cell().PaddingBottom(20).AlignCenter().Text($"_______________________\n{inter.Tipo} ({nomeInter})");
+                                    table.Cell().Column(c =>
+                                    {
+                                        c.Item().PaddingTop(15).PaddingBottom(15).LineHorizontal(0.5f).LineColor("#718096");
+                                        c.Item().Text($"{inter.Tipo}").FontSize(9).Bold();
+                                        c.Item().PaddingTop(2).Text(nomeInter).FontSize(8.5f).FontColor("#4a5568");
+                                    });
+                                    table.Cell();
+                                    table.Cell();
                                 }
                             }
                         });
-
-                        col.Item().PaddingTop(10).AlignCenter().Text($"Maputo, {DateTime.Now:dd/MM/yyyy}");
                     });
                 });
             });
 
             byte[] bytes = document.GeneratePdf();
             return File(bytes, "application/pdf", $"Contrato_Emprestimo_Pedido_{pedido.Id}.pdf");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GerarFormularioPedidoPdf(int id)
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            var pedido = await _pedidoRepositorio.BuscarPorIdAsync(id);
+            if (pedido == null) return NotFound();
+
+            var cli = pedido.Entidade;
+
+            string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
+            string numeroProcesso = pedido.CRR.HasValue ? $"CP-{DateTime.Now:yyyyMMdd}-{pedido.CRR.Value}" : $"CP-{DateTime.Now:yyyyMMdd}-{pedido.Id}";
+
+            decimal valorSolicitado = pedido.Valor;
+            int prazoMeses = pedido.Prazo;
+            string finalidadeDestino = !string.IsNullOrEmpty(pedido.Destino) ? pedido.Destino : "Expansão de Negócio / Apoio Financeiro";
+
+            string nomeCliente = cli?.Nome ?? "N/A";
+            string nuitCliente = cli?.Nuit ?? "N/A";
+            string biCliente = cli?.NrDocumento ?? "N/A";
+            string contactoCliente = cli?.Telefone ?? cli?.Telefone ?? "N/A";
+            string enderecoCliente = cli?.Endereco ?? "Maputo";
+
+            // Configurar cultura para português para garantir o mês correto
+            var culturaPt = new System.Globalization.CultureInfo("pt-PT");
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(36);
+                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(10).FontColor("#172b4d"));
+
+                    // Rodapé padrão em todas as páginas do documento
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("DOCUMENTO PARA IMPRESSÃO E ASSINATURA — ").FontSize(8).Italic().FontColor("#a0aec0");
+                        text.Span(nomeEmpresa).FontSize(8).Bold().FontColor("#718096");
+                    });
+
+                    page.Content().Column(col =>
+                    {
+                        col.Spacing(10);
+
+                        // --- CABEÇALHO ---
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Cash Pronto").Bold().FontSize(22).FontColor("#079b62");
+                                c.Item().Text(nomeEmpresa).FontSize(9).FontColor("#718096");
+                            });
+
+                            row.ConstantItem(150).AlignRight().Column(c =>
+                            {
+                                c.Item().Text($"Data: {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic().AlignRight();
+                                c.Item().Text($"Nº Processo: {numeroProcesso}").Bold().FontSize(9).FontColor("#079b62").AlignRight();
+                            });
+                        });
+
+                        col.Item().PaddingVertical(4).LineHorizontal(1).LineColor("#079b62");
+
+                        // Título em Bloco Verde
+                        col.Item().Background("#079b62").Padding(8).AlignCenter().Text("FORMULÁRIO DE PEDIDO DE CRÉDITO")
+                            .Bold().FontSize(12).FontColor("#FFFFFF");
+
+                        col.Item().PaddingTop(5);
+
+                        // --- 1. DADOS DO CLIENTE (EM NEGRITO) ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("1. DADOS DO CLIENTE").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Column(inner =>
+                        {
+                            inner.Item().Row(row =>
+                            {
+                                row.RelativeItem(7).Text(t => { t.Span("Nome Completo: ").Bold(); t.Span(nomeCliente); });
+                                row.RelativeItem(5).Text(t => { t.Span("Contacto: ").Bold(); t.Span(contactoCliente); });
+                            });
+                            inner.Item().PaddingTop(4).Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("NUIT: ").Bold(); t.Span(nuitCliente); });
+                                row.RelativeItem(6).Text(t => { t.Span("BI nº: ").Bold(); t.Span(biCliente); });
+                            });
+                            inner.Item().PaddingTop(4).Text(t => { t.Span("Endereço: ").Bold(); t.Span(enderecoCliente); });
+                        });
+
+                        col.Item().PaddingTop(5);
+
+                        // --- 2. DADOS DO CRÉDITO (EM NEGRITO) ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("2. DADOS DO CRÉDITO").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Column(inner =>
+                        {
+                            inner.Item().Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("Valor Solicitado: ").Bold(); t.Span($"{valorSolicitado:N2} MT").Bold().FontColor("#079b62"); });
+                                row.RelativeItem(6).Text(t => { t.Span("Prazo: ").Bold(); t.Span($"{prazoMeses} Meses"); });
+                            });
+                            inner.Item().PaddingTop(4).Text(t => { t.Span("Finalidade: ").Bold(); t.Span(finalidadeDestino); });
+                        });
+
+                        col.Item().PaddingTop(5);
+
+                        // --- 3. TERMOS E CONDIÇÕES (EM NEGRITO) ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("3. TERMOS E CONDIÇÕES").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Text(
+                            "DECLARAÇÃO DO REQUERENTE: Declaro que as informações acima são verdadeiras, exactas e completas, comprometendo-me a actualizar os dados em caso de alteração.\n" +
+                            "Autorizo a Cash Pronto Microcrédito E.I. a consultar os centros de registo de crédito e a validar os termos de conversão, complemento e demais informações úteis para a análise do requerente."
+                        ).FontSize(8).Italic().FontColor("#4a5568");
+
+                        // --- LOCAL E DATA CENTRALIZADOS ---
+                        col.Item().PaddingTop(25).AlignCenter().Text($"Maputo, aos {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic();
+
+                        col.Item().PaddingTop(20);
+
+                        // --- ASSINATURAS (Cliente à esquerda, Atendimento do lado direito) ---
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(); // Coluna da Esquerda (Cliente)
+                                columns.ConstantColumn(40); // Espaço entre colunas
+                                columns.RelativeColumn(); // Coluna da Direita (Atendimento / Operador)
+                            });
+
+                            // Célula do Cliente (Esquerda)
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(5).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Assinatura do Cliente").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).Text(nomeCliente).FontSize(8.5f).FontColor("#4a5568");
+                            });
+
+                            // Célula de Espaçamento Vazio
+                            table.Cell();
+
+                            // Célula do Atendimento / Operador (Direita)
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(5).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Pelo Atendimento / Operador").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).Text(nomeEmpresa).FontSize(8.5f).FontColor("#4a5568");
+                            });
+                        });
+                    });
+                });
+            });
+
+            byte[] bytes = document.GeneratePdf();
+            return File(bytes, "application/pdf", $"Formulario_Pedido_Credito_{pedido.Id}.pdf");
         }
         // GET: /Pedido/Despacho (aceita opcionalmente id ou crr, ou ajustamos para aceitar id como ID do pedido)
         public async Task<IActionResult> Despacho(int id)
@@ -1332,6 +1539,359 @@ namespace Analise.Controllers
             }
 
             return RedirectToAction("Pagamento", new { id = pedidoId });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GerarFolhaGarantiasPdf(int id)
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            var pedido = await _pedidoRepositorio.BuscarPorIdAsync(id);
+            if (pedido == null) return NotFound();
+
+            var cli = pedido.Entidade;
+            var garantiasCliente = await _pedidoRepositorio.BuscarGarantiasClienteAsync(pedido.EntidadeId, pedido.CRR);
+
+            string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
+            string numeroProcesso = pedido.CRR.HasValue ? $"CP-{DateTime.Now:yyyyMMdd}-{pedido.CRR.Value}" : $"CP-{DateTime.Now:yyyyMMdd}-{pedido.Id}";
+
+            string nomeCliente = cli?.Nome ?? "N/A";
+            string nuitCliente = cli?.Nuit ?? "N/A";
+            string biCliente = cli?.NrDocumento ?? "N/A";
+            string contactoCliente = cli?.Telefone ?? cli?.Telefone ?? "N/A";
+            string enderecoCliente = cli?.Endereco ?? "Maputo";
+
+            decimal totalGarantias = garantiasCliente != null ? garantiasCliente.Sum(g => g.ValorActual) : 0;
+            string totalGarantiasExtenso = ExtensoHelper.ConverterParaExtenso(totalGarantias);
+
+            // Configurar cultura para português para garantir o mês correto
+            var culturaPt = new System.Globalization.CultureInfo("pt-PT");
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(36);
+                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(10).FontColor("#172b4d"));
+
+                    // Rodapé padrão em todas as páginas do documento
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("GARANTIAS DO CRÉDITO — ").FontSize(8).Italic().FontColor("#a0aec0");
+                        text.Span(nomeEmpresa).FontSize(8).Bold().FontColor("#718096");
+                    });
+
+                    page.Content().Column(col =>
+                    {
+                        col.Spacing(10);
+
+                        // --- CABEÇALHO PADRÃO ---
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Cash Pronto").Bold().FontSize(22).FontColor("#079b62");
+                                c.Item().Text(nomeEmpresa).FontSize(9).FontColor("#718096");
+                            });
+
+                            row.ConstantItem(180).AlignRight().Column(c =>
+                            {
+                                c.Item().Text($"Data: {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic().AlignRight();
+                                c.Item().Text($"Nº Processo: {numeroProcesso}").Bold().FontSize(9).FontColor("#079b62").AlignRight();
+                            });
+                        });
+
+                        col.Item().PaddingVertical(4).LineHorizontal(1).LineColor("#079b62");
+
+                        // Título em Bloco Verde
+                        col.Item().Background("#079b62").Padding(8).AlignCenter().Text("FOLHA DE RELAÇÃO E CONSTITUIÇÃO DE GARANTIAS")
+                            .Bold().FontSize(12).FontColor("#FFFFFF");
+
+                        col.Item().PaddingTop(5);
+
+                        // --- 1. DADOS DO CLIENTE (EM NEGRITO) ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("1. DADOS DO CLIENTE").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Column(inner =>
+                        {
+                            inner.Item().Row(row =>
+                            {
+                                row.RelativeItem(7).Text(t => { t.Span("Nome Completo: ").Bold(); t.Span(nomeCliente); });
+                                row.RelativeItem(5).Text(t => { t.Span("Contacto: ").Bold(); t.Span(contactoCliente); });
+                            });
+                            inner.Item().PaddingTop(4).Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("NUIT: ").Bold(); t.Span(nuitCliente); });
+                                row.RelativeItem(6).Text(t => { t.Span("BI nº: ").Bold(); t.Span(biCliente); });
+                            });
+                            inner.Item().PaddingTop(4).Text(t => { t.Span("Endereço: ").Bold(); t.Span(enderecoCliente); });
+                        });
+
+                        col.Item().PaddingTop(5);
+
+                        // --- 2. RELAÇÃO DE BENS EM GARANTIA (EM NEGRITO) ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("2. RELAÇÃO DE BENS EM GARANTIA").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("Para assegurar o reembolso pontual do capital, juros e demais encargos do crédito concedido, o mutuário entrega e vincula a favor da ");
+                            text.Span(nomeEmpresa).Bold();
+                            text.Span($", sob a forma de garantia, os seguintes bens avaliados no valor global de ");
+                            text.Span($"{totalGarantias:N2} MT").Bold().FontColor("#079b62");
+                            text.Span($" ({totalGarantiasExtenso}):");
+                        });
+
+                        col.Item().PaddingTop(5);
+
+                        // Tabela de Garantias (Com colunas: Tipo, Descrição, Valor Atual - Sem Valor de Aquisição)
+                        if (garantiasCliente != null && garantiasCliente.Any())
+                        {
+                            col.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(25); // Tipo
+                                    columns.RelativeColumn(55); // Descrição
+                                    columns.RelativeColumn(20); // Valor Atual
+                                });
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background("#079b62").Padding(6).Text("TIPO").Bold().FontSize(9).FontColor("#FFFFFF");
+                                    header.Cell().Background("#079b62").Padding(6).Text("DESCRIÇÃO").Bold().FontSize(9).FontColor("#FFFFFF");
+                                    header.Cell().Background("#079b62").Padding(6).AlignRight().Text("VALOR ATUAL (MT)").Bold().FontSize(9).FontColor("#FFFFFF");
+                                });
+
+                                foreach (var g in garantiasCliente)
+                                {
+                                    table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(6).Text(g.Tipo).FontSize(9);
+                                    table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(6).Text(g.Descricao).FontSize(9);
+                                    table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(6).AlignRight().Text($"{g.ValorActual:N2} MT").FontSize(9).Bold().FontColor("#079b62");
+                                }
+                            });
+                        }
+                        else
+                        {
+                            col.Item().PaddingTop(5).AlignCenter().Text("Nenhuma garantia registada para este pedido.").FontSize(9).Italic().FontColor("#718096");
+                        }
+
+                        col.Item().PaddingTop(10);
+
+                        // --- 3. DECLARAÇÃO DE RESPONSABILIDADE (EM NEGRITO) ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("3. DECLARAÇÃO DE RESPONSABILIDADE").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("Declaro por minha honra que os bens acima descritos são inteiramente minha propriedade, encontram-se livres de quaisquer ónus ou encargos, e autorizo a ");
+                            text.Span(nomeEmpresa);
+                            text.Span(" a proceder à sua retenção ou execução em caso de incumprimento das obrigações decorrentes do crédito.");
+                        });
+
+                        // --- LOCAL E DATA CENTRALIZADOS ---
+                        col.Item().PaddingTop(25).AlignCenter().Text($"Maputo, aos {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic();
+
+                        col.Item().PaddingTop(30);
+
+                        // --- ASSINATURA APENAS DO MUTUÁRIO (Centralizada) ---
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem(30); // Espaço à esquerda para centrar
+                            row.RelativeItem(40).Column(c =>
+                            {
+                                c.Item().PaddingBottom(15).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().AlignCenter().Text("Assinatura do Mutuário").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).AlignCenter().Text(nomeCliente).FontSize(8.5f).FontColor("#4a5568");
+                            });
+                            row.RelativeItem(30); // Espaço à direita para centrar
+                        });
+                    });
+                });
+            });
+
+            byte[] bytes = document.GeneratePdf();
+            return File(bytes, "application/pdf", $"Folha_Garantias_Pedido_{pedido.Id}.pdf");
+        }
+        [HttpGet]
+        public async Task<IActionResult> GerarFolhaGarantiasIntervenientePdf(int intervenienteId, int pedidoId)
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            var pedido = await _pedidoRepositorio.BuscarPorIdAsync(pedidoId);
+            if (pedido == null) return NotFound();
+
+            var intervenientes = await _pedidoRepositorio.BuscarIntervenientesPorPedidoAsync(pedido.EntidadeId, pedido.CRR);
+            var inter = intervenientes.FirstOrDefault(i => i.IntervenienteID == intervenienteId || i.Id == intervenienteId);
+            if (inter == null) return NotFound();
+
+            var entidadeInterveniente = inter.IntervenienteEntidade;
+            var garantiasInterveniente = await _pedidoRepositorio.BuscarGarantiasIntervenienteAsync(inter.IntervenienteID, pedido.CRR);
+
+            string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
+            string numeroProcesso = pedido.CRR.HasValue ? $"CP-{DateTime.Now:yyyyMMdd}-{pedido.CRR.Value}" : $"CP-{DateTime.Now:yyyyMMdd}-{pedido.Id}";
+            var cli = pedido.Entidade;
+            string nomeCliente = cli?.Nome ?? "Mutuário Principal"; // <--- ADICIONADO AQUI
+
+            string nomeInterveniente = entidadeInterveniente?.Nome ?? "N/A";
+            string nuitInterveniente = entidadeInterveniente?.Nuit ?? "N/A";
+            string biInterveniente = entidadeInterveniente?.NrDocumento ?? "N/A";
+            string contactoInterveniente = entidadeInterveniente?.Telefone ?? entidadeInterveniente?.Telefone ?? "N/A";
+            string enderecoInterveniente = entidadeInterveniente?.Endereco ?? "Maputo";
+            string tipoInterveniente = inter.Tipo ?? "Garant";
+
+            decimal totalGarantias = garantiasInterveniente != null ? garantiasInterveniente.Sum(g => g.ValorActual) : 0;
+            string totalGarantiasExtenso = ExtensoHelper.ConverterParaExtenso(totalGarantias);
+
+            var culturaPt = new System.Globalization.CultureInfo("pt-PT");
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(36);
+                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(10).FontColor("#172b4d"));
+
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span($"TERMO DE CONSTITUIÇÃO DE GARANTIAS ({tipoInterveniente.ToUpper()}) — ").FontSize(8).Italic().FontColor("#a0aec0");
+                        text.Span(nomeEmpresa).FontSize(8).Bold().FontColor("#718096");
+                    });
+
+                    page.Content().Column(col =>
+                    {
+                        col.Spacing(10);
+
+                        // Cabeçalho
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Cash Pronto").Bold().FontSize(22).FontColor("#079b62");
+                                c.Item().Text(nomeEmpresa).FontSize(9).FontColor("#718096");
+                            });
+
+                            row.ConstantItem(180).AlignRight().Column(c =>
+                            {
+                                c.Item().Text($"Data: {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic().AlignRight();
+                                c.Item().Text($"Nº Processo: {numeroProcesso}").Bold().FontSize(9).FontColor("#079b62").AlignRight();
+                            });
+                        });
+
+                        col.Item().PaddingVertical(4).LineHorizontal(1).LineColor("#079b62");
+
+                        col.Item().Background("#079b62").Padding(8).AlignCenter().Text($"FOLHA DE GARANTIAS - {tipoInterveniente.ToUpper()}")
+                            .Bold().FontSize(12).FontColor("#FFFFFF");
+
+                        col.Item().PaddingTop(5);
+
+                        // Dados do Interveniente
+                        col.Item().Background("#f5f7fb").Padding(5).Text($"1. DADOS DO {tipoInterveniente.ToUpper()}").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Column(inner =>
+                        {
+                            inner.Item().Row(row =>
+                            {
+                                row.RelativeItem(7).Text(t => { t.Span("Nome Completo: ").Bold(); t.Span(nomeInterveniente); });
+                                row.RelativeItem(5).Text(t => { t.Span("Contacto: ").Bold(); t.Span(contactoInterveniente); });
+                            });
+                            inner.Item().PaddingTop(4).Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("NUIT: ").Bold(); t.Span(nuitInterveniente); });
+                                row.RelativeItem(6).Text(t => { t.Span("BI nº: ").Bold(); t.Span(biInterveniente); });
+                            });
+                            inner.Item().PaddingTop(4).Text(t => { t.Span("Endereço: ").Bold(); t.Span(enderecoInterveniente); });
+                        });
+
+                        col.Item().PaddingTop(5);
+
+                        // Relação de Bens
+                        col.Item().Background("#f5f7fb").Padding(5).Text("2. RELAÇÃO DE BENS EM GARANTIA").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Text(text =>
+                        {
+                            text.Justify();
+                            text.Span($"Para assegurar o cumprimento das obrigações do crédito associado a este processo em nome de ");
+                            text.Span(nomeCliente).Bold();
+                            text.Span($", o(a) {tipoInterveniente.ToLower()} entrega e vincula a favor da ");
+                            text.Span(nomeEmpresa).Bold();
+                            text.Span($", sob a forma de garantia, os seguintes bens avaliados no valor global de ");
+                            text.Span($"{totalGarantias:N2} MT").Bold().FontColor("#079b62");
+                            text.Span($" ({totalGarantiasExtenso}):");
+                        });
+
+                        col.Item().PaddingTop(5);
+
+                        if (garantiasInterveniente != null && garantiasInterveniente.Any())
+                        {
+                            col.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(25);
+                                    columns.RelativeColumn(55);
+                                    columns.RelativeColumn(20);
+                                });
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background("#079b62").Padding(6).Text("TIPO").Bold().FontSize(9).FontColor("#FFFFFF");
+                                    header.Cell().Background("#079b62").Padding(6).Text("DESCRIÇÃO").Bold().FontSize(9).FontColor("#FFFFFF");
+                                    header.Cell().Background("#079b62").Padding(6).AlignRight().Text("VALOR ATUAL (MT)").Bold().FontSize(9).FontColor("#FFFFFF");
+                                });
+
+                                foreach (var g in garantiasInterveniente)
+                                {
+                                    table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(6).Text(g.Tipo).FontSize(9);
+                                    table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(6).Text(g.Descricao).FontSize(9);
+                                    table.Cell().BorderBottom(1).BorderColor("#E0E0E0").Padding(6).AlignRight().Text($"{g.ValorActual:N2} MT").FontSize(9).Bold().FontColor("#079b62");
+                                }
+                            });
+                        }
+                        else
+                        {
+                            col.Item().PaddingTop(5).AlignCenter().Text("Nenhuma garantia registada para este interveniente.").FontSize(9).Italic().FontColor("#718096");
+                        }
+
+                        col.Item().PaddingTop(10);
+
+                        // Declaração
+                        col.Item().Background("#f5f7fb").Padding(5).Text("3. DECLARAÇÃO DE RESPONSABILIDADE").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Text(text =>
+                        {
+                            text.Justify();
+                            text.Span("Declaro por minha honra que os bens acima descritos são inteiramente minha propriedade, encontram-se livres de quaisquer ónus ou encargos, e autorizo a ");
+                            text.Span(nomeEmpresa);
+                            text.Span($" a proceder à sua retenção ou execução nos termos legais aplicáveis na qualidade de {tipoInterveniente.ToLower()}.");
+                        });
+
+                        col.Item().PaddingTop(25).AlignCenter().Text($"Maputo, aos {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic();
+
+                        col.Item().PaddingTop(30);
+
+                        // Assinatura individual do Interveniente
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem(30);
+                            row.RelativeItem(40).Column(c =>
+                            {
+                                c.Item().PaddingBottom(15).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().AlignCenter().Text($"Assinatura do {tipoInterveniente}").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).AlignCenter().Text(nomeInterveniente).FontSize(8.5f).FontColor("#4a5568");
+                            });
+                            row.RelativeItem(30);
+                        });
+                    });
+                });
+            });
+
+            byte[] bytes = document.GeneratePdf();
+            return File(bytes, "application/pdf", $"Folha_Garantias_{tipoInterveniente}_{inter.IntervenienteID}.pdf");
         }
     }
 }

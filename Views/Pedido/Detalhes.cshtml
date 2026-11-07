@@ -104,9 +104,14 @@
                 </div>
             </div>
 
-            <!-- Rodapé com Ações -->
+            <!-- Rodapé com Ações (Atualizado) -->
             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                <a asp-action="Ver" class="btn btn-secondary px-4 rounded-2 text-white">Voltar</a>
+                <a asp-action="Ver" class="btn btn-light px-4 rounded-2 text-secondary border">Voltar</a>
+
+                <!-- NOVO BOTÃO: Gerar Formulário PDF -->
+                <a asp-action="GerarFormularioPedidoPdf" asp-route-id="@Model.Id" class="btn btn-success px-4 rounded-2 text-white fw-normal" style="background-color: #079b62; border-color: #079b62;">
+                    <i class="fa-solid fa-file-pdf me-1"></i> Ficha PDF
+                </a>
             </div>
         </div>
     </div>

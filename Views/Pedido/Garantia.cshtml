@@ -34,6 +34,10 @@
             <h2 class="fw-bold text-dark mb-1">Gestão de Garantias e Colaterais</h2>
             <p class="text-muted small mb-0">Associadas ao Pedido #@Model.PedidoId</p>
         </div>
+        <!-- Botão para gerar a Folha de Garantias em PDF -->
+        <a asp-controller="Pedido" asp-action="GerarFolhaGarantiasPdf" asp-route-id="@Model.PedidoId" class="btn btn-success rounded-2 px-3 d-flex align-items-center gap-2 text-white" style="background-color: #079b62; border-color: #079b62;">
+            <i class="fa-solid fa-file-pdf"></i> Folha
+        </a>
         <a asp-controller="Pedido" asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> Voltar à Lista de Pedidos
         </a>

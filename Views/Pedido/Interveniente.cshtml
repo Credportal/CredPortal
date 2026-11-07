@@ -1,18 +1,17 @@
-﻿@model GarantiaViewModel
+﻿@model IntervenienteViewModel
 @{
-    ViewData["Title"] = "Gerir Garantias";
+    ViewData["Title"] = "Gerir Intervenientes";
 
-    // Cálculos de totais
-    int totalItens = Model.ListaGarantias != null ? Model.ListaGarantias.Count : 0;
-    decimal somaAquisicao = Model.ListaGarantias != null ? Model.ListaGarantias.Sum(g => g.ValorAquisicao) : 0;
-    decimal somaActual = Model.ListaGarantias != null ? Model.ListaGarantias.Sum(g => g.ValorActual) : 0;
+    // Totais de suporte
+    int totalIntervenientes = Model.ListaIntervenientes != null ? Model.ListaIntervenientes.Count : 0;
+    decimal somaGarantiasIntervenientes = Model.ListaIntervenientes != null ? Model.ListaIntervenientes.Sum(i => i.ValorActualGarantia) : 0;
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
 
 <div class="container-fluid px-4 py-3">
-    <!-- Alertas -->
+    <!-- Alertas de Sucesso / Erro -->
     @if (TempData["MensagemSucesso"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -31,142 +30,147 @@
     <!-- Cabeçalho da Página -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Gestão de Garantias e Colaterais</h2>
-            <p class="text-muted small mb-0">Associadas ao Pedido #@Model.PedidoId</p>
+            <h2 class="fw-bold text-dark mb-1">Gestão de Intervenientes do Pedido</h2>
+            <p class="text-muted small mb-0">Associação de Co-Devedores e Avalistas ao Pedido #@Model.PedidoId</p>
         </div>
         <a asp-controller="Pedido" asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> Voltar à Lista de Pedidos
         </a>
     </div>
 
-    <!-- Informações do Cliente & CRR -->
+    <!-- Informações do Pedido & CRR -->
     <div class="card shadow-sm border-0 rounded-4 bg-white mb-4">
         <div class="card-body p-4">
             <div class="row g-3 align-items-center">
                 <div class="col-md-6">
-                    <span class="d-block text-secondary small fw-semibold">Entidade / Cliente</span>
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Entidade Principal / Cliente</span>
                     <h5 class="fw-bold text-dark mb-0">@Model.NomeEntidade <span class="text-muted small">(ID: #@Model.EntidadeId)</span></h5>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <span class="d-block text-secondary small fw-semibold">Código CRR</span>
+                    <span class="d-block text-secondary small text-uppercase fw-semibold">Código CRR</span>
                     <h5 class="font-monospace fw-bold text-success mb-0" style="color: #079b62 !important;">@(Model.Crr.HasValue ? Model.Crr.Value.ToString("0") : "Não atribuído")</h5>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Formulário para Registar Nova Garantia -->
+    <!-- Formulário para Adicionar Novo Interveniente -->
     <div class="card shadow-sm border-0 rounded-4 bg-white mb-4">
         <div class="card-header bg-white border-0 pt-4 px-4">
-            <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-shield-halved text-success me-2" style="color: #079b62 !important;"></i> Registar Nova Garantia</h5>
+            <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-user-plus text-success me-2" style="color: #079b62 !important;"></i> Adicionar Interveniente</h5>
         </div>
         <div class="card-body p-4">
-            <form asp-controller="Pedido" asp-action="CriarGarantia" method="post">
+            <form id="formAdicionarInterveniente" asp-controller="Pedido" asp-action="AdicionarInterveniente" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
-                <input type="hidden" asp-for="NovaGarantia.EntidadeId" value="@Model.EntidadeId" />
-                <input type="hidden" asp-for="NovaGarantia.Crr" value="@Model.Crr" />
+                <input type="hidden" asp-for="NovoInterveniente.EntidadeId" value="@Model.EntidadeId" />
+                <input type="hidden" asp-for="NovoInterveniente.Crr" value="@Model.Crr" />
 
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <label asp-for="NovaGarantia.Tipo" class="form-label fw-semibold text-secondary">Tipo de Garantia</label>
-                        <select asp-for="NovaGarantia.Tipo" class="form-select rounded-2 shadow-sm">
-                            <option value="">-- Selecione o Tipo --</option>
-                            <option value="Penhor">Penhor</option>
-                            <option value="Hipoteca">Hipoteca</option>
-                            <option value="Outras">Outras</option>
+                    <div class="col-md-6">
+                        <label asp-for="NovoInterveniente.IntervenienteID" class="form-label fw-semibold text-secondary">Selecionar Entidade</label>
+                        <select id="selectEntidade" asp-for="NovoInterveniente.IntervenienteID" asp-items="Model.ListaEntidades" class="form-select rounded-2 shadow-sm select2">
+                            <option value="">-- Selecione a Entidade --</option>
                         </select>
-                        <span asp-validation-for="NovaGarantia.Tipo" class="text-danger small"></span>
+                        <span asp-validation-for="NovoInterveniente.IntervenienteID" class="text-danger small"></span>
                     </div>
 
-                    <div class="col-md-4">
-                        <label asp-for="NovaGarantia.ValorAquisicao" class="form-label fw-semibold text-secondary">Valor de Aquisição (MT)</label>
-                        <input asp-for="NovaGarantia.ValorAquisicao" class="form-control rounded-2 shadow-sm" type="number" step="0.01" placeholder="0.00" />
-                        <span asp-validation-for="NovaGarantia.ValorAquisicao" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label asp-for="NovaGarantia.ValorActual" class="form-label fw-semibold text-secondary">Valor Atual (MT)</label>
-                        <input asp-for="NovaGarantia.ValorActual" class="form-control rounded-2 shadow-sm" type="number" step="0.01" placeholder="0.00" />
-                        <span asp-validation-for="NovaGarantia.ValorActual" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-12">
-                        <label asp-for="NovaGarantia.Descricao" class="form-label fw-semibold text-secondary">Descrição</label>
-                        <textarea asp-for="NovaGarantia.Descricao" class="form-control rounded-2 shadow-sm" rows="2" placeholder="Descreva detalhadamente a garantia..."></textarea>
-                        <span asp-validation-for="NovaGarantia.Descricao" class="text-danger small"></span>
+                    <div class="col-md-6">
+                        <label asp-for="NovoInterveniente.Tipo" class="form-label fw-semibold text-secondary">Tipo de Interveniente</label>
+                        <select id="selectTipo" asp-for="NovoInterveniente.Tipo" class="form-select rounded-2 shadow-sm">
+                            <option value="">-- Selecione o Tipo --</option>
+                            <option value="Co-Devedor">Co-Devedor</option>
+                            <option value="Avalista">Avalista</option>
+                        </select>
+                        <span asp-validation-for="NovoInterveniente.Tipo" class="text-danger small"></span>
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-end mt-4 pt-3 border-top">
-                    <button type="submit" class="btn btn-success px-4 rounded-2 text-white fw-normal" style="background-color: #079b62; border-color: #079b62;">
-                        <i class="fa-solid fa-plus me-1"></i> Adicionar Garantia
+                    <button type="submit" id="btnAdicionar" class="btn btn-success px-4 rounded-2 text-white fw-normal" style="background-color: #079b62; border-color: #079b62;" disabled>
+                        <i class="fa-solid fa-plus me-1"></i> Adicionar Interveniente
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Cards de Resumo (Total de Itens e Somatórios) -->
+    <!-- Cards de Resumo -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <span class="text-muted small fw-semibold">Total de Itens</span>
-                <h4 class="fw-bold text-dark mb-0 mt-1"><i class="fa-solid fa-list-check text-success me-2" style="color: #079b62 !important;"></i> @totalItens</h4>
+                <span class="text-muted small text-uppercase fw-semibold">Total de Intervenientes</span>
+                <h4 class="fw-bold text-dark mb-0 mt-1"><i class="fa-solid fa-users text-success me-2" style="color: #079b62 !important;"></i> @totalIntervenientes</h4>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <span class="text-muted small fw-semibold">Total Aquisição</span>
-                <h4 class="fw-bold text-dark mb-0 mt-1">MT @somaAquisicao.ToString("N2")</h4>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <span class="text-muted small fw-semibold">Total Atual</span>
-                <h4 class="fw-bold text-success mb-0 mt-1" style="color: #079b62 !important;">MT @somaActual.ToString("N2")</h4>
+                <span class="text-muted small text-uppercase fw-semibold">Total Garantias dos Intervenientes</span>
+                <h4 class="fw-bold text-success mb-0 mt-1" style="color: #079b62 !important;">MT @somaGarantiasIntervenientes.ToString("N2")</h4>
             </div>
         </div>
     </div>
 
-    <!-- Tabela com a Lista de Garantias Associadas -->
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
+    <!-- Tabela com a Lista de Intervenientes Associados -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
         <div class="card-header bg-white border-0 pt-4 px-4">
-            <h5 class="fw-bold text-dark mb-0">Garantias Associadas</h5>
+            <h5 class="fw-bold text-dark mb-0">Intervenientes Associados</h5>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-muted small">
+                <thead class="table-light text-muted small text-uppercase">
                     <tr>
                         <th class="ps-4 py-3">ID</th>
+                        <th class="py-3">Nome</th>
+                        <th class="py-3">NUIT</th>
                         <th class="py-3">Tipo</th>
-                        <th class="py-3">Descrição</th>
-                        <th class="py-3">Valor Aquisição (MT)</th>
-                        <th class="py-3">Valor Atual (MT)</th>
-                        <th class="py-3">Data Registo</th>
+                        <th class="py-3">Total Garantias (MT)</th>
+                        <th class="py-3 text-end pe-4">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.ListaGarantias != null && Model.ListaGarantias.Any())
+                    @if (Model.ListaIntervenientes != null && Model.ListaIntervenientes.Any())
                     {
-                        @foreach (var g in Model.ListaGarantias)
+                        @foreach (var item in Model.ListaIntervenientes)
                         {
                             <tr>
-                                <td class="ps-4 fw-semibold text-dark">#@g.Id</td>
+                                <td class="ps-4 fw-semibold text-dark">#@item.Id</td>
+                                <td class="fw-medium text-dark">@(item.IntervenienteEntidade != null ? item.IntervenienteEntidade.Nome : "Interveniente #" + item.IntervenienteID)</td>
+                                <td><code>@(item.IntervenienteEntidade != null ? item.IntervenienteEntidade.Nuit : "-")</code></td>
                                 <td>
-                                    <span class="badge bg-light text-dark border rounded-pill px-2 py-1">@g.Tipo</span>
+                                    <span class="badge bg-light text-dark border rounded-pill px-2 py-1">@item.Tipo</span>
                                 </td>
-                                <td class="fw-medium text-dark">@g.Descricao</td>
-                                <td class="fw-bold">MT @g.ValorAquisicao.ToString("N2")</td>
-                                <td class="fw-semibold text-success" style="color: #079b62 !important;">MT @g.ValorActual.ToString("N2")</td>
-                                <td>@g.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="fw-bold text-success" style="color: #079b62 !important;">MT @item.ValorActualGarantia.ToString("N2")</td>
+                                <td class="text-end pe-4">
+                                    <div class="d-inline-flex gap-2">
+                                        <!-- Botão para abrir Modal de Garantias -->
+                                        <button type="button" class="btn btn-sm btn-outline-success rounded-2 d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalGarantia_@item.IntervenienteID">
+                                            <i class="fa-solid fa-shield-halved"></i> Garantias
+                                        </button>
+
+                                        <!-- Botão para Imprimir Folha de Garantias do Interveniente -->
+                                        <a asp-controller="Pedido" asp-action="GerarFolhaGarantiasIntervenientePdf" asp-route-intervenienteId="@item.IntervenienteID" asp-route-pedidoId="@Model.PedidoId" class="btn btn-sm btn-success rounded-2 d-flex align-items-center gap-1 text-white" style="background-color: #079b62; border-color: #079b62;" title="Imprimir Folha de Garantias">
+                                            <i class="fa-solid fa-file-pdf"></i> PDF
+                                        </a>
+
+                                        <!-- Form para Remover Interveniente -->
+                                        <form asp-controller="Pedido" asp-action="RemoverInterveniente" method="post" onsubmit="return confirm('Tem certeza que pretende remover este interveniente do pedido?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-2 d-flex align-items-center gap-1">
+                                                <i class="fa-solid fa-trash-can"></i> Remover
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">Nenhuma garantia registada para este cliente/CRR.</td>
+                            <td colspan="6" class="text-center py-4 text-muted">Nenhum interveniente associado a este pedido/CRR.</td>
                         </tr>
                     }
                 </tbody>
@@ -175,6 +179,160 @@
     </div>
 </div>
 
+<!-- MODAIS FLUTUANTES PARA GESTÃO DE GARANTIAS POR INTERVENIENTE -->
+@if (Model.ListaIntervenientes != null && Model.ListaIntervenientes.Any())
+{
+    @foreach (var inter in Model.ListaIntervenientes)
+    {
+        var garantiasDoInterveniente = Model.GarantiasPorInterveniente.ContainsKey(inter.IntervenienteID)
+            ? Model.GarantiasPorInterveniente[inter.IntervenienteID]
+            : new List<GarantiaModel>();
+
+        <div class="modal fade" id="modalGarantia_@inter.IntervenienteID" tabindex="-1" aria-labelledby="modalLabel_@inter.IntervenienteID" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow">
+                    <div class="modal-header border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title fw-bold text-dark" id="modalLabel_@inter.IntervenienteID">
+                            <i class="fa-solid fa-shield-halved text-success me-2" style="color: #079b62 !important;"></i>
+                            Garantias de @(inter.IntervenienteEntidade != null ? inter.IntervenienteEntidade.Nome : "Interveniente #" + inter.IntervenienteID)
+                        </h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Botão PDF dentro do Modal -->
+                            <a asp-controller="Pedido" asp-action="GerarFolhaGarantiasIntervenientePdf" asp-route-intervenienteId="@inter.IntervenienteID" asp-route-pedidoId="@Model.PedidoId" class="btn btn-sm btn-success text-white rounded-2" style="background-color: #079b62; border-color: #079b62;">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Folha de Garantias PDF
+                            </a>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                    </div>
+                    <div class="modal-body p-4">
+                        <!-- Formulário para Registar Nova Garantia do Interveniente -->
+                        <form asp-controller="Pedido" asp-action="CriarGarantiaInterveniente" method="post" class="mb-4 p-3 bg-light rounded-3 border">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                            <input type="hidden" asp-for="NovaGarantiaInterveniente.EntidadeId" value="@inter.IntervenienteID" />
+                            <input type="hidden" asp-for="NovaGarantiaInterveniente.Crr" value="@Model.Crr" />
+
+                            <h6 class="fw-bold text-dark mb-3">Registar Nova Garantia</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-secondary">Tipo</label>
+                                    <select asp-for="NovaGarantiaInterveniente.Tipo" class="form-select form-select-sm rounded-2">
+                                        <option value="">-- Selecione --</option>
+                                        <option value="Penhor">Penhor</option>
+                                        <option value="Hipoteca">Hipoteca</option>
+                                        <option value="Outras">Outras</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-secondary">Valor Aquisição (MT)</label>
+                                    <input asp-for="NovaGarantiaInterveniente.ValorAquisicao" class="form-control form-control-sm rounded-2" type="number" step="0.01" placeholder="0.00" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-secondary">Valor Atual (MT)</label>
+                                    <input asp-for="NovaGarantiaInterveniente.ValorActual" class="form-control form-control-sm rounded-2" type="number" step="0.01" placeholder="0.00" />
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-semibold text-secondary">Descrição</label>
+                                    <textarea asp-for="NovaGarantiaInterveniente.Descricao" class="form-control form-control-sm rounded-2" rows="2" placeholder="Descreva a garantia..."></textarea>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3">
+                                <button type="submit" class="btn btn-sm btn-success px-3 rounded-2 text-white" style="background-color: #079b62; border-color: #079b62;">
+                                    <i class="fa-solid fa-plus me-1"></i> Adicionar Garantia
+                                </button>
+                            </div>
+                        </form>
+
+                        <hr />
+
+                        <!-- Tabela de Garantias Registadas do Interveniente -->
+                        <h6 class="fw-bold text-dark mb-3">Garantias Prestadas</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light text-muted small">
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Descrição</th>
+                                        <th>Valor Aquisição</th>
+                                        <th>Valor Atual</th>
+                                        <th class="text-end">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (garantiasDoInterveniente != null && garantiasDoInterveniente.Any())
+                                    {
+                                        @foreach (var g in garantiasDoInterveniente)
+                                        {
+                                            <tr>
+                                                <td><span class="badge bg-light text-dark border">@g.Tipo</span></td>
+                                                <td>@g.Descricao</td>
+                                                <td>MT @g.ValorAquisicao.ToString("N2")</td>
+                                                <td class="fw-semibold text-success" style="color: #079b62 !important;">MT @g.ValorActual.ToString("N2")</td>
+                                                <td class="text-end">
+                                                    <form asp-controller="Pedido" asp-action="RemoverGarantia" method="post" class="d-inline" onsubmit="return confirm('Remover esta garantia?');">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@g.Id" />
+                                                        <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                                                        <button type="submit" class="btn btn-xs btn-outline-danger rounded-1 py-0 px-2" title="Remover Garantia">
+                                                            <i class="fa-solid fa-trash-can"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="text-center py-3 text-muted small">Nenhuma garantia registada para este interveniente neste CRR.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectEntidade = document.getElementById("selectEntidade");
+            const selectTipo = document.getElementById("selectTipo");
+            const btnAdicionar = document.getElementById("btnAdicionar");
+
+            function validarFormulario() {
+                const entidadeValida = selectEntidade && selectEntidade.value !== "";
+                const tipoValido = selectTipo && selectTipo.value !== "";
+
+                if (entidadeValida && tipoValido) {
+                    btnAdicionar.removeAttribute("disabled");
+                } else {
+                    btnAdicionar.setAttribute("disabled", "true");
+                }
+            }
+
+            if (selectEntidade && selectTipo && btnAdicionar) {
+                selectEntidade.addEventListener("change", validarFormulario);
+                selectTipo.addEventListener("change", validarFormulario);
+                validarFormulario();
+            }
+
+            @if (TempData["OpenModalIntervenienteId"] != null)
+                {
+                    <text>
+                                    var openModalId = '@TempData["OpenModalIntervenienteId"]';
+                    var modalElem = document.getElementById('modalGarantia_' + openModalId);
+                    if (modalElem) {
+                        var modalInstance = new bootstrap.Modal(modalElem);
+                        modalInstance.show();
+                    }
+                </text>
+            }
+                });
+    </script>
 }
