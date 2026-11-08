@@ -23,10 +23,14 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-solid text-dark mb-0">Detalhes da Entidade</h2>
         <div class="d-flex gap-2">
-            <!-- Botão de Pré-visualizar / Imprimir Ficha -->
+          @*   <!-- Botão de Pré-visualizar / Imprimir Ficha -->
             <button onclick="window.print()" class="btn btn-outline-success rounded-2 px-3" style="color: #079b62; border-color: #079b62;">
                 <i class="fa-solid fa-file-pdf me-1"></i> Ficha
-            </button>
+            </button> *@
+            <!-- Botão de Descarregar Ficha PDF -->
+            <a asp-action="GerarFichaClientePdf" asp-route-id="@Model.EntidadeNome.Id" class="btn btn-outline-success rounded-2 px-3" style="color: #079b62; border-color: #079b62;" target="_blank">
+                <i class="fa-solid fa-file-pdf me-1"></i> Ficha
+            </a>
             <!-- Botão Voltar direcionado para a action Ver -->
             <a asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-4">
                 <i class="fa-solid fa-arrow-left me-1"></i> Voltar
@@ -38,7 +42,7 @@
     <div id="fichaCliente" class="card shadow-sm border-0 rounded-4 bg-white p-4">
         <div class="card-body p-2">
 
-            <!-- CABEÇALHO OFICIAL DO DOCUMENTO (Marca, Slogan, Logótipo Verde e Metadados) -->
+            @* <!-- CABEÇALHO OFICIAL DO DOCUMENTO (Marca, Slogan, Logótipo Verde e Metadados) -->
             <div class="d-flex justify-content-between align-items-center pb-4 mb-4 border-bottom">
                 <div class="d-flex align-items-center gap-3">
                     <div class="d-flex align-items-center justify-content-center rounded-3 text-white" style="width: 50px; height: 50px; background-color: #079b62; font-size: 24px;">
@@ -54,7 +58,7 @@
                     <div>Emitido por: <span class="fw-bold text-dark">@nomeUtilizador</span></div>
                     <div>Data: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
                 </div>
-            </div>
+            </div> *@
 
             <div class="row align-items-center mb-4">
                 <!-- Avatar / Ícone -->

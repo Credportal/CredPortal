@@ -29,6 +29,23 @@
 
         agenciaUtilizador = agencia?.Nome ?? "Agência não identificada";
     }
+    // --- VERIFICAR O ESTADO DO DIA USANDO O DiaControloModel ---
+    DateTime dataHoje = DateTime.Now.Date;
+    bool diaFechado = false;
+
+    if (_context.DiasControlo != null)
+    {
+        // Procura pelo registo do dia de hoje
+        var controloDia = await _context.DiasControlo
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.DataReferencia.Date == dataHoje);
+
+        // Se o dia existe e 'EstaAberto' for falso, significa que o fecho foi efetuado
+        if (controloDia != null && !controloDia.EstaAberto)
+        {
+            diaFechado = true;
+        }
+    }
 }
 <html lang="pt">
 <head>
@@ -279,44 +296,63 @@
     <aside class="sg-sidebar">
         <div>
             <nav class="d-flex flex-column gap-1">
-                <a asp-controller="Home" asp-action="Index" class="sg-nav-link @(currentController == "Painel" || currentController == "Home" ? "active" : "")">
-                    <i class="fa-solid fa-house fa-fw"></i> Painel
-                </a>
-                <a asp-controller="Simulador" asp-action="Index" class="sg-nav-link @(currentController == "Simulador" ? "active" : "")">
-                    <i class="fa-solid fa-calculator fa-fw"></i> Simulador
-                </a>
-                <a asp-controller="Entidade" asp-action="Ver" class="sg-nav-link @(currentController == "Entidade" ? "active" : "")">
-                    <i class="fa-solid fa-user fa-fw"></i> Entidades
-                </a>
-                <a asp-controller="Pedido" asp-action="Ver" class="sg-nav-link @(currentController == "Pedido" ? "active" : "")">
-                    <i class="fa-solid fa-credit-card fa-fw"></i> Créditos
-                </a>
-                <a asp-controller="Despesa" asp-action="Index" class="sg-nav-link @(currentController == "Despesa" ? "active" : "")">
-                    <i class="fa-solid fa-receipt fa-fw"></i> Despesas
-                </a>
-                <a asp-controller="Conta" asp-action="Ver" class="sg-nav-link @(currentController == "Conta" ? "active" : "")">
-                    <i class="fa-solid fa-chart-line fa-fw"></i> Contas
-                </a>
-                <a asp-controller="Relatorio" asp-action="Index" class="sg-nav-link @(currentController == "Relatorio" ? "active" : "")">
-                    <i class="fa-solid fa-chart-pie fa-fw"></i> Relatórios
-                </a>
-
-                @if (usuario != null && usuario.Perfil == Analise.Enuns.PerfilEnum.Admin)
+                @if (diaFechado)
                 {
-                    <a asp-controller="FechoDiario" asp-action="RelatorioFecho" class="sg-nav-link @(currentController == "FechoDiario" ? "active" : "")">
-                        <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho e Desempenho
+                    <!-- MENU RESTRITO APÓS O FECHO DO DIA -->
+                    <a asp-controller="Home" asp-action="Index" class="sg-nav-link @(currentController == "Painel" || currentController == "Home" ? "active" : "")">
+                        <i class="fa-solid fa-house fa-fw"></i> Painel
                     </a>
-                    <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Usuario" ? "active" : "")">
-                        <i class="fa-solid fa-users fa-fw"></i> Usuários
+                    <a asp-controller="Simulador" asp-action="Index" class="sg-nav-link @(currentController == "Simulador" ? "active" : "")">
+                        <i class="fa-solid fa-calculator fa-fw"></i> Simulador
+                    </a>
+                    <a asp-controller="Relatorio" asp-action="Index" class="sg-nav-link @(currentController == "Relatorio" ? "active" : "")">
+                        <i class="fa-solid fa-chart-pie fa-fw"></i> Relatórios
+                    </a>
+                }
+                else
+                {
+                    <!-- MENU COMPLETO ANTES DO FECHO -->
+                    <a asp-controller="Home" asp-action="Index" class="sg-nav-link @(currentController == "Painel" || currentController == "Home" ? "active" : "")">
+                        <i class="fa-solid fa-house fa-fw"></i> Painel
+                    </a>
+                    <a asp-controller="Simulador" asp-action="Index" class="sg-nav-link @(currentController == "Simulador" ? "active" : "")">
+                        <i class="fa-solid fa-calculator fa-fw"></i> Simulador
+                    </a>
+                    <a asp-controller="Entidade" asp-action="Ver" class="sg-nav-link @(currentController == "Entidade" ? "active" : "")">
+                        <i class="fa-solid fa-user fa-fw"></i> Entidades
+                    </a>
+                    <a asp-controller="Pedido" asp-action="Ver" class="sg-nav-link @(currentController == "Pedido" ? "active" : "")">
+                        <i class="fa-solid fa-credit-card fa-fw"></i> Créditos
+                    </a>
+                    <a asp-controller="Despesa" asp-action="Index" class="sg-nav-link @(currentController == "Despesa" ? "active" : "")">
+                        <i class="fa-solid fa-receipt fa-fw"></i> Despesas
+                    </a>
+                    <a asp-controller="Conta" asp-action="Ver" class="sg-nav-link @(currentController == "Conta" ? "active" : "")">
+                        <i class="fa-solid fa-chart-line fa-fw"></i> Contas
+                    </a>
+                    <a asp-controller="Relatorio" asp-action="Index" class="sg-nav-link @(currentController == "Relatorio" ? "active" : "")">
+                        <i class="fa-solid fa-chart-pie fa-fw"></i> Relatórios
+                    </a>
+
+                    @if (usuario != null && usuario.Perfil == Analise.Enuns.PerfilEnum.Admin)
+                    {
+                        <a asp-controller="FechoDiario" asp-action="RelatorioFecho" class="sg-nav-link @(currentController == "FechoDiario" ? "active" : "")">
+                            <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho e Desempenho
+                        </a>
+                        <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Usuario" ? "active" : "")">
+                            <i class="fa-solid fa-users fa-fw"></i> Usuários
+                        </a>
+                    }
+
+                    <a asp-controller="AlterarSenha" asp-action="Index" class="sg-nav-link @(currentController == "AlterarSenha" ? "active" : "")">
+                        <i class="fa-solid fa-key fa-fw"></i> Alterar Senha
                     </a>
                 }
 
-                <a asp-controller="AlterarSenha" asp-action="Index" class="sg-nav-link @(currentController == "AlterarSenha" ? "active" : "")">
-                    <i class="fa-solid fa-key fa-fw"></i> Alterar Senha
-                </a>               
-                <form asp-controller="Login" asp-action="TerminarSessao" method="post" class="d-inline">
-                    <button type="submit" class="dropdown-item text-danger py-2 d-flex align-items-center gap-2 border-0 bg-transparent w-100">
-                        <i class="fa-solid fa-right-from-bracket" style="width: 16px;"></i> Terminar Sessão
+                <!-- TERMINAR SESSÃO (Disponível em ambos os estados) -->
+                <form asp-controller="Login" asp-action="TerminarSessao" method="post" class="d-inline mt-2">
+                    <button type="submit" class="dropdown-item text-danger py-2 d-flex align-items-center gap-2 border-0 bg-transparent w-100 fw-semibold" style="font-size: 14px; padding-left: 14px;">
+                        <i class="fa-solid fa-right-from-bracket" style="width: 21px; text-align: center; font-size: 17px;"></i> Terminar Sessão
                     </button>
                 </form>
             </nav>
