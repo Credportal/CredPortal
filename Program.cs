@@ -9,6 +9,7 @@ using Analise.Helper;
 using Microsoft.Extensions.ObjectPool;
 using QuestPDF.Infrastructure; // Necessário para a licença do QuestPDF
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // REGISTAR LICENÇA DO QUESTPDF (Obrigatório para .NET 8)
@@ -17,11 +18,22 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-// CONFIGURAR PORTA PARA RAILWAY
-if (!builder.Environment.IsDevelopment())
+//// CONFIGURAR PORTA PARA RAILWAY
+//if (!builder.Environment.IsDevelopment())
+//{
+//    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+//    builder.WebHost.UseUrls($"http://*:{port}");
+//}
+
+// CONFIGURAR PORTA PARA RAILWAY E LOCAL
+var portVar = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(portVar))
 {
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-    builder.WebHost.UseUrls($"http://*:{port}");
+    builder.WebHost.UseUrls($"http://*:{portVar}");
+}
+else if (!builder.Environment.IsDevelopment())
+{
+    builder.WebHost.UseUrls("http://0.0.0.0:8080");
 }
 
 // SMTP
