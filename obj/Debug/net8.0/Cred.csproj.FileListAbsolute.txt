@@ -199,3 +199,4 @@ C:\Cred\Analise\obj\Debug\net8.0\refint\Cred.dll
 C:\Cred\Analise\obj\Debug\net8.0\Cred.pdb
 C:\Cred\Analise\obj\Debug\net8.0\Cred.genruntimeconfig.cache
 C:\Cred\Analise\obj\Debug\net8.0\ref\Cred.dll
+C:\Cred\Analise\bin\Debug\net8.0\railway.json
