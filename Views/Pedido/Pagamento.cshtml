@@ -22,8 +22,14 @@
     <!-- Alertas -->
     @if (TempData["MensagemSucesso"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["MensagemSucesso"]
+        <div class="alert alert-success alert-dismissible fade show d-flex justify-content-between align-items-center" role="alert">
+            <div>
+                <i class="fa-solid fa-circle-check me-2"></i> @TempData["MensagemSucesso"]
+            </div>
+            <!-- Exemplo de botão para descarregar o último recibo gerado para este pedido -->
+            <a asp-controller="Pedido" asp-action="GerarReciboPagamentoPdf" asp-route-pedidoId="@Model.Id" class="btn btn-sm btn-dark text-white fw-bold" target="_blank">
+                <i class="fa-solid fa-file-pdf me-1"></i> Imprimir Recibo
+            </a>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }

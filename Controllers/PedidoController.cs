@@ -1194,14 +1194,14 @@ namespace Analise.Controllers
         // POST: /Pedido/ProcessarDesembolso
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessarDesembolso(DesembolsoInputModel model)
+        public async Task<IActionResult> ProcessarDesembolso(int id, DateTime? dataDesembolsoManual, List<DesembolsoItemInput> desembolsos)
         {
             var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
             if (usuarioLogado == null) return RedirectToAction("Index", "Login");
 
             var pedido = await _bancoContext.Pedidos
                 .Include(p => p.Entidade)
-                .FirstOrDefaultAsync(p => p.Id == model.Id);
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (pedido == null)
             {
@@ -1213,12 +1213,17 @@ namespace Analise.Controllers
             try
             {
                 decimal valorTotalDesembolsado = 0;
-                DateTime dataOperacao = DateTime.Today; // Data da operação / desembolso
+
+                // Se o utilizador preencheu a data manual, usa-la; caso contrário, assume a data de hoje
+                DateTimeOffset dataOperacao = dataDesembolsoManual.HasValue
+                    ? new DateTimeOffset(dataDesembolsoManual.Value)
+                    : DateTimeOffset.Now;
+
                 string nomeCliente = pedido.Entidade?.Nome ?? "Cliente";
 
-                if (model.Desembolsos != null)
+                if (desembolsos != null)
                 {
-                    foreach (var item in model.Desembolsos)
+                    foreach (var item in desembolsos)
                     {
                         // 1. Validar e obter a Conta Bancária
                         var conta = await _bancoContext.Contas.FirstOrDefaultAsync(c => c.Id == item.ContaId);
@@ -1242,7 +1247,7 @@ namespace Analise.Controllers
 
                         string descricaoMovimento = $"Desembolso de crédito - {nomeCliente}";
 
-                        // 4. Registar nos Movimentos Internos (com EntidadeId incluído)
+                        // 4. Registar nos Movimentos Internos
                         var movimentoInterno = new MovimentoInternoModel
                         {
                             Descricao = descricaoMovimento,
@@ -1272,13 +1277,13 @@ namespace Analise.Controllers
                     }
                 }
 
-                // 6. Atualizar a tabela Pedidos (Estado Vigente = 3, Valor Desembolsado e Data do Desembolso)
+                // 6. Atualizar a tabela Pedidos (Estado Vigente = 3, Valor Desembolsado e a Data escolhida/atual)
                 pedido.EstadoId = 3;
                 pedido.ValorDesembolsado = valorTotalDesembolsado;
                 pedido.DataDesembolso = dataOperacao;
                 _bancoContext.Pedidos.Update(pedido);
 
-                // 7. Gerar e Lançar o Plano de Amortização linha por linha na tabela Amortizacoes
+                // 7. Gerar e Lançar o Plano de Amortização linha por linha a partir da data de desembolso
                 decimal valorAprovado = pedido.ValorDecisao ?? 0;
                 decimal taxaMensal = (pedido.TaxaDecisao ?? 0) / 100m;
                 int prazoMeses = pedido.PrazoDecisao ?? 0;
@@ -1294,7 +1299,7 @@ namespace Analise.Controllers
                 }
 
                 decimal capitalEmDivida = valorAprovado;
-                DateTime dataVencimento = dataOperacao;
+                DateTime dataVencimento = dataOperacao.DateTime;
 
                 for (int i = 1; i <= prazoMeses; i++)
                 {
@@ -1329,7 +1334,7 @@ namespace Analise.Controllers
                 await _bancoContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                TempData["MensagemSucesso"] = "Desembolso concretizado com sucesso, movimentos registados e plano de amortização gerado!";
+                TempData["MensagemSucesso"] = "Desembolso concretizado com sucesso!";
             }
             catch (Exception ex)
             {
@@ -1337,7 +1342,7 @@ namespace Analise.Controllers
                 TempData["MensagemErro"] = "Erro ao processar desembolso: " + (ex.InnerException?.Message ?? ex.Message);
             }
 
-            return RedirectToAction("Ver");
+            return RedirectToAction("Ver", new { id = id });
         }
         [HttpGet]
         public async Task<IActionResult> Pagamento(int id)
@@ -1892,6 +1897,588 @@ namespace Analise.Controllers
 
             byte[] bytes = document.GeneratePdf();
             return File(bytes, "application/pdf", $"Folha_Garantias_{tipoInterveniente}_{inter.IntervenienteID}.pdf");
+        }
+        [HttpGet]
+        public async Task<IActionResult> GerarReciboPagamentoPdf(int pedidoId, int? movimentoId, decimal? valorPago, int? contaId)
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            var pedido = await _pedidoRepositorio.BuscarPorIdAsync(pedidoId);
+            if (pedido == null) return NotFound();
+
+            var cli = pedido.Entidade;
+
+            decimal valorRealPago = 0;
+            int? contaRealId = contaId;
+
+            // 1. Se foi passado um ID de movimento específico (ex: o ID da tabela da imagem)
+            if (movimentoId.HasValue && movimentoId.Value > 0)
+            {
+                var movimento = await _bancoContext.MovimentosExternos // Substitua por _bancoContext.Movimentos ou o nome real da sua tabela de movimentos
+                    .FirstOrDefaultAsync(m => m.Id == movimentoId.Value);
+
+                if (movimento != null)
+                {
+                    // Pega o valor do Débito ou Crédito conforme a operação de reembolso/recebimento
+                    valorRealPago = movimento.Debito > 0 ? movimento.Debito : movimento.Credito;
+                    contaRealId = movimento.ContaId;
+                }
+            }
+            else if (valorPago.HasValue && valorPago.Value > 0)
+            {
+                valorRealPago = valorPago.Value;
+            }
+            else
+            {
+                // 2. Se não foi passado, busca estritamente o ÚLTIMO movimento de reembolso registado para esta entidade/pedido
+                var ultimoMovimento = await _bancoContext.MovimentosExternos
+                    .Where(m => m.EntidadeId == pedido.EntidadeId && m.TipoOperacao.Contains("Reembolso"))
+                    .OrderByDescending(m => m.Id)
+                    .FirstOrDefaultAsync();
+
+                if (ultimoMovimento != null)
+                {
+                    valorRealPago = ultimoMovimento.Debito > 0 ? ultimoMovimento.Debito : ultimoMovimento.Credito;
+                    contaRealId = ultimoMovimento.ContaId;
+                }
+                else
+                {
+                    valorRealPago = 0;
+                }
+            }
+
+            // Buscar os detalhes da conta de destino com base no ID obtido do movimento
+            string nomeContaStr = "Conta Principal";
+            string formaPagamento = "Depósito/Transferência";
+
+            if (contaRealId.HasValue && contaRealId.Value > 0)
+            {
+                var contaModel = await _bancoContext.Contas.FindAsync(contaRealId.Value);
+                if (contaModel != null)
+                {
+                    nomeContaStr = $"{contaModel.Banco} - {contaModel.Conta} ({contaModel.Titular})";
+
+                    if (!string.IsNullOrEmpty(contaModel.Banco) && contaModel.Banco.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        formaPagamento = "Numerário";
+                    }
+                    else if (!string.IsNullOrEmpty(contaModel.Conta) && contaModel.Conta.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        formaPagamento = "Numerário";
+                    }
+                }
+            }
+
+            string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
+            string numeroProcesso = pedido.CRR.HasValue ? $"CRR-{pedido.CRR.Value:0}" : $"CP-{pedido.Id}";
+            string numeroRecibo = $"REC-{DateTime.Now:yyyyMMdd}-{pedido.Id}-{new Random().Next(100, 999)}";
+
+            string nomeCliente = cli?.Nome ?? "N/A";
+            string nuitCliente = cli?.Nuit ?? "N/A";
+            string biCliente = cli?.NrDocumento ?? "N/A";
+            string contactoCliente = cli?.Telefone ?? "N/A";
+            string operadorStr = usuarioLogado?.Login ?? "Administrador";
+
+            var culturaPt = new System.Globalization.CultureInfo("pt-PT");
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(36);
+                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(10).FontColor("#172b4d"));
+
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("DOCUMENTO PROCESSADO POR COMPUTADOR — ").FontSize(8).Italic().FontColor("#a0aec0");
+                        text.Span(nomeEmpresa).FontSize(8).Bold().FontColor("#718096");
+                    });
+
+                    page.Content().Column(col =>
+                    {
+                        col.Spacing(10);
+
+                        // --- CABEÇALHO ---
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Cash Pronto").Bold().FontSize(22).FontColor("#079b62");
+                                c.Item().Text(nomeEmpresa).FontSize(9).FontColor("#718096");
+                            });
+
+                            row.ConstantItem(180).AlignRight().Column(c =>
+                            {
+                                c.Item().Text($"Data: {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy, HH:mm", culturaPt)}").FontSize(8.5f).Italic().AlignRight();
+                                c.Item().Text($"Nº Recibo: {numeroRecibo}").Bold().FontSize(9).FontColor("#079b62").AlignRight();
+                                c.Item().Text($"Ref. Crédito: {numeroProcesso}").FontSize(9).FontColor("#718096").AlignRight();
+                            });
+                        });
+
+                        col.Item().PaddingVertical(4).LineHorizontal(1).LineColor("#079b62");
+
+                        col.Item().Background("#079b62").Padding(8).AlignCenter().Text("RECIBO DE PAGAMENTO")
+                            .Bold().FontSize(12).FontColor("#FFFFFF");
+
+                        col.Item().PaddingTop(5);
+
+                        // --- 1. DADOS DO MUTUÁRIO ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("1. DADOS DO MUTUÁRIO").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Column(inner =>
+                        {
+                            inner.Item().Row(row =>
+                            {
+                                row.RelativeItem(7).Text(t => { t.Span("Nome Completo: ").Bold(); t.Span(nomeCliente); });
+                                row.RelativeItem(5).Text(t => { t.Span("Contacto: ").Bold(); t.Span(contactoCliente); });
+                            });
+                            inner.Item().PaddingTop(4).Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("NUIT: ").Bold(); t.Span(nuitCliente); });
+                                row.RelativeItem(6).Text(t => { t.Span("BI nº: ").Bold(); t.Span(biCliente); });
+                            });
+                        });
+
+                        col.Item().PaddingTop(5);
+
+                        // --- 2. DETALHES DO PAGAMENTO ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("2. DETALHES DO PAGAMENTO").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Column(inner =>
+                        {
+                            inner.Item().Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("Valor Recebido: ").Bold(); t.Span($"{valorRealPago:N2} MT").Bold().FontColor("#079b62"); });
+                                row.RelativeItem(6).Text(t => { t.Span("Conta de Destino: ").Bold(); t.Span(nomeContaStr); });
+                            });
+                            inner.Item().PaddingTop(4).Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("Emitido por: ").Bold(); t.Span(operadorStr); });
+                                row.RelativeItem(6).Text(t => { t.Span("Forma de Pagamento: ").Bold(); t.Span(formaPagamento); });
+                            });
+                        });
+
+                        col.Item().PaddingTop(5);
+
+                        // --- 3. OBSERVAÇÕES ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("3. OBSERVAÇÕES").Bold().FontSize(10).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(3).Text(
+                            "Declara-se que a quantia acima descrita foi recebida e devidamente aplicada na amortização das prestações e encargos do crédito associado, nos termos regulamentares da instituição."
+                        ).FontSize(8.5f).Italic().FontColor("#4a5568");
+
+                        col.Item().PaddingTop(25).AlignCenter().Text($"Maputo, aos {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic();
+
+                        col.Item().PaddingTop(25);
+
+                        // --- ASSINATURAS ---
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn();
+                                columns.ConstantColumn(40);
+                                columns.RelativeColumn();
+                            });
+
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(5).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Assinatura do Cliente").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).Text(nomeCliente).FontSize(8.5f).FontColor("#4a5568");
+                            });
+
+                            table.Cell();
+
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(5).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Pelo Operador / Tesouraria").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).Text(nomeEmpresa).FontSize(8.5f).FontColor("#4a5568");
+                            });
+                        });
+                    });
+                });
+            });
+
+            byte[] bytes = document.GeneratePdf();
+            return File(bytes, "application/pdf", $"Recibo_Pagamento_{pedido.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+        }
+        [HttpGet]
+        public async Task<IActionResult> GerarReciboDesembolsoPdf(int id)
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            var pedido = await _pedidoRepositorio.BuscarPorIdAsync(id);
+            if (pedido == null) return NotFound();
+
+            var cli = pedido.Entidade;
+
+            // --- BUSCAR VALOR E CONTAS REAIS DO DESEMBOLSO DIRETAMENTE DA BASE DE DADOS ---
+            decimal valorRealDesembolsado = pedido.ValorDesembolsado > 0 ? pedido.ValorDesembolsado : (pedido.ValorDecisao ?? pedido.Valor);
+
+            // Tentar obter a descrição da(s) conta(s) associada(s) ao desembolso (caso tenha uma tabela de registo de transações ou histórico de contas)
+            string informacaoContas = "Conta Principal";
+            string formaPagamento = "Depósito/Transferência";
+
+            // Exemplo: se tiver uma tabela ou relação de movimentos/desembolsos por conta, pode consultar aqui. 
+            // Caso contrário, garantimos que o valor reflete fielmente o que foi gravado no pedido.
+
+            string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
+            string numeroProcesso = pedido.CRR.HasValue ? $"CRR-{pedido.CRR.Value:0}" : $"CP-{pedido.Id}";
+            string numeroRecibo = $"DES-{DateTime.Now:yyyyMMdd}-{pedido.Id}";
+
+            string nomeCliente = cli?.Nome ?? "N/A";
+            string nuitCliente = cli?.Nuit ?? "N/A";
+            string biCliente = cli?.NrDocumento ?? "N/A";
+            string contactoCliente = cli?.Telefone ?? "N/A";
+            string operadorStr = usuarioLogado?.Login ?? "Administrador";
+
+            decimal taxaDecisao = pedido.TaxaDecisao ?? pedido.Taxa;
+            int prazoDecisao = pedido.PrazoDecisao ?? pedido.Prazo;
+            decimal prestacaoDecisao = pedido.PrestacaoDecisao ?? pedido.Prestacao;
+
+            // Configurar cultura para português para garantir o mês correto
+            var culturaPt = new System.Globalization.CultureInfo("pt-PT");
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(36);
+                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(9.5f).FontColor("#172b4d"));
+
+                    // Rodapé padrão
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("DOCUMENTO DE DESEMBOLSO DE CRÉDITO — ").FontSize(8).Italic().FontColor("#a0aec0");
+                        text.Span(nomeEmpresa).FontSize(8).Bold().FontColor("#718096");
+                    });
+
+                    page.Content().Column(col =>
+                    {
+                        col.Spacing(8);
+
+                        // --- CABEÇALHO ---
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Cash Pronto").Bold().FontSize(22).FontColor("#079b62");
+                                c.Item().Text(nomeEmpresa).FontSize(9).FontColor("#718096");
+                            });
+
+                            row.ConstantItem(180).AlignRight().Column(c =>
+                            {
+                                c.Item().Text($"Data: {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy, HH:mm", culturaPt)}").FontSize(8.5f).Italic().AlignRight();
+                                c.Item().Text($"Nº Recibo: {numeroRecibo}").Bold().FontSize(9).FontColor("#079b62").AlignRight();
+                                c.Item().Text($"Ref. Crédito: {numeroProcesso}").FontSize(9).FontColor("#718096").AlignRight();
+                            });
+                        });
+
+                        col.Item().PaddingVertical(4).LineHorizontal(1).LineColor("#079b62");
+
+                        // Título em Bloco Verde
+                        col.Item().Background("#079b62").Padding(8).AlignCenter().Text("COMPROVATIVO DE DESEMBOLSO DE CRÉDITO")
+                            .Bold().FontSize(12).FontColor("#FFFFFF");
+
+                        col.Item().PaddingTop(4);
+
+                        // --- 1. DADOS DO MUTUÁRIO ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("1. DADOS DO MUTUÁRIO").Bold().FontSize(9.5f).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(2).Column(inner =>
+                        {
+                            inner.Item().Row(row =>
+                            {
+                                row.RelativeItem(7).Text(t => { t.Span("Nome Completo: ").Bold(); t.Span(nomeCliente); });
+                                row.RelativeItem(5).Text(t => { t.Span("Contacto: ").Bold(); t.Span(contactoCliente); });
+                            });
+                            inner.Item().PaddingTop(3).Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("NUIT: ").Bold(); t.Span(nuitCliente); });
+                                row.RelativeItem(6).Text(t => { t.Span("BI nº: ").Bold(); t.Span(biCliente); });
+                            });
+                        });
+
+                        col.Item().PaddingTop(4);
+
+                        // --- 2. CONDIÇÕES DO CRÉDITO E DESEMBOLSO ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("2. DETALHES DO DESEMBOLSO E CONDIÇÕES").Bold().FontSize(9.5f).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(2).Column(inner =>
+                        {
+                            inner.Item().Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("Valor Desembolsado: ").Bold(); t.Span($"{valorRealDesembolsado:N2} MT").Bold().FontColor("#079b62"); });
+                                row.RelativeItem(6).Text(t => { t.Span("Taxa de Juro: ").Bold(); t.Span($"{taxaDecisao:N2}% ao mês"); });
+                            });
+                            inner.Item().PaddingTop(3).Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("Prazo: ").Bold(); t.Span($"{prazoDecisao} Meses"); });
+                                row.RelativeItem(6).Text(t => { t.Span("Prestação Mensal: ").Bold(); t.Span($"{prestacaoDecisao:N2} MT"); });
+                            });
+                            inner.Item().PaddingTop(3).Row(row =>
+                            {
+                                row.RelativeItem(6).Text(t => { t.Span("Emitido por: ").Bold(); t.Span(operadorStr); });
+                                row.RelativeItem(6).Text(t => { t.Span("Forma / Origem: ").Bold(); t.Span("Tesouraria / Conta Bancária"); });
+                            });
+                        });
+
+                        col.Item().PaddingTop(4);
+
+                        // --- 3. DECLARAÇÃO ---
+                        col.Item().Background("#f5f7fb").Padding(5).Text("3. DECLARAÇÃO DE RECEPÇÃO").Bold().FontSize(9.5f).FontColor("#172b4d");
+
+                        col.Item().PaddingTop(2).Text(
+                            "Declaro que recebi da Cash Pronto Microcrédito E.I. o valor total desembolsado especificado neste documento, " +
+                            "comprometendo-me a cumprir rigorosamente o plano de amortização e as condições contratuais estabelecidas."
+                        ).FontSize(8.5f).Italic().FontColor("#4a5568");
+
+                        // --- LOCAL E DATA ---
+                        col.Item().PaddingTop(15).AlignCenter().Text($"Maputo, aos {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(9).Italic();
+
+                        col.Item().PaddingTop(15);
+
+                        // --- ASSINATURAS ---
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn();
+                                columns.ConstantColumn(40);
+                                columns.RelativeColumn();
+                            });
+
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(5).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Assinatura do Mutuário").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).Text(nomeCliente).FontSize(8.5f).FontColor("#4a5568");
+                            });
+
+                            table.Cell();
+
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(5).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Pelo Operador / Tesouraria").FontSize(9).Bold();
+                                c.Item().PaddingTop(2).Text(nomeEmpresa).FontSize(8.5f).FontColor("#4a5568");
+                            });
+                        });
+                    });
+                });
+            });
+
+            byte[] bytes = document.GeneratePdf();
+            return File(bytes, "application/pdf", $"Recibo_Desembolso_{pedido.Id}.pdf");
+        }
+        [HttpGet]
+        public async Task<IActionResult> GerarPlanoAmortizacaoPdf(int id)
+        {
+            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
+
+            var pedido = await _pedidoRepositorio.BuscarPorIdAsync(id);
+            if (pedido == null) return NotFound();
+
+            var cli = pedido.Entidade;
+
+            // 1. Tentar carregar o Plano de Amortização já gravado na tabela Amortizacoes
+            var listaAmortizacoes = await _bancoContext.Amortizacoes
+                .Where(a => a.PedidoId == id)
+                .OrderBy(a => a.NR)
+                .ToListAsync();
+
+            // 2. SE NÃO EXISTIR PLANO GRAVADO, GERAMOS NA HORA USANDO A MESMA REGRA DA VIEW!
+            if (listaAmortizacoes == null || !listaAmortizacoes.Any())
+            {
+                DateTime dataReferencia;
+                if (pedido.EstadoId == 4 || pedido.EstadoId == 5)
+                {
+                    dataReferencia = pedido.DataDesembolso.HasValue ? pedido.DataDesembolso.Value.DateTime : DateTime.Today;
+                }
+                else
+                {
+                    dataReferencia = DateTime.Today;
+                }
+
+                listaAmortizacoes = GerarPlanoAmortizacaoTemporario(pedido, dataReferencia);
+            }
+
+            string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
+            string numeroProcesso = pedido.CRR.HasValue ? $"-{pedido.CRR.Value:0}" : $"CP-{pedido.Id}";
+            string numeroRecibo = $"PLN-{DateTime.Now:yyyyMMdd}-{pedido.Id}";
+
+            string nomeCliente = cli?.Nome ?? "N/A";
+            string nuitCliente = cli?.Nuit ?? "N/A";
+            string contactoCliente = cli?.Telefone ?? "N/A";
+
+            decimal valorEmprestimo = pedido.ValorDesembolsado > 0 ? pedido.ValorDesembolsado : (pedido.ValorDecisao ?? pedido.Valor);
+            int prazoMeses = pedido.PrazoDecisao ?? pedido.Prazo;
+            decimal taxaJuro = pedido.TaxaDecisao ?? pedido.Taxa;
+            decimal prestacaoValor = pedido.PrestacaoDecisao ?? pedido.Prestacao;
+
+            // Configurar cultura para português para garantir o mês correto
+            var culturaPt = new System.Globalization.CultureInfo("pt-PT");
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    // CONFIGURAÇÃO DE PÁGINA HORIZONTAL (LANDSCAPE) PARA CABER TODAS AS COLUNAS
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(30);
+                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(9).FontColor("#172b4d"));
+
+                    // Rodapé padrão
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("PLANO DE AMORTIZAÇÃO DE CRÉDITO (DOCUMENTO OFICIAL) — ").FontSize(7.5f).Italic().FontColor("#a0aec0");
+                        text.Span(nomeEmpresa).FontSize(7.5f).Bold().FontColor("#718096");
+                    });
+
+                    page.Content().Column(col =>
+                    {
+                        col.Spacing(8);
+
+                        // --- CABEÇALHO ---
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Cash Pronto").Bold().FontSize(20).FontColor("#079b62");
+                                c.Item().Text(nomeEmpresa).FontSize(8.5f).FontColor("#718096");
+                            });
+
+                            row.ConstantItem(220).AlignRight().Column(c =>
+                            {
+                                c.Item().Text($"Data: {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy, HH:mm", culturaPt)}").FontSize(8f).Italic().AlignRight();
+                                c.Item().Text($"Ref: {numeroRecibo}").Bold().FontSize(8.5f).FontColor("#079b62").AlignRight();
+                                c.Item().Text($"Código CRR: {numeroProcesso}").FontSize(8.5f).FontColor("#718096").AlignRight();
+                            });
+                        });
+
+                        col.Item().PaddingVertical(3).LineHorizontal(1).LineColor("#079b62");
+
+                        // Título em Bloco Verde
+                        col.Item().Background("#079b62").Padding(6).AlignCenter().Text("PLANO DE AMORTIZAÇÃO DE CRÉDITO")
+                            .Bold().FontSize(11).FontColor("#FFFFFF");
+
+                        col.Item().PaddingTop(3);
+
+                        // --- 1. RESUMO DO MUTUÁRIO E CONDIÇÕES ---
+                        col.Item().Background("#f5f7fb").Padding(6).Column(inner =>
+                        {
+                            inner.Item().Row(row =>
+                            {
+                                row.RelativeItem(5).Text(t => { t.Span("Mutuário: ").Bold(); t.Span(nomeCliente); });
+                                row.RelativeItem(3).Text(t => { t.Span("NUIT: ").Bold(); t.Span(nuitCliente); });
+                                row.RelativeItem(4).Text(t => { t.Span("Contacto: ").Bold(); t.Span(contactoCliente); });
+                            });
+                            inner.Item().PaddingTop(3).Row(row =>
+                            {
+                                row.RelativeItem(3).Text(t => { t.Span("Valor Empréstimo: ").Bold(); t.Span($"{valorEmprestimo:N2} MT").FontColor("#079b62"); });
+                                row.RelativeItem(3).Text(t => { t.Span("Prazo: ").Bold(); t.Span($"{prazoMeses} Meses"); });
+                                row.RelativeItem(3).Text(t => { t.Span("Taxa de Juro: ").Bold(); t.Span($"{taxaJuro:N2}%"); });
+                                row.RelativeItem(3).Text(t => { t.Span("Prestação: ").Bold(); t.Span($"{prestacaoValor:N2} MT"); });
+                            });
+                        });
+
+                        col.Item().PaddingTop(5);
+
+                        // --- 2. TABELA DO PLANO DE AMORTIZAÇÃO (HORIZONTAL) ---
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.ConstantColumn(35);   // Nr
+                                columns.RelativeColumn(2);  // Vencimento
+                                columns.RelativeColumn(2);  // Prestação
+                                columns.RelativeColumn(2);  // Juro
+                                columns.RelativeColumn(2);  // Amortização
+                                columns.RelativeColumn(2.5f); // Capital em Dívida
+                                columns.RelativeColumn(2);  // Valor Pago
+                                columns.RelativeColumn(2);  // Valor a Pagar
+                            });
+
+                            // Cabeçalho da Tabela
+                            table.Header(header =>
+                            {
+                                header.Cell().Background("#edf2f7").Padding(4).Text("Nr").Bold().FontSize(8.5f);
+                                header.Cell().Background("#edf2f7").Padding(4).Text("Vencimento").Bold().FontSize(8.5f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Prestação (mt)").Bold().FontSize(8.5f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Juro (mt)").Bold().FontSize(8.5f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Amortização (mt)").Bold().FontSize(8.5f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Capital em Dívida").Bold().FontSize(8.5f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor Pago").Bold().FontSize(8.5f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor a Pagar").Bold().FontSize(8.5f);
+                            });
+
+                            if (listaAmortizacoes != null && listaAmortizacoes.Any())
+                            {
+                                foreach (var item in listaAmortizacoes)
+                                {
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.NR.ToString()).FontSize(8.5f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Vencimento.ToString("dd/MM/yyyy")).FontSize(8.5f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.Prestacao:N2}").Bold().FontSize(8.5f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.Juro:N2}").FontColor("#c53030").FontSize(8.5f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.Principal:N2}").FontColor("#079b62").FontSize(8.5f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.PrincipalPorPagar:N2}").FontSize(8.5f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.TotalPago:N2}").FontColor("#2b6cb0").FontSize(8.5f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.TotalPorPagar:N2}").Bold().FontColor("#dd6b20").FontSize(8.5f);
+                                }
+                            }
+                        });
+
+                        // --- LOCAL E ASSINATURAS ---
+                        col.Item().PaddingTop(15);
+
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text($"Maputo, aos {DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", culturaPt)}").FontSize(8.5f).Italic();
+                            });
+                        });
+
+                        col.Item().PaddingTop(15);
+
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn();
+                                columns.ConstantColumn(80);
+                                columns.RelativeColumn();
+                            });
+
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(4).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Assinatura do Mutuário").FontSize(8.5f).Bold();
+                                c.Item().Text(nomeCliente).FontSize(8f).FontColor("#4a5568");
+                            });
+
+                            table.Cell();
+
+                            table.Cell().Column(c =>
+                            {
+                                c.Item().PaddingBottom(4).LineHorizontal(0.5f).LineColor("#718096");
+                                c.Item().Text("Pelo Operador / Instituição").FontSize(8.5f).Bold();
+                                c.Item().Text(nomeEmpresa).FontSize(8f).FontColor("#4a5568");
+                            });
+                        });
+                    });
+                });
+            });
+
+            byte[] bytes = document.GeneratePdf();
+            return File(bytes, "application/pdf", $"Plano_Amortizacao_{pedido.Id}.pdf");
         }
     }
 }

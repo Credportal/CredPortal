@@ -36,6 +36,10 @@
                             <a asp-controller="Pedido" asp-action="GerarContratoPdf" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-success rounded-2 fw-semibold px-2 py-1 shadow-sm d-flex align-items-center gap-1" style="color: #079b62; border-color: #079b62;" title="Gerar Contrato (PDF)">
                                 <i class="fa-solid fa-file-contract"></i> Contrato
                             </a>
+                            <!-- ADICIONE AQUI O NOVO BOTÃO DO PLANO HORIZONTAL -->
+                            <a asp-controller="Pedido" asp-action="GerarPlanoAmortizacaoPdf" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-success rounded-2 fw-semibold px-2 py-1 shadow-sm d-flex align-items-center gap-1" style="color: #079b62; border-color: #079b62;" target="_blank" title="Plano de Amortização (Horizontal)">
+                                <i class="fa-solid fa-file-pdf"></i> Plano de Amortização
+                            </a>
                         </div>
                     </div>
                     <!-- Detalhes extra do Cliente -->

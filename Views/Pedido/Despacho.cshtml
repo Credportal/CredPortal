@@ -21,8 +21,13 @@
     <!-- Alertas -->
     @if (TempData["MensagemSucesso"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["MensagemSucesso"]
+        <div class="alert alert-success alert-dismissible fade show d-flex justify-content-between align-items-center" role="alert">
+            <div>
+                <i class="fa-solid fa-circle-check me-2"></i> @TempData["MensagemSucesso"]
+            </div>
+            <a asp-controller="Pedido" asp-action="GerarReciboDesembolsoPdf" asp-route-id="@Model.Id" class="btn btn-sm btn-dark text-white fw-bold" target="_blank">
+                <i class="fa-solid fa-file-pdf me-1"></i> Imprimir Recibo de Desembolso
+            </a>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
@@ -81,6 +86,15 @@
                 <form id="formDesembolso" asp-controller="Pedido" asp-action="ProcessarDesembolso" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@(Model.Id)" />
+
+                    <!-- NOVO CAMPO: Data de Desembolso Manual -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Data de Desembolso (Opcional - Se vazio, assume a data de hoje)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-secondary"><i class="fa-regular fa-calendar"></i></span>
+                            <input type="date" name="DataDesembolsoManual" class="form-control rounded-2 shadow-sm" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        </div>
+                    </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary">Valor a Desembolsar (MT)</label>
