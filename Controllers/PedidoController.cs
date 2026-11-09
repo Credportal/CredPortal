@@ -513,7 +513,7 @@ namespace Analise.Controllers
             var lista = new List<AmortizacaoModel>();
             decimal valor = pedido.ValorDecisao > 0 ? pedido.ValorDecisao.Value : pedido.Valor;
             int prazo = (pedido.PrazoDecisao ?? 0) > 0 ? pedido.PrazoDecisao.Value : pedido.Prazo;
-            decimal taxaMensal = (pedido.TaxaDecisao > 0 ? pedido.TaxaDecisao.Value : pedido.Taxa) / 100m / 12m;
+            decimal taxaMensal = (pedido.TaxaDecisao > 0 ? pedido.TaxaDecisao.Value : pedido.Taxa) / 100m;
             decimal prestacao = pedido.PrestacaoDecisao > 0 ? pedido.PrestacaoDecisao.Value : pedido.Prestacao;
 
             if (prestacao <= 0 && prazo > 0 && valor > 0)
