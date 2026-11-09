@@ -1,92 +1,118 @@
 ﻿@model dynamic
 @{
-    ViewData["Title"] = "Relatórios Consolidados";
+    ViewData["Title"] = "Relatórios de Carteira de Crédito";
     Layout = "_Layout";
     string tipoRelatorio = ViewBag.RelatorioTipo ?? "Pendentes";
 }
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
 
 <div class="container-fluid px-0">
 
     <!-- TÍTULO -->
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1 fs-3">Relatórios de Crédito e Operações</h2>
-            <div class="text-secondary small">Gestão analítica de carteira, pagamentos, clientes e movimentos</div>
+            <h2 class="fw-bold text-dark mb-1 fs-3">Relatórios de Carteira de Crédito</h2>
+            <div class="text-secondary small">Gestão analítica e consolidação dos estados da carteira de crédito</div>
         </div>
-        <div>
+        @* <div>
             <button type="button" class="btn btn-outline-secondary px-3 py-2 rounded-3 shadow-sm" onclick="window.print();">
                 <i class="fa-solid fa-print me-1"></i> Imprimir Relatório
             </button>
-        </div>
+        </div> *@
     </div>
 
     <!-- PAINEL DE FILTROS GLOBAIS -->
-    <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0 mb-4">
+    <!-- PAINEL DE FILTROS GLOBAIS (MODERN COMPACT) -->
+    <div class="sg-card bg-white p-3 shadow-sm rounded-4 border-0 mb-4">
         <form asp-controller="Relatorio" asp-action="Index" method="get">
-            <div class="row g-3 align-items-end">
-
-                <input type="hidden" name="tipoRelatorio" id="inputTipoRelatorio" value="@tipoRelatorio" />
+            <div class="row g-2 align-items-center">
 
                 <!-- Data Inicial -->
-                <div class="col-12 col-md-3 col-xl-2">
-                    <label class="form-label text-secondary small fw-semibold">Data Inicial</label>
-                    <input type="date" name="dataInicial" class="form-control sg-filter-select w-100" />
+                <div class="col-12 col-md-auto flex-grow-1">
+                    <label class="form-label text-muted small fw-semibold mb-1" style="font-size: 11px;">Data Inicial</label>
+                    <input type="date" name="dataInicial" value="@ViewBag.FiltroDataInicial" class="form-control form-control-sm rounded-3 py-2 px-3 border-light bg-light" style="font-size: 13px;" />
                 </div>
 
                 <!-- Data Final -->
-                <div class="col-12 col-md-3 col-xl-2">
-                    <label class="form-label text-secondary small fw-semibold">Data Final</label>
-                    <input type="date" name="dataFinal" class="form-control sg-filter-select w-100" />
+                <div class="col-12 col-md-auto flex-grow-1">
+                    <label class="form-label text-muted small fw-semibold mb-1" style="font-size: 11px;">Data Final</label>
+                    <input type="date" name="dataFinal" value="@ViewBag.FiltroDataFinal" class="form-control form-control-sm rounded-3 py-2 px-3 border-light bg-light" style="font-size: 13px;" />
                 </div>
 
                 <!-- Gestor -->
-                <div class="col-12 col-md-3 col-xl-2">
-                    <label class="form-label text-secondary small fw-semibold">Gestor</label>
-                    <select name="gestorId" class="form-select sg-filter-select w-100">
-                        <option value="">-- Todos os Gestores --</option>
+                <div class="col-12 col-md-auto flex-grow-1">
+                    <label class="form-label text-muted small fw-semibold mb-1" style="font-size: 11px;">Gestor</label>
+                    <select name="gestorId" class="form-select form-select-sm rounded-3 py-2 px-3 border-light bg-light" style="font-size: 13px;">
+                        <option value="">-- Todos --</option>
                         @if (ViewBag.ListaGestores != null)
                         {
                             foreach (var g in ViewBag.ListaGestores)
                             {
-                                <option value="@g.Id">@g.Nome</option>
-                            }
-                        }
-                    </select>
-                </div>
-
-                <!-- Agência (Atualizado para carregar dinamicamente da base de dados) -->
-                <div class="col-12 col-md-3 col-xl-2">
-                    <label class="form-label text-secondary small fw-semibold">Agência</label>
-                    <select name="agencia" class="form-select sg-filter-select w-100">
-                        <option value="Todas">-- Todas as Agências --</option>
-                        @if (ViewBag.ListaAgencias != null)
-                        {
-                            foreach (var ag in ViewBag.ListaAgencias)
-                            {
-                                <option value="@ag.Id">@ag.Nome</option>
+                                var isSelected = (ViewBag.FiltroGestorId != null && ViewBag.FiltroGestorId == g.Id);
+                                if (isSelected)
+                                {
+                                    <option value="@g.Id" selected="selected">@g.Nome</option>
+                                }
+                                else
+                                {
+                                    <option value="@g.Id">@g.Nome</option>
+                                }
                             }
                         }
                     </select>
                 </div>
 
                 <!-- Cliente -->
-                <div class="col-12 col-md-4 col-xl-2">
-                    <label class="form-label text-secondary small fw-semibold">Cliente</label>
-                    <select name="entidadeId" class="form-select sg-filter-select w-100">
-                        <option value="">-- Todos os Clientes --</option>
+                <div class="col-12 col-md-auto flex-grow-1">
+                    <label class="form-label text-muted small fw-semibold mb-1" style="font-size: 11px;">Cliente</label>
+                    <select name="entidadeId" class="form-select form-select-sm rounded-3 py-2 px-3 border-light bg-light" style="font-size: 13px;">
+                        <option value="">-- Todos --</option>
                         @if (ViewBag.ListaEntidades != null)
                         {
                             foreach (var e in ViewBag.ListaEntidades)
                             {
-                                <option value="@e.Id">@e.Nome</option>
+                                var isSelectedEnt = (ViewBag.FiltroEntidadeId != null && ViewBag.FiltroEntidadeId == e.Id);
+                                if (isSelectedEnt)
+                                {
+                                    <option value="@e.Id" selected="selected">@e.Nome</option>
+                                }
+                                else
+                                {
+                                    <option value="@e.Id">@e.Nome</option>
+                                }
                             }
                         }
                     </select>
                 </div>
 
-                <!-- Botão Filtrar -->
-                <div class="col-12 col-md-2 col-xl-2">
-                    <button type="submit" class="btn btn-success w-100 text-white fw-semibold py-2" style="background-color: #079b62; border-color: #079b62;">
+                <!-- Conta -->
+                <div class="col-12 col-md-auto flex-grow-1">
+                    <label class="form-label text-muted small fw-semibold mb-1" style="font-size: 11px;">Conta</label>
+                    <select name="contaId" class="form-select form-select-sm rounded-3 py-2 px-3 border-light bg-light" style="font-size: 13px;">
+                        <option value="">-- Todas --</option>
+                        @if (ViewBag.ListaContasFiltro != null)
+                        {
+                            foreach (var c in ViewBag.ListaContasFiltro)
+                            {
+                                var isSelectedConta = (ViewBag.FiltroContaId != null && ViewBag.FiltroContaId == c.Id);
+                                if (isSelectedConta)
+                                {
+                                    <option value="@c.Id" selected="selected">@c.Banco - @c.Conta</option>
+                                }
+                                else
+                                {
+                                    <option value="@c.Id">@c.Banco - @c.Conta</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Botão Filtrar (Compacto e alinhado ao fundo) -->
+                <div class="col-12 col-md-auto d-flex align-items-end mt-3 mt-md-0 pt-md-3">
+                    <button type="submit" class="btn btn-sm text-white fw-semibold px-4 py-2 rounded-3 shadow-sm w-100" style="background-color: #079b62; border-color: #079b62; font-size: 13px;">
                         <i class="fa-solid fa-filter me-1"></i> Filtrar
                     </button>
                 </div>
@@ -95,356 +121,704 @@
         </form>
     </div>
 
-    <!-- ABAS PRINCIPAIS DE NAVEGAÇÃO -->
-    <ul class="nav nav-pills mb-4 gap-2 flex-wrap" id="mainTab" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active rounded-3 fw-semibold px-3 py-2" id="carteira-tab" data-bs-toggle="pill" data-bs-target="#carteiraSecao" type="button" style="background-color: #079b62 !important; color: #fff;">
-                <i class="fa-solid fa-folder-open me-2"></i>Carteira de Crédito
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link rounded-3 fw-semibold px-3 py-2 text-dark bg-white border" id="pagamentos-tab" data-bs-toggle="pill" data-bs-target="#pagamentosSecao" type="button">
-                <i class="fa-solid fa-file-invoice-dollar me-2 text-success"></i>Pagamentos (Amortizações)
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link rounded-3 fw-semibold px-3 py-2 text-dark bg-white border" id="clientes-tab" data-bs-toggle="pill" data-bs-target="#clientesSecao" type="button">
-                <i class="fa-solid fa-users me-2 text-primary"></i>Clientes (Entidades)
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link rounded-3 fw-semibold px-3 py-2 text-dark bg-white border" id="movInternos-tab" data-bs-toggle="pill" data-bs-target="#movimentosInternosSecao" type="button">
-                <i class="fa-solid fa-right-left me-2 text-warning"></i>Movimentos Internos
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link rounded-3 fw-semibold px-3 py-2 text-dark bg-white border" id="movExternos-tab" data-bs-toggle="pill" data-bs-target="#movimentosExternosSecao" type="button">
-                <i class="fa-solid fa-exchange-alt me-2 text-info"></i>Movimentos Externos
-            </button>
-        </li>
-    </ul>
+    <!-- ABAS DE ESTADOS DA CARTEIRA (MODERN COMPACT PILLS) -->
+    <div class="table-responsive pb-2 mb-3 border-0">
+        <ul class="nav nav-pills flex-nowrap gap-1 bg-white p-1 rounded-4 shadow-sm border border-light" id="carteiraSubTab" role="tablist" style="min-width: max-content;">
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom active" data-bs-toggle="pill" data-bs-target="#tabPendentes" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-clock me-1"></i> Pendentes
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom" data-bs-toggle="pill" data-bs-target="#tabAprovados" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-check-circle me-1"></i> Aprovados
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom" data-bs-toggle="pill" data-bs-target="#tabRejeitados" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-ban me-1"></i> Rejeitados
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom" data-bs-toggle="pill" data-bs-target="#tabVigentes" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-file-contract me-1"></i> Vigentes
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom" data-bs-toggle="pill" data-bs-target="#tabLiquidados" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-circle-check me-1"></i> Liquidados
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom text-primary" data-bs-toggle="pill" data-bs-target="#tabDesembolsos" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-money-bill-transfer me-1"></i> Desembolsos
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom text-success" data-bs-toggle="pill" data-bs-target="#tabVencimentosProximos" type="button" style="font-size: 13px;">
+                    <i class="fa-regular fa-calendar me-1"></i> Vencimentos Próximos
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom text-warning" data-bs-toggle="pill" data-bs-target="#tabPagamentosPendentes" type="button" style="font-size: 13px;">
+                    <i class="fa-regular fa-credit-card me-1"></i> Pagamentos Pendentes
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom text-success" data-bs-toggle="pill" data-bs-target="#tabPagamentosFeitos" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-circle-check me-1"></i> Pagamentos Feitos
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom text-dark" data-bs-toggle="pill" data-bs-target="#tabClientes" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-users me-1"></i> Clientes
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom text-primary" data-bs-toggle="pill" data-bs-target="#tabMovimentosExternos" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-right-left me-1"></i> Extrato Externo
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom text-secondary" data-bs-toggle="pill" data-bs-target="#tabMovimentosInternos" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-exchange-alt me-1"></i> Extrato Interno
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-3 fw-semibold px-3 py-1.5 tab-custom text-danger" data-bs-toggle="pill" data-bs-target="#tabMora" type="button" style="font-size: 13px;">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Mora
+                </button>
+            </li>
+        </ul>
+    </div>
 
-    <!-- CONTEÚDO DAS ABAS PRINCIPAIS -->
-    <div class="tab-content" id="mainTabContent">
+    <div class="tab-content sg-card bg-white p-4 shadow-sm rounded-4 border-0">
 
-        <!-- SEÇÃO 1: CARTEIRA DE CRÉDITO -->
-        <div class="tab-pane fade show active" id="carteiraSecao" role="tabpanel">
-
-            <!-- Sub-abas para os Estados da Carteira -->
-            <ul class="nav nav-tabs mb-3" id="carteiraSubTab" role="tablist">
-                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabPendentes">Pendentes</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabAprovados">Aprovados</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabRejeitados">Rejeitados</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabVigentes">Vigentes</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabLiquidados">Liquidados</button></li>
-                <li class="nav-item"><button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#tabMora">Mora</button></li>
-            </ul>
-
-            <div class="tab-content sg-card bg-white p-4 shadow-sm rounded-4 border-0">
-
-                <!-- TABELA: PENDENTES -->
-                <div class="tab-pane fade show active" id="tabPendentes">
-                    <h5 class="fw-bold text-dark mb-3">Pedidos Pendentes</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
-                            <thead class="table-light text-secondary small">
-                                <tr>
-                                    <th>Agência</th>
-                                    <th>Gestor</th>
-                                    <th>Cliente</th>
-                                    <th>CRR</th>
-                                    <th>Data Cadastro</th>
-                                    <th class="text-end">Valor</th>
-                                    <th class="text-center">Prazo</th>
-                                    <th class="text-end">Taxa</th>
-                                    <th class="text-end">Prestação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (ViewBag.Pendentes != null)
-                                {
-                                    foreach (var p in (List<PedidoModel>)ViewBag.Pendentes)
-                                    {
-                                        <tr>
-                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
-                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
-                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
-                                            <td><span class="font-monospace text-success">@p.CRR</span></td>
-                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
-                                            <td class="text-end fw-bold">MT @p.Valor.ToString("N2")</td>
-                                            <td class="text-center">@p.Prazo meses</td>
-                                            <td class="text-end">@p.Taxa.ToString("N2")%</td>
-                                            <td class="text-end fw-bold text-success">MT @p.Prestacao.ToString("N2")</td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TABELA: APROVADOS -->
-                <div class="tab-pane fade" id="tabAprovados">
-                    <h5 class="fw-bold text-dark mb-3">Pedidos Aprovados</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
-                            <thead class="table-light text-secondary small">
-                                <tr>
-                                    <th>Agência</th>
-                                    <th>Gestor</th>
-                                    <th>Cliente</th>
-                                    <th>CRR</th>
-                                    <th>Data Cadastro</th>
-                                    <th class="text-end">Valor Decisão</th>
-                                    <th class="text-center">Prazo Decisão</th>
-                                    <th class="text-end">Taxa Decisão</th>
-                                    <th class="text-end">Prestação Decisão</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (ViewBag.Aprovados != null)
-                                {
-                                    foreach (var p in (List<PedidoModel>)ViewBag.Aprovados)
-                                    {
-                                        <tr>
-                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
-                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
-                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
-                                            <td><span class="font-monospace text-success">@p.CRR</span></td>
-                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
-                                            <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
-                                            <td class="text-center">@p.PrazoDecisao meses</td>
-                                            <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
-                                            <td class="text-end fw-bold text-success">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TABELA: REJEITADOS -->
-                <div class="tab-pane fade" id="tabRejeitados">
-                    <h5 class="fw-bold text-dark mb-3">Pedidos Rejeitados</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
-                            <thead class="table-light text-secondary small">
-                                <tr>
-                                    <th>Agência</th>
-                                    <th>Gestor</th>
-                                    <th>Cliente</th>
-                                    <th>CRR</th>
-                                    <th>Data Cadastro</th>
-                                    <th class="text-end">Valor</th>
-                                    <th class="text-center">Prazo</th>
-                                    <th class="text-end">Taxa de Juro</th>
-                                    <th class="text-end">Prestação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (ViewBag.Rejeitados != null)
-                                {
-                                    foreach (var p in (List<PedidoModel>)ViewBag.Rejeitados)
-                                    {
-                                        <tr>
-                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
-                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
-                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
-                                            <td><span class="font-monospace text-danger">@p.CRR</span></td>
-                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
-                                            <td class="text-end fw-bold">MT @p.Valor.ToString("N2")</td>
-                                            <td class="text-center">@p.Prazo meses</td>
-                                            <td class="text-end">@p.Taxa.ToString("N2")%</td>
-                                            <td class="text-end fw-bold">MT @p.Prestacao.ToString("N2")</td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TABELA: VIGENTES -->
-                <div class="tab-pane fade" id="tabVigentes">
-                    <h5 class="fw-bold text-dark mb-3">Créditos Vigentes</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
-                            <thead class="table-light text-secondary small">
-                                <tr>
-                                    <th>Agência</th>
-                                    <th>Gestor</th>
-                                    <th>Cliente</th>
-                                    <th>CRR</th>
-                                    <th>Data Desembolso</th>
-                                    <th class="text-end">Valor Desembolso</th>
-                                    <th class="text-center">Prazo</th>
-                                    <th class="text-end">Taxa</th>
-                                    <th class="text-end">Prestação</th>
-                                    <th class="text-end">Capital Vigente</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (ViewBag.Vigentes != null)
-                                {
-                                    foreach (var p in (List<PedidoModel>)ViewBag.Vigentes)
-                                    {
-                                        <tr>
-                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
-                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
-                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
-                                            <td><span class="font-monospace text-success">@p.CRR</span></td>
-                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
-                                            <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
-                                            <td class="text-center">@p.PrazoDecisao meses</td>
-                                            <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
-                                            <td class="text-end">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
-                                            <td class="text-end fw-bold text-success">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TABELA: LIQUIDADOS -->
-                <div class="tab-pane fade" id="tabLiquidados">
-                    <h5 class="fw-bold text-dark mb-3">Créditos Liquidados</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
-                            <thead class="table-light text-secondary small">
-                                <tr>
-                                    <th>Agência</th>
-                                    <th>Gestor</th>
-                                    <th>Cliente</th>
-                                    <th>CRR</th>
-                                    <th>Data Desembolso</th>
-                                    <th class="text-end">Valor Desembolso</th>
-                                    <th class="text-center">Prazo</th>
-                                    <th class="text-end">Taxa</th>
-                                    <th class="text-end">Prestação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (ViewBag.Liquidados != null)
-                                {
-                                    foreach (var p in (List<PedidoModel>)ViewBag.Liquidados)
-                                    {
-                                        <tr>
-                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
-                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
-                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
-                                            <td><span class="font-monospace text-muted">@p.CRR</span></td>
-                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
-                                            <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
-                                            <td class="text-center">@p.PrazoDecisao meses</td>
-                                            <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
-                                            <td class="text-end">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TABELA: MORA -->
-                <div class="tab-pane fade" id="tabMora">
-                    <h5 class="fw-bold text-danger mb-3">Créditos em Mora (Atraso)</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
-                            <thead class="table-light text-secondary small">
-                                <tr>
-                                    <th>Agência</th>
-                                    <th>Gestor</th>
-                                    <th>Cliente</th>
-                                    <th>CRR</th>
-                                    <th>Data Desembolso</th>
-                                    <th class="text-end">Valor Desembolso</th>
-                                    <th class="text-center">Prazo</th>
-                                    <th class="text-end">Taxa</th>
-                                    <th class="text-end">Prestação</th>
-                                    <th class="text-end">Capital Vigente</th>
-                                    <th class="text-center">Dias Atraso</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (ViewBag.Mora != null)
-                                {
-                                    foreach (var p in (List<PedidoModel>)ViewBag.Mora)
-                                    {
-                                        <tr>
-                                            <td>@(p.Entidade?.AgenciaId?.ToString() ?? "Maputo")</td>
-                                            <td>@(p.Gestor?.Nome ?? "N/D")</td>
-                                            <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
-                                            <td><span class="font-monospace text-danger">@p.CRR</span></td>
-                                            <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
-                                            <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
-                                            <td class="text-center">@p.PrazoDecisao meses</td>
-                                            <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
-                                            <td class="text-end">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
-                                            <td class="text-end fw-bold text-danger">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
-                                            <td class="text-center"><span class="badge bg-danger-subtle text-danger px-2 py-1">+5 dias</span></td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- SEÇÃO 2: PAGAMENTOS (AMORTIZAÇÕES) -->
-        <div class="tab-pane fade" id="pagamentosSecao" role="tabpanel">
-            <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0">
-                <h5 class="fw-bold text-dark mb-3">Relatório de Pagamentos e Amortizações</h5>
-                <p class="text-muted small">Previstos, Feitos e Por Fazer com controlo de dias de atraso e multas.</p>
-            </div>
-        </div>
-
-        <!-- SEÇÃO 3: CLIENTES (ENTIDADES) -->
-        <div class="tab-pane fade" id="clientesSecao" role="tabpanel">
-            <div class="sg-card bg-white p-4 shadow-sm rounded-4 border-0">
-                <h5 class="fw-bold text-dark mb-3">Registo de Clientes (Entidades)</h5>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
-                        <thead class="table-light text-secondary small">
-                            <tr>
-                                <th>Nome</th>
-                                <th>Tipo</th>
-                                <th>NUIT</th>
-                                <th>Documento</th>
-                                <th>Nr Documento</th>
-                                <th>Validade</th>
-                                <th>Data Nasc.</th>
-                                <th>Contacto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (ViewBag.Clientes != null)
+        <!-- TABELA: PENDENTES -->
+        <div class="tab-pane fade show active" id="tabPendentes" role="tabpanel">
+            <h5 class="fw-bold text-dark mb-3">Créditos Pendentes</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Cadastro</th>
+                            <th class="text-end">Valor</th>
+                            <th class="text-center">Prazo</th>
+                            <th class="text-end">Taxa</th>
+                            <th class="text-end">Prestação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Pendentes != null && ((List<PedidoModel>)ViewBag.Pendentes).Any())
+                        {
+                            foreach (var p in (List<PedidoModel>)ViewBag.Pendentes)
                             {
-                                foreach (var c in (List<EntidadeModel>)ViewBag.Clientes)
-                                {
-                                    <tr>
-                                        <td class="fw-semibold">@c.Nome</td>
-                                        <td>@c.TipoCliente</td>
-                                        <td>@c.Nuit</td>
-                                        <td>@c.Documento</td>
-                                        <td>@c.NrDocumento</td>
-                                        <td>@(c.Validade?.ToString("dd/MM/yyyy") ?? "N/D")</td>
-                                        <td>@(c.Aniversario?.ToString("dd/MM/yyyy") ?? "N/D")</td>
-                                        <td>@c.Telefone</td>
-                                    </tr>
-                                }
+                                <tr>
+                                    <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-success">@p.CRR</span></td>
+                                    <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end fw-bold">MT @p.Valor.ToString("N2")</td>
+                                    <td class="text-center">@p.Prazo meses</td>
+                                    <td class="text-end">@p.Taxa.ToString("N2")%</td>
+                                    <td class="text-end fw-bold text-success">MT @p.Prestacao.ToString("N2")</td>
+                                </tr>
                             }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                        else
+                        {
+                            <tr><td colspan="8" class="text-center py-4 text-muted">Nenhum registo encontrado.</td></tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- SEÇÃO 4: MOVIMENTOS INTERNOS -->
-        <div class="tab-pane fade" id="
+        <!-- TABELA: APROVADOS -->
+        <div class="tab-pane fade" id="tabAprovados" role="tabpanel">
+            <h5 class="fw-bold text-dark mb-3">Créditos Aprovados</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Cadastro</th>
+                            <th class="text-end">Valor Decisão</th>
+                            <th class="text-center">Prazo Decisão</th>
+                            <th class="text-end">Taxa Decisão</th>
+                            <th class="text-end">Prestação Decisão</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Aprovados != null && ((List<PedidoModel>)ViewBag.Aprovados).Any())
+                        {
+                            foreach (var p in (List<PedidoModel>)ViewBag.Aprovados)
+                            {
+                                <tr>
+                                    <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-success">@p.CRR</span></td>
+                                    <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                    <td class="text-center">@p.PrazoDecisao meses</td>
+                                    <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
+                                    <td class="text-end fw-bold text-success">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="8" class="text-center py-4 text-muted">Nenhum registo encontrado.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: REJEITADOS -->
+        <div class="tab-pane fade" id="tabRejeitados" role="tabpanel">
+            <h5 class="fw-bold text-dark mb-3">Créditos Rejeitados</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Cadastro</th>
+                            <th class="text-end">Valor</th>
+                            <th class="text-center">Prazo</th>
+                            <th class="text-end">Taxa</th>
+                            <th class="text-end">Prestação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Rejeitados != null && ((List<PedidoModel>)ViewBag.Rejeitados).Any())
+                        {
+                            foreach (var p in (List<PedidoModel>)ViewBag.Rejeitados)
+                            {
+                                <tr>
+                                    <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-danger">@p.CRR</span></td>
+                                    <td>@p.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end fw-bold">MT @p.Valor.ToString("N2")</td>
+                                    <td class="text-center">@p.Prazo meses</td>
+                                    <td class="text-end">@p.Taxa.ToString("N2")%</td>
+                                    <td class="text-end fw-bold">MT @p.Prestacao.ToString("N2")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="8" class="text-center py-4 text-muted">Nenhum registo encontrado.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: VIGENTES -->
+        <div class="tab-pane fade" id="tabVigentes" role="tabpanel">
+            <h5 class="fw-bold text-dark mb-3">Créditos Vigentes</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Desembolso</th>
+                            <th class="text-end">Valor Desembolso</th>
+                            <th class="text-center">Prazo</th>
+                            <th class="text-end">Taxa</th>
+                            <th class="text-end">Prestação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Vigentes != null && ((List<PedidoModel>)ViewBag.Vigentes).Any())
+                        {
+                            foreach (var p in (List<PedidoModel>)ViewBag.Vigentes)
+                            {
+                                <tr>
+                                    <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-success">@p.CRR</span></td>
+                                    <td>@(p.DataDesembolso?.ToString("dd/MM/yyyy") ?? p.DataCadastro.ToString("dd/MM/yyyy"))</td>
+                                    <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                    <td class="text-center">@p.PrazoDecisao meses</td>
+                                    <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
+                                    <td class="text-end fw-bold text-primary">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="8" class="text-center py-4 text-muted">Nenhum registo encontrado.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: LIQUIDADOS -->
+        <div class="tab-pane fade" id="tabLiquidados" role="tabpanel">
+            <h5 class="fw-bold text-dark mb-3">Créditos Liquidados</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Desembolso</th>
+                            <th class="text-end">Valor Desembolso</th>
+                            <th class="text-center">Prazo</th>
+                            <th class="text-end">Taxa</th>
+                            <th class="text-end">Prestação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Liquidados != null && ((List<PedidoModel>)ViewBag.Liquidados).Any())
+                        {
+                            foreach (var p in (List<PedidoModel>)ViewBag.Liquidados)
+                            {
+                                <tr>
+                                    <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-muted">@p.CRR</span></td>
+                                    <td>@(p.DataDesembolso?.ToString("dd/MM/yyyy") ?? p.DataCadastro.ToString("dd/MM/yyyy"))</td>
+                                    <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                    <td class="text-center">@p.PrazoDecisao meses</td>
+                                    <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
+                                    <td class="text-end">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="8" class="text-center py-4 text-muted">Nenhum registo encontrado.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: DESEMBOLSOS -->
+        <div class="tab-pane fade" id="tabDesembolsos" role="tabpanel">
+            <h5 class="fw-bold text-primary mb-3">Créditos Desembolsados</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Desembolso</th>
+                            <th class="text-end">Valor Desembolsado</th>
+                            <th class="text-center">Prazo</th>
+                            <th class="text-end">Taxa</th>
+                            <th class="text-end">Prestação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Desembolsos != null && ((List<PedidoModel>)ViewBag.Desembolsos).Any())
+                        {
+                            foreach (var p in (List<PedidoModel>)ViewBag.Desembolsos)
+                            {
+                                <tr>
+                                    <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-primary">@p.CRR</span></td>
+                                    <td>@(p.DataDesembolso?.ToString("dd/MM/yyyy") ?? "N/D")</td>
+                                    <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? p.Valor.ToString("N2"))</td>
+                                    <td class="text-center">@(p.PrazoDecisao > 0 ? p.PrazoDecisao : p.Prazo) meses</td>
+                                    <td class="text-end">@(p.TaxaDecisao > 0 ? p.TaxaDecisao?.ToString("N2") : p.Taxa.ToString("N2"))%</td>
+                                    <td class="text-end fw-bold text-primary">MT @(p.PrestacaoDecisao > 0 ? p.PrestacaoDecisao?.ToString("N2") : p.Prestacao.ToString("N2"))</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="8" class="text-center py-4 text-muted">Nenhum registo encontrado para o período de desembolso selecionado.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: VENCIMENTOS PRÓXIMOS -->
+        <div class="tab-pane fade" id="tabVencimentosProximos" role="tabpanel">
+            <h5 class="fw-bold text-success mb-3">Vencimentos Próximos</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Vencimento</th>
+                            <th class="text-end">Valor por Pagar</th>
+                            <th class="text-center">Dias Restantes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var vencimentosProximosList = ViewBag.VencimentosProximos as List<Analise.Models.AmortizacaoModel>;
+                        }
+                        @if (vencimentosProximosList != null && vencimentosProximosList.Any())
+                        {
+                            foreach (var item in vencimentosProximosList)
+                            {
+                                int diasRestantes = (item.Vencimento.Date - DateTime.Today).Days;
+                                decimal valorTotal = item.PrincipalPorPagar + item.JuroPorPagar + item.MultaPorPagar;
+                                <tr>
+                                    <td>@(item.Pedido?.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(item.Pedido?.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-danger">@(item.Pedido?.CRR.ToString() ?? "N/D")</span></td>
+                                    <td>@item.Vencimento.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end fw-bold">MT @valorTotal.ToString("N2")</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1">
+                                            -@diasRestantes dias
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Sem vencimentos próximos registados.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: PAGAMENTOS PENDENTES -->
+        <div class="tab-pane fade" id="tabPagamentosPendentes" role="tabpanel">
+            <h5 class="fw-bold text-warning mb-3">Pagamentos Pendentes (Em Atraso)</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Vencimento</th>
+                            <th class="text-end">Valor por Pagar</th>
+                            <th class="text-center">Dias em Atraso</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var pagamentosPendentesList = ViewBag.PagamentosPendentes as List<Analise.Models.AmortizacaoModel>;
+                        }
+                        @if (pagamentosPendentesList != null && pagamentosPendentesList.Any())
+                        {
+                            foreach (var item in pagamentosPendentesList)
+                            {
+                                int diasAtraso = (DateTime.Today - item.Vencimento.Date).Days;
+                                decimal valorTotal = item.PrincipalPorPagar + item.JuroPorPagar + item.MultaPorPagar;
+                                <tr>
+                                    <td>@(item.Pedido?.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(item.Pedido?.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-danger">@(item.Pedido?.CRR.ToString() ?? "N/D")</span></td>
+                                    <td>@item.Vencimento.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end fw-bold">MT @valorTotal.ToString("N2")</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger-subtle text-danger px-2 py-1 fw-bold">
+                                            +@diasAtraso dias
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Nenhum pagamento pendente em atraso.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: PAGAMENTOS FEITOS -->
+        <div class="tab-pane fade" id="tabPagamentosFeitos" role="tabpanel">
+            <h5 class="fw-bold text-success mb-3">Pagamentos Feitos (Liquidados)</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Vencimento</th>
+                            <th class="text-end">Valor Pago</th>
+                            <th class="text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var pagamentosFeitosList = ViewBag.PagamentosFeitos as List<Analise.Models.AmortizacaoModel>;
+                        }
+                        @if (pagamentosFeitosList != null && pagamentosFeitosList.Any())
+                        {
+                            foreach (var item in pagamentosFeitosList)
+                            {
+                                decimal valorPago = item.TotalPago;
+                                <tr>
+                                    <td>@(item.Pedido?.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(item.Pedido?.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-success">@(item.Pedido?.CRR.ToString() ?? "N/D")</span></td>
+                                    <td>@item.Vencimento.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end fw-bold">MT @valorPago.ToString("N2")</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success px-2 py-1 fw-bold">
+                                            Liquidado
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Nenhum pagamento feito encontrado para o período selecionado.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: CLIENTES -->
+        <div class="tab-pane fade" id="tabClientes" role="tabpanel">
+            <h5 class="fw-bold text-dark mb-3">Lista de Clientes</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>NUIT</th>
+                            <th>Documento</th>
+                            <th>Nr. Documento</th>
+                            <th>Data Nasc.</th>
+                            <th>Contacto</th>
+                            <th>Email</th>
+                            <th>Data Cadastro</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var clientesList = ViewBag.Clientes as List<Analise.Models.EntidadeModel>;
+                        }
+                        @if (clientesList != null && clientesList.Any())
+                        {
+                            foreach (var cliente in clientesList)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-secondary">#@cliente.Id</td>
+                                    <td class="fw-semibold text-dark">@cliente.Nome</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border px-2 py-1">
+                                            @(cliente.TipoCliente ?? "Individual")
+                                        </span>
+                                    </td>
+                                    <td>@(cliente.Nuit ?? "N/D")</td>
+                                    <td>@(cliente.Documento ?? "N/D")</td>
+                                    <td class="font-monospace">@(cliente.NrDocumento ?? "N/D")</td>
+                                    <td>@(cliente.Aniversario?.ToString("dd/MM/yyyy") ?? "N/D")</td>
+                                    <td>@(cliente.Telefone ?? "N/D")</td>
+                                    <td>@(cliente.Email ?? "N/D")</td>
+                                    <td>@cliente.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="10" class="text-center py-4 text-muted">Nenhum cliente encontrado.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: MORA -->
+        <div class="tab-pane fade" id="tabMora" role="tabpanel">
+            <h5 class="fw-bold text-danger mb-3">Créditos em Mora (Atraso)</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Gestor</th>
+                            <th>Cliente</th>
+                            <th>CRR</th>
+                            <th>Data Desembolso</th>
+                            <th class="text-end">Valor Desembolso</th>
+                            <th class="text-center">Prazo</th>
+                            <th class="text-end">Taxa</th>
+                            <th class="text-end">Prestação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.Mora != null && ((List<PedidoModel>)ViewBag.Mora).Any())
+                        {
+                            foreach (var p in (List<PedidoModel>)ViewBag.Mora)
+                            {
+                                <tr>
+                                    <td>@(p.Gestor?.Nome ?? "N/D")</td>
+                                    <td class="fw-semibold">@(p.Entidade?.Nome ?? "N/D")</td>
+                                    <td><span class="font-monospace text-danger">@p.CRR</span></td>
+                                    <td>@(p.DataDesembolso?.ToString("dd/MM/yyyy") ?? p.DataCadastro.ToString("dd/MM/yyyy"))</td>
+                                    <td class="text-end fw-bold">MT @(p.ValorDecisao?.ToString("N2") ?? "0.00")</td>
+                                    <td class="text-center">@p.PrazoDecisao meses</td>
+                                    <td class="text-end">@(p.TaxaDecisao?.ToString("N2") ?? "0")%</td>
+                                    <td class="text-end">MT @(p.PrestacaoDecisao?.ToString("N2") ?? "0.00")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="8" class="text-center py-4 text-muted">Nenhum registo encontrado.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: MOVIMENTOS EXTERNOS -->
+        <div class="tab-pane fade" id="tabMovimentosExternos" role="tabpanel">
+            <h5 class="fw-bold text-dark mb-3">Extrato de Movimentos Externos</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Descrição</th>
+                            <th class="text-end">Valor (MT)</th>
+                            <th>Conta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var movimentosList = ViewBag.MovimentosExternos as List<Analise.Models.MovimentoExternoModel>;
+                        }
+                        @if (movimentosList != null && movimentosList.Any())
+                        {
+                            foreach (var mov in movimentosList)
+                            {
+                                // Se houver valor em Débito, é exibido a vermelho (-). Se houver em Crédito, a verde (+).
+                                bool isDebito = mov.Debito > 0;
+                                decimal valorMovimento = isDebito ? mov.Debito : mov.Credito;
+
+                                string corValor = isDebito ? "text-danger" : "text-success";
+                                string sinalValor = isDebito ? "- MT " : "+ MT ";
+
+                                <tr>
+                                    <td>@mov.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border px-2 py-1">
+                                            @(mov.TipoOperacao ?? "Operação")
+                                        </span>
+                                    </td>
+                                    <td class="fw-semibold">@(mov.Descricao ?? "N/D")</td>
+                                    <td class="text-end fw-bold @corValor">
+                                        @sinalValor@valorMovimento.ToString("N2")
+                                    </td>
+                                    <td>@(mov.Conta?.Banco ?? mov.ContaId.ToString())</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="5" class="text-center py-4 text-muted">Nenhum movimento externo encontrado para os filtros selecionados.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA: MOVIMENTOS INTERNOS -->
+        <div class="tab-pane fade" id="tabMovimentosInternos" role="tabpanel">
+            <h5 class="fw-bold text-dark mb-3">Movimentos Internos (Transferências / Operações entre Contas)</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-secondary small">
+                        <tr>
+                            <th>Data</th>
+                            <th>Banco Origem / Conta</th>
+                            <th>Banco Destino / Conta</th>
+                            <th>Descrição</th>
+                            <th class="text-end">Valor (MT)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var movInternosList = ViewBag.MovimentosInternos as List<Analise.Models.MovimentoInternoModel>; // Ajuste o nome do Model se necessário
+                        }
+                        @if (movInternosList != null && movInternosList.Any())
+                        {
+                            foreach (var item in movInternosList)
+                            {
+                                <tr>
+                                    <td>@item.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(item.ContaOrigem?.Banco ?? "N/D") - @(item.ContaOrigem?.Conta ?? "")</td>
+                                    <td>@(item.ContaDestino?.Banco ?? "N/D") - @(item.ContaDestino?.Conta ?? "")</td>
+                                    <td class="fw-semibold">@(item.Descricao ?? "N/D")</td>
+                                    <td class="text-end fw-bold text-primary">
+                                        @{
+                                            bool isDebito = item.Debito > 0;
+                                            decimal valorMovimento = isDebito ? item.Debito : item.Credito;
+                                            string corValor = isDebito ? "text-danger" : "text-success";
+                                            string sinalValor = isDebito ? "- MT " : "+ MT ";
+                                        }
+                                        <td class="text-end fw-bold @corValor">
+                                            @sinalValor@valorMovimento.ToString("N2")
+                                        </td>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="5" class="text-center py-4 text-muted">Nenhum movimento interno encontrado para os filtros selecionados.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .tab-custom {
+            background-color: #ffffff !important;
+            color: #333333 !important;
+            border: 1px solid #dee2e6 !important;
+        }
+
+            .tab-custom.active {
+                background-color: #079b62 !important;
+                color: #ffffff !important;
+                border-color: #079b62 !important;
+            }
+    </style>
+    <script>
+        const tabs = document.querySelectorAll('.tab-custom');
+        tabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (event) {
+                tabs.forEach(t => t.classList.remove('active'));
+                event.target.classList.add('active');
+            });
+        });
+    </script>
+}

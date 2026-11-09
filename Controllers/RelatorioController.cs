@@ -1,9 +1,12 @@
-﻿using Analise.Filters;
+﻿using Analise.Data;
+using Analise.Filters;
 using Analise.Helper;
 using Analise.Models;
 using Analise.Repositorio;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,16 +18,19 @@ namespace Analise.Controllers
     public class RelatorioController : Controller
     {
         private readonly IPedidoRepositorio _pedidoRepositorio;
-        private readonly IAgenciaRepositorio _agenciaRepositorio; // Injetado para popular as agências
+        private readonly IEntidadeRepositorio _entidadeRepositorio;
+        private readonly BancoContext _bancoContext;
         private readonly ISessao _sessao;
 
         public RelatorioController(
             IPedidoRepositorio pedidoRepositorio,
-            IAgenciaRepositorio agenciaRepositorio,
+            IEntidadeRepositorio entidadeRepositorio,
+            BancoContext bancoContext,
             ISessao sessao)
         {
             _pedidoRepositorio = pedidoRepositorio;
-            _agenciaRepositorio = agenciaRepositorio;
+            _entidadeRepositorio = entidadeRepositorio;
+            _bancoContext = bancoContext;
             _sessao = sessao;
         }
 
@@ -34,12 +40,9 @@ namespace Analise.Controllers
             DateTime? dataInicial = null,
             DateTime? dataFinal = null,
             int? gestorId = null,
-            string agencia = null,
             int? entidadeId = null,
-            int? contaId = null,
-            int? clienteId = null)
+            int? contaId = null)
         {
-            // Validação de Sessão ativa
             if (_sessao.BuscarSessaoDoUsuario() == null)
             {
                 return RedirectToAction("Index", "Login");
@@ -47,82 +50,212 @@ namespace Analise.Controllers
 
             try
             {
-                // Buscar todos os pedidos com as relações necessárias (Entidade, Gestor, etc.)
-                var pedidos = await _pedidoRepositorio.BuscarTodosAsync() ?? new List<PedidoModel>();
-
-                // --- 1. PREENCHER LISTAS PARA OS DROPDOWNS DE FILTROS (Com base em todos os dados originais) ---
-                ViewBag.ListaGestores = pedidos.Where(p => p.Gestor != null).Select(p => p.Gestor).Distinct().ToList();
-                ViewBag.ListaEntidades = pedidos.Where(p => p.Entidade != null).Select(p => p.Entidade).Distinct().ToList();
-                ViewBag.ListaAgencias = _agenciaRepositorio.BuscarTodos() ?? new List<AgenciaModel>(); // Carregado diretamente do repositório de agências
-
-                // --- 2. APLICAR FILTROS GLOBAIS ---
-                if (gestorId.HasValue && gestorId.Value > 0)
+                // Tratamento e validação de datas caso venham invertidas
+                if (dataInicial.HasValue && dataFinal.HasValue && dataInicial.Value > dataFinal.Value)
                 {
-                    pedidos = pedidos.Where(p => p.GestorId == gestorId.Value).ToList();
+                    var temp = dataInicial;
+                    dataInicial = dataFinal;
+                    dataFinal = temp;
                 }
 
-                if (!string.IsNullOrEmpty(agencia) && agencia != "Todas")
+                var pedidos = await _pedidoRepositorio.BuscarTodosAsync() ?? new List<PedidoModel>();
+
+                // Listas para os filtros globais
+                ViewBag.ListaGestores = pedidos.Where(p => p.Gestor != null).Select(p => p.Gestor).Distinct().ToList();
+                ViewBag.ListaEntidades = pedidos.Where(p => p.Entidade != null).Select(p => p.Entidade).Distinct().ToList();
+
+                // Devolver os filtros selecionados à View
+                ViewBag.FiltroGestorId = gestorId;
+                ViewBag.FiltroEntidadeId = entidadeId;
+                ViewBag.FiltroContaId = contaId;
+                ViewBag.FiltroDataInicial = dataInicial?.ToString("yyyy-MM-dd");
+                ViewBag.FiltroDataFinal = dataFinal?.ToString("yyyy-MM-dd");
+
+                var pedidosGerais = pedidos.AsEnumerable();
+
+                if (gestorId.HasValue && gestorId.Value > 0)
                 {
-                    if (int.TryParse(agencia, out int agenciaIdInt))
-                    {
-                        pedidos = pedidos.Where(p => p.Entidade?.AgenciaId == agenciaIdInt).ToList();
-                    }
+                    pedidosGerais = pedidosGerais.Where(p => p.GestorId == gestorId.Value);
                 }
 
                 if (entidadeId.HasValue && entidadeId.Value > 0)
                 {
-                    pedidos = pedidos.Where(p => p.EntidadeId == entidadeId.Value).ToList();
+                    pedidosGerais = pedidosGerais.Where(p => p.EntidadeId == entidadeId.Value);
+                }
+
+                var pedidosFiltrados = pedidosGerais;
+                if (dataInicial.HasValue)
+                {
+                    pedidosFiltrados = pedidosFiltrados.Where(p => p.DataCadastro >= dataInicial.Value);
+                }
+                if (dataFinal.HasValue)
+                {
+                    pedidosFiltrados = pedidosFiltrados.Where(p => p.DataCadastro <= dataFinal.Value.AddDays(1));
+                }
+
+                var pedidosDesembolsados = pedidosGerais;
+                if (dataInicial.HasValue)
+                {
+                    pedidosDesembolsados = pedidosDesembolsados.Where(p => p.DataDesembolso.HasValue && p.DataDesembolso.Value >= dataInicial.Value);
+                }
+                if (dataFinal.HasValue)
+                {
+                    pedidosDesembolsados = pedidosDesembolsados.Where(p => p.DataDesembolso.HasValue && p.DataDesembolso.Value <= dataFinal.Value.AddDays(1));
+                }
+
+                var pedidoIdsEmMora = _bancoContext.Amortizacoes
+                    .AsEnumerable()
+                    .Where(a => a.DiasAtraso > 0 && a.PrincipalPorPagar > 0)
+                    .Select(a => a.PedidoId)
+                    .Distinct()
+                    .ToList();
+
+                var hoje = DateTime.Today;
+
+                var queryAmortizacoes = _bancoContext.Amortizacoes
+                    .Include(a => a.Pedido)
+                    .ThenInclude(p => p.Entidade)
+                    .Include(a => a.Pedido)
+                    .ThenInclude(p => p.Gestor)
+                    .AsEnumerable();
+
+                if (gestorId.HasValue && gestorId.Value > 0)
+                {
+                    queryAmortizacoes = queryAmortizacoes.Where(a => a.Pedido?.GestorId == gestorId.Value);
+                }
+                if (entidadeId.HasValue && entidadeId.Value > 0)
+                {
+                    queryAmortizacoes = queryAmortizacoes.Where(a => a.Pedido?.EntidadeId == entidadeId.Value);
                 }
 
                 if (dataInicial.HasValue)
                 {
-                    pedidos = pedidos.Where(p => p.DataCadastro >= dataInicial.Value).ToList();
+                    queryAmortizacoes = queryAmortizacoes.Where(a => a.Vencimento.Date >= dataInicial.Value.Date);
+                }
+                if (dataFinal.HasValue)
+                {
+                    queryAmortizacoes = queryAmortizacoes.Where(a => a.Vencimento.Date <= dataFinal.Value.Date);
+                }
+
+                ViewBag.VencimentosProximos = queryAmortizacoes
+                    .Where(a => a.PrincipalPorPagar > 0 && a.Vencimento.Date >= hoje)
+                    .OrderBy(a => a.Vencimento)
+                    .ToList();
+
+                ViewBag.PagamentosPendentes = queryAmortizacoes
+                    .Where(a => a.PrincipalPorPagar > 0 && a.Vencimento.Date < hoje)
+                    .OrderBy(a => a.Vencimento)
+                    .ToList();
+
+                // Pagamentos Feitos (Amortizações liquidadas onde PrincipalPorPagar <= 0)
+                ViewBag.PagamentosFeitos = queryAmortizacoes
+                    .Where(a => a.PrincipalPorPagar <= 0)
+                    .OrderByDescending(a => a.Vencimento)
+                    .ToList();
+
+                // --- CARREGAR LISTA DE CLIENTES ---
+                var clientesQuery = _entidadeRepositorio.BuscarTodos() ?? new List<EntidadeModel>();
+
+                if (entidadeId.HasValue && entidadeId.Value > 0)
+                {
+                    clientesQuery = clientesQuery.Where(c => c.Id == entidadeId.Value).ToList();
+                }
+                if (dataInicial.HasValue)
+                {
+                    clientesQuery = clientesQuery.Where(c => c.DataCadastro >= dataInicial.Value).ToList();
+                }
+                if (dataFinal.HasValue)
+                {
+                    clientesQuery = clientesQuery.Where(c => c.DataCadastro <= dataFinal.Value.AddDays(1)).ToList();
+                }
+
+                ViewBag.Clientes = clientesQuery.OrderBy(c => c.Nome).ToList();
+
+                // --- CARREGAR MOVIMENTOS EXTERNOS ---
+                var queryMovimentos = _bancoContext.MovimentosExternos
+                    .Include(m => m.Entidade)
+                    .Include(m => m.Conta)
+                    .AsEnumerable();
+
+                if (entidadeId.HasValue && entidadeId.Value > 0)
+                {
+                    queryMovimentos = queryMovimentos.Where(m => m.EntidadeId == entidadeId.Value);
+                }
+
+                if (dataInicial.HasValue)
+                {
+                    queryMovimentos = queryMovimentos.Where(m => m.DataCadastro.Date >= dataInicial.Value.Date);
                 }
 
                 if (dataFinal.HasValue)
                 {
-                    pedidos = pedidos.Where(p => p.DataCadastro <= dataFinal.Value.AddDays(1)).ToList();
+                    queryMovimentos = queryMovimentos.Where(m => m.DataCadastro.Date <= dataFinal.Value.Date);
                 }
 
-                // --- 3. SEPARAR POR CATEGORIAS DE RELATÓRIO DE CARTEIRA ---
-                // EstadoId: 1 = Pendente, 2 = Aprovado, 3 = Rejeitado, 4 = Vigente/Desembolsado, 5 = Liquidado, 6 = Mora
+                ViewBag.MovimentosExternos = queryMovimentos.OrderByDescending(m => m.DataCadastro).ToList();
+
+                // --- CARREGAR CONTAS PARA O FILTRO ---
+                var contasLista = _bancoContext.Contas.AsEnumerable().ToList();
+                ViewBag.ListaContasFiltro = contasLista;
+
+                // --- CARREGAR MOVIMENTOS INTERNOS ---
+                var queryMovimentosInternos = _bancoContext.MovimentosInternos
+                    .Include(m => m.ContaOrigem)
+                    .Include(m => m.ContaDestino)
+                    .AsEnumerable();
+
+                if (contaId.HasValue && contaId.Value > 0)
+                {
+                    queryMovimentosInternos = queryMovimentosInternos.Where(m => m.ContaOrigemId == contaId.Value || m.ContaDestinoId == contaId.Value);
+                }
+
+                if (dataInicial.HasValue)
+                {
+                    queryMovimentosInternos = queryMovimentosInternos.Where(m => m.DataCadastro.Date >= dataInicial.Value.Date);
+                }
+
+                if (dataFinal.HasValue)
+                {
+                    queryMovimentosInternos = queryMovimentosInternos.Where(m => m.DataCadastro.Date <= dataFinal.Value.Date);
+                }
+
+                ViewBag.MovimentosInternos = queryMovimentosInternos.OrderByDescending(m => m.DataCadastro).ToList();
+                // ----------------------------------
+
                 ViewBag.RelatorioTipo = tipoRelatorio;
-
-                ViewBag.Pendentes = pedidos.Where(p => p.EstadoId == 1).ToList();
-                ViewBag.Aprovados = pedidos.Where(p => p.EstadoId == 2).ToList();
-                ViewBag.Rejeitados = pedidos.Where(p => p.EstadoId == 3).ToList();
-                ViewBag.Vigentes = pedidos.Where(p => p.EstadoId == 4).ToList();
-                ViewBag.Liquidados = pedidos.Where(p => p.EstadoId == 5).ToList();
-                ViewBag.Mora = pedidos.Where(p => p.EstadoId == 6).ToList();
-
-                // Clientes (Entidades) únicos filtrados
-                ViewBag.Clientes = pedidos.Select(p => p.Entidade).Where(e => e != null).Distinct().ToList();
-
-                // Dados de Pagamentos e Movimentos (prontos para ligação aos respetivos repositórios futuramente)
-                ViewBag.PagamentosPrevistos = new List<object>();
-                ViewBag.PagamentosFeitos = new List<object>();
-                ViewBag.PagamentosPorFazer = new List<object>();
-                ViewBag.MovimentosInternos = new List<object>();
-                ViewBag.MovimentosExternos = new List<object>();
+                ViewBag.Pendentes = pedidosFiltrados.Where(p => p.EstadoId == 1).ToList();
+                ViewBag.Aprovados = pedidosFiltrados.Where(p => p.EstadoId == 2).ToList();
+                ViewBag.Rejeitados = pedidosFiltrados.Where(p => p.EstadoId == 4).ToList();
+                ViewBag.Vigentes = pedidosFiltrados.Where(p => p.EstadoId == 3).ToList();
+                ViewBag.Liquidados = pedidosFiltrados.Where(p => p.EstadoId == 5).ToList();
+                ViewBag.Desembolsos = pedidosDesembolsados.Where(p => p.DataDesembolso.HasValue).ToList();
+                ViewBag.Mora = pedidosFiltrados.Where(p => pedidoIdsEmMora.Contains(p.Id)).ToList();
             }
             catch (Exception ex)
             {
                 TempData["MensagemErro"] = $"Erro ao gerar relatórios: {ex.Message}";
 
-                // Garantir listas vazias em caso de erro para evitar NullReferenceException na View
                 ViewBag.Pendentes = new List<PedidoModel>();
                 ViewBag.Aprovados = new List<PedidoModel>();
                 ViewBag.Rejeitados = new List<PedidoModel>();
                 ViewBag.Vigentes = new List<PedidoModel>();
                 ViewBag.Liquidados = new List<PedidoModel>();
+                ViewBag.Desembolsos = new List<PedidoModel>();
                 ViewBag.Mora = new List<PedidoModel>();
+                ViewBag.VencimentosProximos = new List<Analise.Models.AmortizacaoModel>();
+                ViewBag.PagamentosPendentes = new List<Analise.Models.AmortizacaoModel>();
+                ViewBag.PagamentosFeitos = new List<Analise.Models.AmortizacaoModel>();
+                ViewBag.MovimentosExternos = new List<MovimentoExternoModel>();
+                ViewBag.MovimentosInternos = new List<MovimentoInternoModel>();
                 ViewBag.Clientes = new List<EntidadeModel>();
                 ViewBag.ListaGestores = new List<UsuarioModel>();
                 ViewBag.ListaEntidades = new List<EntidadeModel>();
-                ViewBag.ListaAgencias = new List<AgenciaModel>();
+                ViewBag.ListaContasFiltro = new List<ContaModel>();
             }
 
             return View();
         }
+
+      
     }
 }

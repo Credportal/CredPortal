@@ -6,6 +6,7 @@
         Aprovado = 2,
         Vigente = 3,
         Rejeitado = 4,
-        Liquidado = 5
+        Liquidado = 5,
+       Mora = 6
     }
 }

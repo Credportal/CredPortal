@@ -2,7 +2,6 @@
 @{
     ViewData["Title"] = "Gerir Garantias";
 
-    // Cálculos de totais
     int totalItens = Model.ListaGarantias != null ? Model.ListaGarantias.Count : 0;
     decimal somaAquisicao = Model.ListaGarantias != null ? Model.ListaGarantias.Sum(g => g.ValorAquisicao) : 0;
     decimal somaActual = Model.ListaGarantias != null ? Model.ListaGarantias.Sum(g => g.ValorActual) : 0;
@@ -34,13 +33,14 @@
             <h2 class="fw-bold text-dark mb-1">Gestão de Garantias e Colaterais</h2>
             <p class="text-muted small mb-0">Associadas ao Pedido #@Model.PedidoId</p>
         </div>
-        <!-- Botão para gerar a Folha de Garantias em PDF -->
-        <a asp-controller="Pedido" asp-action="GerarFolhaGarantiasPdf" asp-route-id="@Model.PedidoId" class="btn btn-success rounded-2 px-3 d-flex align-items-center gap-2 text-white" style="background-color: #079b62; border-color: #079b62;">
-            <i class="fa-solid fa-file-pdf"></i> Folha
-        </a>
-        <a asp-controller="Pedido" asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
-            <i class="fa-solid fa-arrow-left"></i> Voltar à Lista de Pedidos
-        </a>
+        <div class="d-flex gap-2">
+            <a asp-controller="Pedido" asp-action="GerarFolhaGarantiasPdf" asp-route-id="@Model.PedidoId" class="btn btn-success rounded-2 px-3 d-flex align-items-center gap-2 text-white" style="background-color: #079b62; border-color: #079b62;">
+                <i class="fa-solid fa-file-pdf"></i> Folha
+            </a>
+            <a asp-controller="Pedido" asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Voltar à Lista
+            </a>
+        </div>
     </div>
 
     <!-- Informações do Cliente & CRR -->
@@ -111,7 +111,7 @@
         </div>
     </div>
 
-    <!-- Cards de Resumo (Total de Itens e Somatórios) -->
+    <!-- Cards de Resumo -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
@@ -148,6 +148,7 @@
                         <th class="py-3">Valor Aquisição (MT)</th>
                         <th class="py-3">Valor Atual (MT)</th>
                         <th class="py-3">Data Registo</th>
+                        <th class="py-3 text-end pe-4">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -164,13 +165,37 @@
                                 <td class="fw-bold">MT @g.ValorAquisicao.ToString("N2")</td>
                                 <td class="fw-semibold text-success" style="color: #079b62 !important;">MT @g.ValorActual.ToString("N2")</td>
                                 <td>@g.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-end pe-4">
+                                    <!-- Botão Editar (Aciona o Modal) -->
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-2 me-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editarGarantiaModal"
+                                            data-id="@g.Id"
+                                            data-tipo="@g.Tipo"
+                                            data-aquisicao="@g.ValorAquisicao"
+                                            data-actual="@g.ValorActual"
+                                            data-descricao="@g.Descricao"
+                                            title="Editar">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                    <!-- Botão Remover -->
+                                    <form asp-controller="Pedido" asp-action="RemoverGarantia" method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja remover esta garantia?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@g.Id" />
+                                        <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-2" title="Remover">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">Nenhuma garantia registada para este cliente/CRR.</td>
+                            <td colspan="7" class="text-center py-4 text-muted">Nenhuma garantia registada para este cliente/CRR.</td>
                         </tr>
                     }
                 </tbody>
@@ -179,6 +204,79 @@
     </div>
 </div>
 
+<!-- Modal de Edição de Garantia -->
+<div class="modal fade" id="editarGarantiaModal" tabindex="-1" aria-labelledby="editarGarantiaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <form asp-controller="Pedido" asp-action="EditarGarantia" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" id="edit-id" />
+                <input type="hidden" name="PedidoId" value="@Model.PedidoId" />
+
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-dark" id="editarGarantiaModalLabel">
+                        <i class="fa-solid fa-pen-to-square text-success me-2" style="color: #079b62 !important;"></i> Editar Garantia
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body px-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-secondary">Tipo de Garantia</label>
+                            <select name="Tipo" id="edit-tipo" class="form-select rounded-2 shadow-sm" required>
+                                <option value="">-- Selecione o Tipo --</option>
+                                <option value="Penhor">Penhor</option>
+                                <option value="Hipoteca">Hipoteca</option>
+                                <option value="Outras">Outras</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-secondary">Valor de Aquisição (MT)</label>
+                            <input name="ValorAquisicao" id="edit-aquisicao" class="form-control rounded-2 shadow-sm" type="number" step="0.01" required />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-secondary">Valor Atual (MT)</label>
+                            <input name="ValorActual" id="edit-actual" class="form-control rounded-2 shadow-sm" type="number" step="0.01" required />
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold text-secondary">Descrição</label>
+                            <textarea name="Descricao" id="edit-descricao" class="form-control rounded-2 shadow-sm" rows="3" required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pb-4 px-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-2 px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success rounded-2 px-4 text-white" style="background-color: #079b62; border-color: #079b62;">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Script para preencher o modal de edição com os dados da linha selecionada
+        var editarGarantiaModal = document.getElementById('editarGarantiaModal');
+        editarGarantiaModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+
+            var id = button.getAttribute('data-id');
+            var tipo = button.getAttribute('data-tipo');
+            var aquisicao = button.getAttribute('data-aquisicao');
+            var actual = button.getAttribute('data-actual');
+            var descricao = button.getAttribute('data-descricao');
+
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-tipo').value = tipo;
+            document.getElementById('edit-aquisicao').value = aquisicao;
+            document.getElementById('edit-actual').value = actual;
+            document.getElementById('edit-descricao').value = descricao;
+        });
+    </script>
 }
