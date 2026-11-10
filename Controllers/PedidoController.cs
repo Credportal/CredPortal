@@ -1267,6 +1267,7 @@ namespace Analise.Controllers
                             Descricao = descricaoMovimento,
                             Credito = item.Valor,
                             ContaId = item.ContaId,
+                            Crr = pedido.CRR,
                             EntidadeId = pedido.EntidadeId,
                             TipoOperacao = "Desembolso",
                             DataCadastro = DateTimeOffset.Now,
@@ -1369,7 +1370,6 @@ namespace Analise.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcessarPagamento(int pedidoId, int contaId, decimal valorDeposito, List<AmortizacaoModel> amortizacoes)
         {
             var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
@@ -1380,7 +1380,7 @@ namespace Analise.Controllers
                 TempData["MensagemErro"] = "O valor do depósito deve ser superior a zero.";
                 return RedirectToAction("Pagamento", new { id = pedidoId });
             }
-            
+
             var pedido = await _bancoContext.Pedidos
                 .Include(p => p.Entidade)
                 .FirstOrDefaultAsync(p => p.Id == pedidoId);
@@ -1411,6 +1411,7 @@ namespace Analise.Controllers
                 decimal totalPrincipalPagoGeral = 0;
                 decimal totalJuroPagoGeral = 0;
                 decimal totalMultaPagoGeral = 0;
+                DateTime dataOperacao = DateTime.Now; // Data a ser gravada nas prestações pagas
 
                 // Atualizar os valores de perdão enviados pela View correspondentes a cada linha
                 if (amortizacoes != null)
@@ -1435,33 +1436,47 @@ namespace Analise.Controllers
                     decimal juroLiquidoPendente = Math.Max(0, item.JuroPorPagar - item.JuroAPerdoar);
                     decimal principalPendente = item.PrincipalPorPagar;
 
+                    decimal valorPagoNestaPrestacao = 0;
+
                     // A) Abater Multa
                     decimal pagarMulta = Math.Min(saldoDisponivel, multaLiquidaPendente);
-                    saldoDisponivel -= pagarMulta;
-                    item.MultaPago += pagarMulta;
-                    totalMultaPagoGeral += pagarMulta;
+                    if (pagarMulta > 0)
+                    {
+                        saldoDisponivel -= pagarMulta;
+                        item.MultaPago += pagarMulta;
+                        totalMultaPagoGeral += pagarMulta;
+                        valorPagoNestaPrestacao += pagarMulta;
+                    }
 
                     // B) Abater Juro
                     decimal pagarJuro = 0;
-                    if (saldoDisponivel > 0)
+                    if (saldoDisponivel > 0 && juroLiquidoPendente > 0)
                     {
                         pagarJuro = Math.Min(saldoDisponivel, juroLiquidoPendente);
                         saldoDisponivel -= pagarJuro;
                         item.JuroPago += pagarJuro;
                         totalJuroPagoGeral += pagarJuro;
+                        valorPagoNestaPrestacao += pagarJuro;
                     }
 
                     // C) Abater Principal (Capital)
                     decimal pagarPrincipal = 0;
-                    if (saldoDisponivel > 0)
+                    if (saldoDisponivel > 0 && principalPendente > 0)
                     {
                         pagarPrincipal = Math.Min(saldoDisponivel, principalPendente);
                         saldoDisponivel -= pagarPrincipal;
                         item.PrincipalPago += pagarPrincipal;
                         totalPrincipalPagoGeral += pagarPrincipal;
+                        valorPagoNestaPrestacao += pagarPrincipal;
                     }
 
                     item.TotalPago = item.PrincipalPago + item.JuroPago + item.MultaPago;
+
+                    // Se esta prestação recebeu algum pagamento (total ou parcial), atualizamos a DataPagamento
+                    if (valorPagoNestaPrestacao > 0)
+                    {
+                        item.DataPagamento = dataOperacao;
+                    }
                 }
 
                 decimal valorTotalEfetivamentePago = totalPrincipalPagoGeral + totalJuroPagoGeral + totalMultaPagoGeral;
@@ -1503,13 +1518,14 @@ namespace Analise.Controllers
                 };
                 _bancoContext.MovimentosInternos.Add(movimentoInterno);
 
-                // 5. Movimento Externo
+                // 5. Movimento Externo (Sem NrId)
                 var movimentoExterno = new MovimentoExternoModel
                 {
                     Descricao = descricaoMovimento,
                     Debito = valorTotalEfetivamentePago,
                     ContaId = conta.Id,
                     EntidadeId = pedido.EntidadeId,
+                    Crr = pedido.CRR,
                     TipoOperacao = "Reembolso de Crédito",
                     DataCadastro = DateTimeOffset.Now,
                     UsuarioId = usuarioLogado.Id,

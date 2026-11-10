@@ -14,6 +14,7 @@ namespace Analise.Models
         // --- DADOS FINANCEIROS DO PEDIDO ---
         [Column(TypeName = "bigint")] // Ou deixar que o EF mapeie automaticamente para bigint
         public long? CRR { get; set; }
+        public DateTimeOffset? DataPagamento { get; set; }
 
         [Required(ErrorMessage = "Informe a entidade associada.")]
         public int EntidadeId { get; set; }

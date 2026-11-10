@@ -96,5 +96,6 @@ namespace Analise.Models
         [NotMapped]
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPorPagar => PrincipalPorPagar + JuroPorPagar + MultaPorPagar;
+        public DateTime? DataPagamento { get; set; }
     }
 }

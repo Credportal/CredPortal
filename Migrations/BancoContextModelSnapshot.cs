@@ -47,7 +47,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Agencias");
+                    b.ToTable("Agencias", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.AmortizacaoModel", b =>
@@ -60,6 +60,9 @@ namespace Cred.Migrations
 
                     b.Property<long?>("CRR")
                         .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DataPagamento")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal>("Juro")
                         .HasColumnType("decimal(18,2)");
@@ -107,7 +110,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("PedidoId");
 
-                    b.ToTable("Amortizacoes");
+                    b.ToTable("Amortizacoes", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.CargoModel", b =>
@@ -127,7 +130,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("cargos");
+                    b.ToTable("cargos", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.ConfiguracaoModel", b =>
@@ -184,7 +187,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Configuracoes");
+                    b.ToTable("Configuracoes", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.ContaModel", b =>
@@ -231,7 +234,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Contas");
+                    b.ToTable("Contas", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.CustosAdmModel", b =>
@@ -276,7 +279,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("CustosAdm");
+                    b.ToTable("CustosAdm", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.DespesaModel", b =>
@@ -310,7 +313,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioCadastroId");
 
-                    b.ToTable("Despesas");
+                    b.ToTable("Despesas", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.DiaControloModel", b =>
@@ -341,7 +344,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DiasControlo");
+                    b.ToTable("DiasControlo", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.EntidadeModel", b =>
@@ -477,7 +480,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Entidades");
+                    b.ToTable("Entidades", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.EstadoModel", b =>
@@ -497,7 +500,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("estados");
+                    b.ToTable("estados", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.FechoDiarioConta", b =>
@@ -539,7 +542,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("FechoDiarioRegistoId");
 
-                    b.ToTable("FechosDiariosContas");
+                    b.ToTable("FechosDiariosContas", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.FechoDiarioGestor", b =>
@@ -612,7 +615,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("FechoDiarioRegistoId");
 
-                    b.ToTable("FechosDiariosGestores");
+                    b.ToTable("FechosDiariosGestores", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.FechoDiarioRegisto", b =>
@@ -664,7 +667,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("FechosDiariosRegistos");
+                    b.ToTable("FechosDiariosRegistos", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.GarantiaModel", b =>
@@ -710,7 +713,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Garantias");
+                    b.ToTable("Garantias", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.IntervenienteModel", b =>
@@ -751,7 +754,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Intervenientes");
+                    b.ToTable("Intervenientes", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.MovimentoExternoModel", b =>
@@ -770,6 +773,9 @@ namespace Cred.Migrations
 
                     b.Property<decimal>("Credito")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<long?>("Crr")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("DataCadastro")
                         .HasColumnType("timestamp with time zone");
@@ -799,7 +805,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("EntidadeId");
 
-                    b.ToTable("MovimentosExternos");
+                    b.ToTable("MovimentosExternos", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.MovimentoInternoModel", b =>
@@ -847,7 +853,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("ContaOrigemId");
 
-                    b.ToTable("MovimentosInternos");
+                    b.ToTable("MovimentosInternos", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.PedidoModel", b =>
@@ -871,6 +877,9 @@ namespace Cred.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTimeOffset?>("DataDesembolso")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DataPagamento")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Destino")
@@ -925,7 +934,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Pedidos");
+                    b.ToTable("Pedidos", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.UsuarioModel", b =>
@@ -989,7 +998,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("CargoId");
 
-                    b.ToTable("Usuarios");
+                    b.ToTable("Usuarios", (string)null);
                 });
 
             modelBuilder.Entity("Analise.Models.AmortizacaoModel", b =>
