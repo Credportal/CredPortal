@@ -47,7 +47,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Agencias", (string)null);
+                    b.ToTable("Agencias");
                 });
 
             modelBuilder.Entity("Analise.Models.AmortizacaoModel", b =>
@@ -110,7 +110,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("PedidoId");
 
-                    b.ToTable("Amortizacoes", (string)null);
+                    b.ToTable("Amortizacoes");
                 });
 
             modelBuilder.Entity("Analise.Models.CargoModel", b =>
@@ -130,7 +130,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("cargos", (string)null);
+                    b.ToTable("cargos");
                 });
 
             modelBuilder.Entity("Analise.Models.ConfiguracaoModel", b =>
@@ -187,7 +187,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Configuracoes", (string)null);
+                    b.ToTable("Configuracoes");
                 });
 
             modelBuilder.Entity("Analise.Models.ContaModel", b =>
@@ -234,7 +234,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Contas", (string)null);
+                    b.ToTable("Contas");
                 });
 
             modelBuilder.Entity("Analise.Models.CustosAdmModel", b =>
@@ -279,7 +279,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("CustosAdm", (string)null);
+                    b.ToTable("CustosAdm");
                 });
 
             modelBuilder.Entity("Analise.Models.DespesaModel", b =>
@@ -313,7 +313,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioCadastroId");
 
-                    b.ToTable("Despesas", (string)null);
+                    b.ToTable("Despesas");
                 });
 
             modelBuilder.Entity("Analise.Models.DiaControloModel", b =>
@@ -344,7 +344,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DiasControlo", (string)null);
+                    b.ToTable("DiasControlo");
                 });
 
             modelBuilder.Entity("Analise.Models.EntidadeModel", b =>
@@ -375,7 +375,6 @@ namespace Cred.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("Conjuge")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -461,7 +460,6 @@ namespace Cred.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.Property<string>("TelefoneConjuge")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
@@ -480,7 +478,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Entidades", (string)null);
+                    b.ToTable("Entidades");
                 });
 
             modelBuilder.Entity("Analise.Models.EstadoModel", b =>
@@ -500,7 +498,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("estados", (string)null);
+                    b.ToTable("estados");
                 });
 
             modelBuilder.Entity("Analise.Models.FechoDiarioConta", b =>
@@ -542,7 +540,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("FechoDiarioRegistoId");
 
-                    b.ToTable("FechosDiariosContas", (string)null);
+                    b.ToTable("FechosDiariosContas");
                 });
 
             modelBuilder.Entity("Analise.Models.FechoDiarioGestor", b =>
@@ -615,7 +613,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("FechoDiarioRegistoId");
 
-                    b.ToTable("FechosDiariosGestores", (string)null);
+                    b.ToTable("FechosDiariosGestores");
                 });
 
             modelBuilder.Entity("Analise.Models.FechoDiarioRegisto", b =>
@@ -667,7 +665,7 @@ namespace Cred.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("FechosDiariosRegistos", (string)null);
+                    b.ToTable("FechosDiariosRegistos");
                 });
 
             modelBuilder.Entity("Analise.Models.GarantiaModel", b =>
@@ -713,7 +711,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Garantias", (string)null);
+                    b.ToTable("Garantias");
                 });
 
             modelBuilder.Entity("Analise.Models.IntervenienteModel", b =>
@@ -754,7 +752,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Intervenientes", (string)null);
+                    b.ToTable("Intervenientes");
                 });
 
             modelBuilder.Entity("Analise.Models.MovimentoExternoModel", b =>
@@ -805,7 +803,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("EntidadeId");
 
-                    b.ToTable("MovimentosExternos", (string)null);
+                    b.ToTable("MovimentosExternos");
                 });
 
             modelBuilder.Entity("Analise.Models.MovimentoInternoModel", b =>
@@ -853,7 +851,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("ContaOrigemId");
 
-                    b.ToTable("MovimentosInternos", (string)null);
+                    b.ToTable("MovimentosInternos");
                 });
 
             modelBuilder.Entity("Analise.Models.PedidoModel", b =>
@@ -934,7 +932,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Pedidos", (string)null);
+                    b.ToTable("Pedidos");
                 });
 
             modelBuilder.Entity("Analise.Models.UsuarioModel", b =>
@@ -998,7 +996,7 @@ namespace Cred.Migrations
 
                     b.HasIndex("CargoId");
 
-                    b.ToTable("Usuarios", (string)null);
+                    b.ToTable("Usuarios");
                 });
 
             modelBuilder.Entity("Analise.Models.AmortizacaoModel", b =>

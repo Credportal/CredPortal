@@ -62,7 +62,7 @@ namespace Analise.Models
         [Required(ErrorMessage = "Digite o email")]
         [EmailAddress(ErrorMessage = "Email inválido")]
         [StringLength(50)]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [Required(ErrorMessage = "Digite o endereço")]
         [StringLength(255)]
@@ -86,10 +86,10 @@ namespace Analise.Models
         public string Mae { get; set; }
 
         [StringLength(100)]
-        public string Conjuge { get; set; }
+        public string? Conjuge { get; set; }
 
         [StringLength(20)]
-        public string TelefoneConjuge { get; set; }
+        public string? TelefoneConjuge { get; set; }
 
         // --- CHAVES ESTRANGEIRAS E AUDITORIA ---
         public int? AgenciaId { get; set; }

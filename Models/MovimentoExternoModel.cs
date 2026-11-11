@@ -30,7 +30,6 @@ namespace Analise.Models
 
         // Adicionado: Associação com o Pedido
         public long? Crr { get; set; }
-        public PedidoModel Pedido { get; set; }
 
         // Tipo de Operação (ex: "Levantamento", "Pagamento", "Taxa")
         public string TipoOperacao { get; set; }
