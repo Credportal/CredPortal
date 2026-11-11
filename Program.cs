@@ -1,12 +1,13 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
-using Analise.Models;
 using Analise.Data;
-using Analise.Repositorio;
 using Analise.Helper;
+using Analise.Models;
+using Analise.Repositories;
+using Analise.Repositorio;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.ObjectPool;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using QuestPDF.Infrastructure; // Necessário para a licença do QuestPDF
 
 

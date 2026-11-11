@@ -29,7 +29,8 @@
 
         agenciaUtilizador = agencia?.Nome ?? "Agência não identificada";
     }
-    // --- VERIFICAR O ESTADO DO DIA USANDO O DiaControloModel ---
+
+    // --- VERIFICAÇÃO ROBUSTA DO ESTADO DO DIA USANDO O DiaControloModel ---
     DateTime dataHoje = DateTime.Now.Date;
     bool diaFechado = false;
 
@@ -39,6 +40,15 @@
         var controloDia = await _context.DiasControlo
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.DataReferencia.Date == dataHoje);
+
+        // Se não encontrar para hoje, pega o último registo de controlo gerido
+        if (controloDia == null)
+        {
+            controloDia = await _context.DiasControlo
+                .AsNoTracking()
+                .OrderByDescending(d => d.DataReferencia)
+                .FirstOrDefaultAsync();
+        }
 
         // Se o dia existe e 'EstaAberto' for falso, significa que o fecho foi efetuado
         if (controloDia != null && !controloDia.EstaAberto)
@@ -336,8 +346,8 @@
 
                     @if (usuario != null && usuario.Perfil == Analise.Enuns.PerfilEnum.Admin)
                     {
-                        <a asp-controller="FechoDiario" asp-action="RelatorioFecho" class="sg-nav-link @(currentController == "FechoDiario" ? "active" : "")">
-                            <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho e Desempenho
+                        <a asp-controller="FechoDiario" asp-action="Index" class="sg-nav-link @(currentController == "Index" ? "active" : "")">
+                            <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho do dia
                         </a>
                         <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Usuario" ? "active" : "")">
                             <i class="fa-solid fa-users fa-fw"></i> Usuários
@@ -371,7 +381,7 @@
             </div>
 
             <div class="text-muted" style="font-size: 10px;">
-                &copy; @DateTime.Now.Year Nael Consultoria Lda.<br>Todos os direitos reservados.
+                © @DateTime.Now.Year Nael Consultoria Lda.<br>Todos os direitos reservados.
             </div>
         </div>
     </aside>

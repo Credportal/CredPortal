@@ -107,8 +107,8 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXN0YWRvXEVkaXRhci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Cred/Analise/Views/FechoDiario/RelatorioFecho.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmVjaG9EaWFyaW9cUmVsYXRvcmlvRmVjaG8uY3NodG1s
+[C:/Cred/Analise/Views/FechoDiario/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmVjaG9EaWFyaW9cSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Cred/Analise/Views/Home/Index.cshtml]

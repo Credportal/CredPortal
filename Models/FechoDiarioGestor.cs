@@ -15,38 +15,55 @@ namespace Analise.Models
 
         public string GestorNome { get; set; }
 
+        // Operacionais do Dia
         [Column(TypeName = "decimal(18,2)")]
-        public decimal DesembolsoMontante { get; set; }
-        public int QtdNovos { get; set; }
-        public int QtdRep { get; set; }
-
-        public int VigenteQtd { get; set; }
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal VigenteCapital { get; set; }
+        public decimal DesembolsoVolume { get; set; }
+        public int DesembolsoNr { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal ReembolsoCapital { get; set; }
-        public int ReembolsoQtd { get; set; }
+        public decimal ReembolsoVolume { get; set; }
+        public int ReembolsoNr { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal MoraHojeCapital { get; set; }
-
-        public int MoraTotalQtd { get; set; }
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal MoraTotalCapital { get; set; }
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal MoraTotalPercentual { get; set; }
+        public decimal PedidosPendentesVolume { get; set; }
+        public int PedidosPendentesNr { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Dias7Capital { get; set; }
-        public int Dias7Qtd { get; set; }
+        public decimal PedidosAprovadosVolume { get; set; }
+        public int PedidosAprovadosNr { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Dias15Capital { get; set; }
-        public int Dias15Qtd { get; set; }
+        public decimal JurosRecebidosVolume { get; set; }
+        public int JurosRecebidosNr { get; set; }
+
+        // Carteira Vigente
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal VigenteVolume { get; set; }
+        public int VigenteNr { get; set; }
+
+        // Carteira em Mora por Faixas de Atraso
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal MoraMenor7Volume { get; set; }
+        public int MoraMenor7Nr { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Dias30Capital { get; set; }
-        public int Dias30Qtd { get; set; }
+        public decimal MoraMenor15Volume { get; set; }
+        public int MoraMenor15Nr { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal MoraMenor30Volume { get; set; }
+        public int MoraMenor30Nr { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal MoraMenor60Volume { get; set; }
+        public int MoraMenor60Nr { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal MoraMenor90Volume { get; set; }
+        public int MoraMenor90Nr { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal MoraMaior90Volume { get; set; }
+        public int MoraMaior90Nr { get; set; }
     }
 }

@@ -30,6 +30,7 @@ namespace Analise.Data
         public DbSet<FechoDiarioGestor> FechosDiariosGestores { get; set; }
         public DbSet<DiaControloModel> DiasControlo { get; set; }
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             //modelBuilder.ApplyConfiguration(new RegistoMap());

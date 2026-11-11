@@ -1,84 +1,84 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Analise.Models
 {
     public class FechoDiarioViewModel
     {
-        public DateTime DataReferencia { get; set; } = DateTime.Now;
+        public DateTime DataReferencia { get; set; }
+        public bool DiaFechado { get; set; }
 
-        // --- 1. RESUMO FINANCEIRO DO DIA ---
-        public int TotalDespesasNumero { get; set; }
-        public decimal TotalDespesasVolume { get; set; }
+        // Totais Globais para os Cards de Resumo Executivo
+        public decimal TotalDespesasDiaVolume { get; set; }
+        public int TotalDespesasDiaNr { get; set; }
 
-        public int TotalDesembolsosNumero { get; set; }
         public decimal TotalDesembolsosVolume { get; set; }
+        public int TotalDesembolsosNumero { get; set; }
 
-        public int TotalReembolsosNumero { get; set; }
         public decimal TotalReembolsosVolume { get; set; }
+        public int TotalReembolsosNumero { get; set; }
 
-        // --- 2. ESTADO DOS PEDIDOS ---
         public int PedidosPendentesNumero { get; set; }
         public int PedidosAprovadosNumero { get; set; }
 
-        // --- 3. CARTEIRA GERAL ---
-        public int CarteiraVigenteNumero { get; set; }
-        public decimal CarteiraVigenteVolume { get; set; }
+        // Totais de Carteira Vigente Global
+        public decimal CarteiraVigenteTotalVolume { get; set; }
+        public int CarteiraVigenteTotalNr { get; set; }
 
-        public int CarteiraMoraNumero { get; set; }
-        public decimal CarteiraMoraVolume { get; set; }
-
-        // --- 4. SALDOS DE CONTAS (Abertura e Fecho) ---
-        public List<ContaResumoSaldoDto> SaldosContas { get; set; } = new List<ContaResumoSaldoDto>();
-
-        // --- 5. MAPA DE DESEMPENHO POR GESTOR (Baseado na imagem) ---
-        public List<MapaDesempenhoLinhaDto> MapaDesempenho { get; set; } = new List<MapaDesempenhoLinhaDto>();
+        // Listas detalhadas para as tabelas
+        public List<FechoDiarioContaViewModel> SaldosContas { get; set; } = new();
+        public List<FechoDiarioGestorViewModel> ResumoGestores { get; set; } = new();
+        public List<FechoDiarioGestorViewModel> CarteiraMoraGestores { get; set; } = new();
     }
 
-    public class ContaResumoSaldoDto
+    // Classes auxiliares para projeção na View
+    public class FechoDiarioContaViewModel
     {
-        public string Banco { get; set; }
-        public string Conta { get; set; }
-        public string Titular { get; set; }
+        public string NomeConta { get; set; }
         public decimal SaldoAbertura { get; set; }
-        public decimal Creditos { get; set; } // Entradas no dia
-        public decimal Debitos { get; set; }  // Saídas no dia (despesas, desembolsos)
+        public decimal CreditosDia { get; set; }
+        public decimal DebitosDia { get; set; }
         public decimal SaldoFecho { get; set; }
     }
-    public class MapaDesempenhoLinhaDto
+
+    public class FechoDiarioGestorViewModel
     {
         public string GestorNome { get; set; }
+        public decimal DesembolsoVolume { get; set; }
+        public int DesembolsoNr { get; set; }
+        public decimal ReembolsoVolume { get; set; }
+        public int ReembolsoNr { get; set; }
+        public decimal PedidosPendentesVolume { get; set; }
+        public int PedidosPendentesNr { get; set; }
+        public decimal PedidosAprovadosVolume { get; set; }
+        public int PedidosAprovadosNr { get; set; }
+        public decimal JurosRecebidosVolume { get; set; }
+        public int JurosRecebidosNr { get; set; }
 
-        // Desembolso no Mês
-        public decimal DesembolsoMontante { get; set; }
-        public int QtdNovos { get; set; }
-        public int QtdRep { get; set; }
+        public decimal VigenteVolume { get; set; }
+        public int VigenteNr { get; set; }
 
-        // Vigente
-        public int VigenteQtd { get; set; }
-        public decimal VigenteCapital { get; set; }
+        public decimal MoraMenor7Volume { get; set; }
+        public int MoraMenor7Nr { get; set; }
+        public decimal MoraMenor15Volume { get; set; }
+        public int MoraMenor15Nr { get; set; }
+        public decimal MoraMenor30Volume { get; set; }
+        public int MoraMenor30Nr { get; set; }
+        public decimal MoraMenor60Volume { get; set; }
+        public int MoraMenor60Nr { get; set; }
+        public decimal MoraMenor90Volume { get; set; }
+        public int MoraMenor90Nr { get; set; }
+        public decimal MoraMaior90Volume { get; set; }
+        public int MoraMaior90Nr { get; set; }
 
-        // Reembolso
-        public decimal ReembolsoCapital { get; set; }
-        public int ReembolsoQtd { get; set; }
+        // Volume Total em Mora (soma de todas as faixas)
+        [NotMapped]
+        public decimal MoraTotalVolume => MoraMenor7Volume + MoraMenor15Volume + MoraMenor30Volume +
+                                          MoraMenor60Volume + MoraMenor90Volume + MoraMaior90Volume;
 
-        // Carteira em Mora Hoje
-        public int MoraHojeQtd { get; set; }
-        public decimal MoraHojeCapital { get; set; }
-
-        // Carteira em Mora Total (Risco)
-        public int MoraTotalQtd { get; set; }
-        public decimal MoraTotalCapital { get; set; }
-        public decimal MoraTotalPercentual => VigenteCapital > 0 ? (MoraTotalCapital / VigenteCapital) * 100 : 0;
-
-        // Carteira em Mora em Dias (> 7, > 15, > 30 Dias)
-        public decimal Dias7Capital { get; set; }
-        public int Dias7Qtd { get; set; }
-
-        public decimal Dias15Capital { get; set; }
-        public int Dias15Qtd { get; set; }
-
-        public decimal Dias30Capital { get; set; }
-        public int Dias30Qtd { get; set; }
+        // Percentagem de Mora sobre a Carteira Vigente
+        [NotMapped]
+        public decimal PercentagemMora => VigenteVolume > 0m ? (MoraTotalVolume / VigenteVolume) * 100m : 0m;
     }
 }

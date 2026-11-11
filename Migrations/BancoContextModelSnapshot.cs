@@ -551,26 +551,11 @@ namespace Cred.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("DesembolsoMontante")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Dias15Capital")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Dias15Qtd")
+                    b.Property<int>("DesembolsoNr")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("Dias30Capital")
+                    b.Property<decimal>("DesembolsoVolume")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Dias30Qtd")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Dias7Capital")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Dias7Qtd")
-                        .HasColumnType("integer");
 
                     b.Property<int>("FechoDiarioRegistoId")
                         .HasColumnType("integer");
@@ -579,35 +564,71 @@ namespace Cred.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("MoraHojeCapital")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("MoraTotalCapital")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("MoraTotalPercentual")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("MoraTotalQtd")
+                    b.Property<int>("JurosRecebidosNr")
                         .HasColumnType("integer");
 
-                    b.Property<int>("QtdNovos")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("QtdRep")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("ReembolsoCapital")
+                    b.Property<decimal>("JurosRecebidosVolume")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ReembolsoQtd")
+                    b.Property<int>("MoraMaior90Nr")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("VigenteCapital")
+                    b.Property<decimal>("MoraMaior90Volume")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("VigenteQtd")
+                    b.Property<int>("MoraMenor15Nr")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("MoraMenor15Volume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MoraMenor30Nr")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("MoraMenor30Volume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MoraMenor60Nr")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("MoraMenor60Volume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MoraMenor7Nr")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("MoraMenor7Volume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MoraMenor90Nr")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("MoraMenor90Volume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PedidosAprovadosNr")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PedidosAprovadosVolume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PedidosPendentesNr")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PedidosPendentesVolume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ReembolsoNr")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ReembolsoVolume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("VigenteNr")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("VigenteVolume")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -624,17 +645,20 @@ namespace Cred.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CarteiraVigenteNumero")
+                    b.Property<int>("CarteiraVigenteTotalNr")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("CarteiraVigenteVolume")
+                    b.Property<decimal>("CarteiraVigenteTotalVolume")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("DataFecho")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<DateTime>("DataHoraProcessamento")
+                    b.Property<DateTime>("DataReferencia")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("Fechado")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("PedidosAprovadosNumero")
                         .HasColumnType("integer");
@@ -660,8 +684,9 @@ namespace Cred.Migrations
                     b.Property<decimal>("TotalReembolsosVolume")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("UsuarioId")
-                        .HasColumnType("integer");
+                    b.Property<string>("UsuarioFecho")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -1090,7 +1115,7 @@ namespace Cred.Migrations
             modelBuilder.Entity("Analise.Models.FechoDiarioGestor", b =>
                 {
                     b.HasOne("Analise.Models.FechoDiarioRegisto", "FechoRegisto")
-                        .WithMany("MapaDesempenho")
+                        .WithMany("ResumoGestores")
                         .HasForeignKey("FechoDiarioRegistoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1228,7 +1253,7 @@ namespace Cred.Migrations
 
             modelBuilder.Entity("Analise.Models.FechoDiarioRegisto", b =>
                 {
-                    b.Navigation("MapaDesempenho");
+                    b.Navigation("ResumoGestores");
 
                     b.Navigation("SaldosContas");
                 });

@@ -10,17 +10,28 @@
 
 <div class="container-fluid px-0">
 
-    <!-- TÍTULO -->
+    <!-- TÍTULO E BOTÃO DE EXPORTAÇÃO PDF -->
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1 fs-3">Relatórios de Carteira de Crédito</h2>
             <div class="text-secondary small">Gestão analítica e consolidação dos estados da carteira de crédito</div>
         </div>
-        @* <div>
-            <button type="button" class="btn btn-outline-secondary px-3 py-2 rounded-3 shadow-sm" onclick="window.print();">
-                <i class="fa-solid fa-print me-1"></i> Imprimir Relatório
-            </button>
-        </div> *@
+        <div>
+            <a id="btnExportarPdf"
+               asp-controller="Relatorio"
+               asp-action="GerarCarteiraPdf"
+               asp-route-tipoRelatorio="Pendentes"
+               asp-route-dataInicial="@ViewBag.FiltroDataInicial"
+               asp-route-dataFinal="@ViewBag.FiltroDataFinal"
+               asp-route-gestorId="@ViewBag.FiltroGestorId"
+               asp-route-entidadeId="@ViewBag.FiltroEntidadeId"
+               asp-route-contaId="@ViewBag.FiltroContaId"
+               class="btn btn-danger px-3 py-2 rounded-3 shadow-sm fw-bold"
+               target="_blank"
+               style="font-size: 13px;">
+                <i class="fa-solid fa-file-pdf me-1"></i> Gerar PDF
+            </a>
+        </div>
     </div>
 
     <!-- PAINEL DE FILTROS GLOBAIS -->
@@ -813,12 +824,68 @@
             }
     </style>
     <script>
-        const tabs = document.querySelectorAll('.tab-custom');
-        tabs.forEach(tab => {
-            tab.addEventListener('shown.bs.tab', function (event) {
-                tabs.forEach(t => t.classList.remove('active'));
-                event.target.classList.add('active');
+        document.addEventListener("DOMContentLoaded", function () {
+            const tabs = document.querySelectorAll('.tab-custom');
+            tabs.forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function (event) {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    event.target.classList.add('active');
+                });
             });
+
+            const pdfBtn = document.getElementById("btnExportarPdf");
+            const tabButtons = document.querySelectorAll('#carteiraSubTab button[data-bs-toggle="pill"]');
+
+            function atualizarLinkPdf(targetId) {
+                let tipo = "Pendentes";
+
+                switch (targetId) {
+                    case "#tabPendentes": tipo = "Pendentes"; break;
+                    case "#tabAprovados": tipo = "Aprovados"; break;
+                    case "#tabRejeitados": tipo = "Rejeitados"; break;
+                    case "#tabVigentes": tipo = "Vigentes"; break;
+                    case "#tabLiquidados": tipo = "Liquidados"; break;
+                    case "#tabDesembolsos": tipo = "Desembolsos"; break;
+                    case "#tabVencimentosProximos": tipo = "VencimentosProximos"; break;
+                    case "#tabPagamentosPendentes": tipo = "PagamentosPendentes"; break;
+                    case "#tabPagamentosFeitos": tipo = "PagamentosFeitos"; break;
+                    case "#tabClientes": tipo = "Clientes"; break;
+                    case "#tabMovimentosExternos": tipo = "ExtratoExterno"; break;
+                    case "#tabMovimentosInternos": tipo = "ExtratoInterno"; break;
+                }
+
+                // Captura os valores diretamente dos inputs do formulário de filtros na página
+                const dataInicial = document.querySelector('input[name="dataInicial"]')?.value;
+                const dataFinal = document.querySelector('input[name="dataFinal"]')?.value;
+                const gestorId = document.querySelector('select[name="gestorId"]')?.value;
+                const entidadeId = document.querySelector('select[name="entidadeId"]')?.value;
+                const contaId = document.querySelector('select[name="contaId"]')?.value;
+
+                const urlParams = new URLSearchParams();
+                urlParams.set('tipoRelatorio', tipo);
+
+                if (dataInicial) urlParams.set('dataInicial', dataInicial);
+                if (dataFinal) urlParams.set('dataFinal', dataFinal);
+                if (gestorId) urlParams.set('gestorId', gestorId);
+                if (entidadeId) urlParams.set('entidadeId', entidadeId);
+                if (contaId) urlParams.set('contaId', contaId);
+
+                if (pdfBtn) {
+                    pdfBtn.href = '/Relatorio/GerarCarteiraPdf?' + urlParams.toString();
+                }
+            }
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('shown.bs.tab', function (e) {
+                    atualizarLinkPdf(e.target.getAttribute('data-bs-target'));
+                });
+            });
+
+            // Inicializa com a aba ativa atual ao carregar a página
+            const activeTab = document.querySelector('#carteiraSubTab button.active');
+            if (activeTab) {
+                atualizarLinkPdf(activeTab.getAttribute('data-bs-target'));
+            }
         });
     </script>
 }

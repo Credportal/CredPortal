@@ -11,15 +11,12 @@ namespace Analise.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
-        [DataType(DataType.Date)]
-        public DateTime DataFecho { get; set; }
+        public DateTime DataReferencia { get; set; }
+        public DateTime DataFecho { get; set; } = DateTime.Now;
+        public string UsuarioFecho { get; set; }
+        public bool Fechado { get; set; } = true;
 
-        public DateTime DataHoraProcessamento { get; set; } = DateTime.Now;
-
-        public int UsuarioId { get; set; }
-
-        // Resumo Executivo
+        // Totais consolidados do dia
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalDespesasVolume { get; set; }
         public int TotalDespesasNumero { get; set; }
@@ -35,12 +32,12 @@ namespace Analise.Models
         public int PedidosPendentesNumero { get; set; }
         public int PedidosAprovadosNumero { get; set; }
 
-        public int CarteiraVigenteNumero { get; set; }
         [Column(TypeName = "decimal(18,2)")]
-        public decimal CarteiraVigenteVolume { get; set; }
+        public decimal CarteiraVigenteTotalVolume { get; set; }
+        public int CarteiraVigenteTotalNr { get; set; }
 
-        // Relações dos Detalhes
-        public virtual List<FechoDiarioConta> SaldosContas { get; set; } = new List<FechoDiarioConta>();
-        public virtual List<FechoDiarioGestor> MapaDesempenho { get; set; } = new List<FechoDiarioGestor>();
+        // Relações de detalhe
+        public virtual ICollection<FechoDiarioConta> SaldosContas { get; set; }
+        public virtual ICollection<FechoDiarioGestor> ResumoGestores { get; set; }
     }
 }

@@ -2330,6 +2330,9 @@ namespace Analise.Controllers
                 listaAmortizacoes = GerarPlanoAmortizacaoTemporario(pedido, dataReferencia);
             }
 
+            // Condição: Se o estado for diferente de Aprovado (ex: Vigente ou Liquidado) exibe colunas extras
+            bool mostrarColunasExtras = pedido.EstadoId != 2;
+
             string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
             string numeroProcesso = pedido.CRR.HasValue ? $"-{pedido.CRR.Value:0}" : $"CP-{pedido.Id}";
             string numeroRecibo = $"PLN-{DateTime.Now:yyyyMMdd}-{pedido.Id}";
@@ -2343,19 +2346,16 @@ namespace Analise.Controllers
             decimal taxaJuro = pedido.TaxaDecisao ?? pedido.Taxa;
             decimal prestacaoValor = pedido.PrestacaoDecisao ?? pedido.Prestacao;
 
-            // Configurar cultura para português para garantir o mês correto
             var culturaPt = new System.Globalization.CultureInfo("pt-PT");
 
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    // CONFIGURAÇÃO DE PÁGINA HORIZONTAL (LANDSCAPE) PARA CABER TODAS AS COLUNAS
                     page.Size(PageSizes.A4.Landscape());
                     page.Margin(30);
                     page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(9).FontColor("#172b4d"));
 
-                    // Rodapé padrão
                     page.Footer().AlignCenter().Text(text =>
                     {
                         text.Span("PLANO DE AMORTIZAÇÃO DE CRÉDITO (DOCUMENTO OFICIAL) — ").FontSize(7.5f).Italic().FontColor("#a0aec0");
@@ -2385,7 +2385,6 @@ namespace Analise.Controllers
 
                         col.Item().PaddingVertical(3).LineHorizontal(1).LineColor("#079b62");
 
-                        // Título em Bloco Verde
                         col.Item().Background("#079b62").Padding(6).AlignCenter().Text("PLANO DE AMORTIZAÇÃO DE CRÉDITO")
                             .Bold().FontSize(11).FontColor("#FFFFFF");
 
@@ -2411,46 +2410,110 @@ namespace Analise.Controllers
 
                         col.Item().PaddingTop(5);
 
-                        // --- 2. TABELA DO PLANO DE AMORTIZAÇÃO (HORIZONTAL) ---
+                        // --- 2. TABELA DO PLANO DE AMORTIZAÇÃO ---
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.ConstantColumn(35);   // Nr
-                                columns.RelativeColumn(2);  // Vencimento
-                                columns.RelativeColumn(2);  // Prestação
-                                columns.RelativeColumn(2);  // Juro
-                                columns.RelativeColumn(2);  // Amortização
-                                columns.RelativeColumn(2.5f); // Capital em Dívida
-                                columns.RelativeColumn(2);  // Valor Pago
-                                columns.RelativeColumn(2);  // Valor a Pagar
+                                columns.ConstantColumn(30);   // Nr
+                                columns.RelativeColumn(2);    // Vencimento
+                                columns.RelativeColumn(2);    // Prestação
+                                columns.RelativeColumn(2);    // Juro
+                                columns.RelativeColumn(2);    // Amortização
+                                columns.RelativeColumn(2.2f); // Capital em Dívida
+                                columns.RelativeColumn(2);    // Valor Pago
+                                columns.RelativeColumn(2);    // Valor a Pagar
+
+                                if (mostrarColunasExtras)
+                                {
+                                    columns.RelativeColumn(2); // Efectivo (DataPagamento)
+                                    columns.RelativeColumn(2); // Situação (DiasAtraso)
+                                }
                             });
 
                             // Cabeçalho da Tabela
                             table.Header(header =>
                             {
-                                header.Cell().Background("#edf2f7").Padding(4).Text("Nr").Bold().FontSize(8.5f);
-                                header.Cell().Background("#edf2f7").Padding(4).Text("Vencimento").Bold().FontSize(8.5f);
-                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Prestação (mt)").Bold().FontSize(8.5f);
-                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Juro (mt)").Bold().FontSize(8.5f);
-                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Amortização (mt)").Bold().FontSize(8.5f);
-                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Capital em Dívida").Bold().FontSize(8.5f);
-                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor Pago").Bold().FontSize(8.5f);
-                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor a Pagar").Bold().FontSize(8.5f);
+                                header.Cell().Background("#edf2f7").Padding(4).Text("Nr").Bold().FontSize(8f);
+                                header.Cell().Background("#edf2f7").Padding(4).Text("Vencimento").Bold().FontSize(8f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Prestação (mt)").Bold().FontSize(8f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Juro (mt)").Bold().FontSize(8f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Amortização").Bold().FontSize(8f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Capital Dívida").Bold().FontSize(8f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor Pago").Bold().FontSize(8f);
+                                header.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor a Pagar").Bold().FontSize(8f);
+
+                                if (mostrarColunasExtras)
+                                {
+                                    header.Cell().Background("#edf2f7").Padding(4).AlignCenter().Text("Efectivo").Bold().FontSize(8f);
+                                    header.Cell().Background("#edf2f7").Padding(4).AlignCenter().Text("Situação").Bold().FontSize(8f);
+                                }
                             });
 
                             if (listaAmortizacoes != null && listaAmortizacoes.Any())
                             {
                                 foreach (var item in listaAmortizacoes)
                                 {
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.NR.ToString()).FontSize(8.5f);
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Vencimento.ToString("dd/MM/yyyy")).FontSize(8.5f);
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.Prestacao:N2}").Bold().FontSize(8.5f);
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.Juro:N2}").FontColor("#c53030").FontSize(8.5f);
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.Principal:N2}").FontColor("#079b62").FontSize(8.5f);
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.PrincipalPorPagar:N2}").FontSize(8.5f);
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.TotalPago:N2}").FontColor("#2b6cb0").FontSize(8.5f);
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.TotalPorPagar:N2}").Bold().FontColor("#dd6b20").FontSize(8.5f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.NR.ToString()).FontSize(8f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Vencimento.ToString("dd/MM/yyyy")).FontSize(8f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.Prestacao:N2}").Bold().FontSize(8f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.Juro:N2}").FontColor("#c53030").FontSize(8f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.Principal:N2}").FontColor("#079b62").FontSize(8f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.PrincipalPorPagar:N2}").FontSize(8f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.TotalPago:N2}").FontColor("#2b6cb0").FontSize(8f);
+                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{item.TotalPorPagar:N2}").Bold().FontColor("#dd6b20").FontSize(8f);
+
+                                    if (mostrarColunasExtras)
+                                    {
+                                        // Tratamento para a coluna Efectivo (Data de Pagamento)
+                                        string dataEfetivaStr = "-";
+                                        if (item.DataPagamento.HasValue)
+                                        {
+                                            dataEfetivaStr = item.DataPagamento.Value.ToString("dd/MM/yyyy");
+                                        }
+                                        else if (item.TotalPago > 0)
+                                        {
+                                            dataEfetivaStr = "Pago";
+                                        }
+
+                                        table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignCenter().Text(dataEfetivaStr).FontSize(8f);
+
+                                        // Tratamento para a coluna Situação (Diferença Efetivo vs Vencimento)
+                                        string situacaoStr = "0";
+                                        string corTexto = "#079b62"; // Verde por defeito
+
+                                        if (item.DataPagamento.HasValue)
+                                        {
+                                            int diasAtraso = (item.DataPagamento.Value.Date - item.Vencimento.Date).Days;
+                                            if (diasAtraso > 0)
+                                            {
+                                                situacaoStr = $"+{diasAtraso} dias";
+                                                corTexto = "#c53030"; // Vermelho se pagou após o vencimento
+                                            }
+                                            else
+                                            {
+                                                situacaoStr = "0";
+                                                corTexto = "#079b62"; // Verde se pagou no dia ou antes
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // Se ainda não foi pago, calcula com base na data de hoje se já estiver vencido
+                                            if (item.TotalPorPagar > 0 && DateTime.Today > item.Vencimento.Date)
+                                            {
+                                                int diasAtraso = (DateTime.Today - item.Vencimento.Date).Days;
+                                                situacaoStr = $"+{diasAtraso} dias";
+                                                corTexto = "#c53030";
+                                            }
+                                            else
+                                            {
+                                                situacaoStr = "0";
+                                                corTexto = "#079b62";
+                                            }
+                                        }
+
+                                        table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignCenter().Text(situacaoStr).Bold().FontColor(corTexto).FontSize(8f);
+                                    }
                                 }
                             }
                         });

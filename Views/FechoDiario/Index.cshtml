@@ -1,0 +1,293 @@
+﻿@model Analise.Models.FechoDiarioViewModel
+@{
+    ViewData["Title"] = "Mapa de Fecho do Dia";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+
+<style>
+    body {
+        background-color: #f4f6f9;
+        font-size: 11px;
+    }
+
+    .report-container {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .table-custom th, .table-custom td {
+        border: 1px solid #dee2e6 !important;
+        vertical-align: middle;
+        padding: 4px 6px;
+    }
+
+    .table-dark-custom {
+        background-color: #1e293b !important;
+        color: white !important;
+    }
+
+    .bg-green-header {
+        background-color: #079b62 !important;
+        color: white !important;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            background-color: #fff;
+            font-size: 10px;
+        }
+
+        .report-container {
+            box-shadow: none;
+            padding: 0;
+        }
+    }
+</style>
+
+<div class="container-fluid px-4 py-3 report-container">
+
+    <!-- Mensagens de Feedback -->
+    @if (TempData["MensagemSucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show no-print" role="alert">
+            <i class="fa-solid fa-check-circle me-2"></i> @TempData["MensagemSucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["MensagemErro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show no-print" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> @TempData["MensagemErro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Cabeçalho Principal (Não impresso) -->
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+        <div>
+            <h4 class="fw-bold text-dark mb-0">MAPA DE FECHO DO DIA - [@Model.DataReferencia.ToString("dd 'de' MMMM 'de' yyyy")]</h4>
+            <p class="text-muted small mb-0">Consolidação Financeira, Despesas, Operações e Carteira por Gestor</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            @if (!Model.DiaFechado)
+            {
+                <!-- Botão de Confirmação e Fecho (Visível APENAS antes de fechar o dia) -->
+                <button type="button" class="btn btn-sm btn-danger fw-bold" data-bs-toggle="modal" data-bs-target="#modalConfirmarFecho">
+                    <i class="fa-solid fa-lock me-1"></i> Fechar o dia
+                </button>
+            }
+            else
+            {
+                <!-- Botões de PDF (Visíveis APENAS depois de fechar o dia) -->
+                <!-- PDF MAPA DE CONTAS E CAIXA (Vertical) -->
+                <a asp-action="GerarMapaContasPdf"
+                   asp-route-data="@Model.DataReferencia.ToString("yyyy-MM-dd")"
+                   class="btn btn-sm btn-primary fw-bold"
+                   target="_blank">
+                    <i class="fa-solid fa-file-pdf me-1"></i> PDF Contas
+                </a>
+
+                <!-- PDF MAPA DE DESEMPENHO (Horizontal / Landscape) -->
+                <a asp-action="GerarMapaDesempenhoPdf"
+                   asp-route-data="@Model.DataReferencia.ToString("yyyy-MM-dd")"
+                   class="btn btn-sm btn-success fw-bold"
+                   style="background-color: #079b62; border-color: #079b62;"
+                   target="_blank">
+                    <i class="fa-solid fa-file-pdf me-1"></i> PDF Desempenho
+                </a>
+            }
+
+            <a asp-action="Index" asp-controller="DiaControlo" class="btn btn-sm btn-outline-secondary">Voltar</a>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal fade no-print" id="modalConfirmarFecho" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fs-6"><i class="fa-solid fa-lock me-2"></i> Confirmar Fecho Diário</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1 fw-semibold text-dark">Deseja gravar os saldos e consolidação do dia na base de dados?</p>
+                    <p class="text-muted small mb-0">Esta operação persiste os registos na tabela de Fechos e encerra as movimentações da data selecionada.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form asp-action="FecharDia" method="post" class="mb-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="dataFecho" value="@Model.DataReferencia.ToString("yyyy-MM-dd")" />
+                        <button type="submit" class="btn btn-sm btn-danger fw-bold">Confirmar e Gravar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOCO 1: RESUMO DE CAIXA E CONTAS BANCÁRIAS + DESPESAS -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-green-header fw-bold py-2">
+                    <i class="fa-solid fa-wallet me-2"></i>RESUMO DE CAIXA E CONTAS BANCÁRIAS (MOVIMENTOS)
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-custom text-end mb-0">
+                        <thead class="table-dark-custom text-center">
+                            <tr>
+                                <th class="text-start ps-2">CONTA</th>
+                                <th>SALDO ABERTURA</th>
+                                <th>CRÉDITOS DO DIA</th>
+                                <th>DÉBITOS DO DIA</th>
+                                <th>SALDO DE FECHO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.SaldosContas != null && Model.SaldosContas.Any())
+                            {
+                                foreach (var c in Model.SaldosContas)
+                                {
+                                    <tr>
+                                        <td class="text-start ps-2 fw-semibold">@c.NomeConta</td>
+                                        <td>@c.SaldoAbertura.ToString("N2")</td>
+                                        <td class="text-success">+ @c.CreditosDia.ToString("N2")</td>
+                                        <td class="text-danger">- @c.DebitosDia.ToString("N2")</td>
+                                        <td class="fw-bold text-dark">@c.SaldoFecho.ToString("N2")</td>
+                                    </tr>
+                                }
+                                <tr class="fw-bold table-light text-dark">
+                                    <td class="text-start ps-2">TOTAL</td>
+                                    <td>@Model.SaldosContas.Sum(x => x.SaldoAbertura).ToString("N2")</td>
+                                    <td class="text-success">+ @Model.SaldosContas.Sum(x => x.CreditosDia).ToString("N2")</td>
+                                    <td class="text-danger">- @Model.SaldosContas.Sum(x => x.DebitosDia).ToString("N2")</td>
+                                    <td>@Model.SaldosContas.Sum(x => x.SaldoFecho).ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TOTAL DESPESAS DO DIA -->
+            <div class="p-2 mt-2 bg-dark text-white rounded d-flex justify-content-between align-items-center">
+                <span class="fw-bold ps-2">TOTAL DESPESAS DO DIA:</span>
+                <span class="fs-6 fw-bold text-warning pe-2">MT @Model.TotalDespesasDiaVolume.ToString("N2") <span class="small text-white font-weight-normal">(Nº: @Model.TotalDespesasDiaNr)</span></span>
+            </div>
+        </div>
+
+        <!-- BLOCO 2: RESUMO OPERACIONAL DO DIA (POR GESTOR) -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-green-header fw-bold py-2">
+                    <i class="fa-solid fa-users me-2"></i>RESUMO OPERACIONAL DO DIA (POR GESTOR)
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-custom text-end mb-0">
+                        <thead class="table-dark-custom text-center">
+                            <tr>
+                                <th class="text-start ps-2">GESTOR</th>
+                                <th>DESEMBOLSO<br /><small>Volume / Nr</small></th>
+                                <th>REEMBOLSO<br /><small>Volume / Nr</small></th>
+                                <th>PEDIDOS PEND.<br /><small>Volume / Nr</small></th>
+                                <th>PEDIDOS APROV.<br /><small>Volume / Nr</small></th>
+                                <th>JUROS RECEB.<br /><small>Volume / Nr</small></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ResumoGestores != null && Model.ResumoGestores.Any())
+                            {
+                                foreach (var g in Model.ResumoGestores)
+                                {
+                                    <tr>
+                                        <td class="text-start ps-2 fw-semibold">@g.GestorNome</td>
+                                        <td>@g.DesembolsoVolume.ToString("N2") / <b>@g.DesembolsoNr</b></td>
+                                        <td>@g.ReembolsoVolume.ToString("N2") / <b>@g.ReembolsoNr</b></td>
+                                        <td>@g.PedidosPendentesVolume.ToString("N2") / <b>@g.PedidosPendentesNr</b></td>
+                                        <td>@g.PedidosAprovadosVolume.ToString("N2") / <b>@g.PedidosAprovadosNr</b></td>
+                                        <td>@g.JurosRecebidosVolume.ToString("N2") / <b>@g.JurosRecebidosNr</b></td>
+                                    </tr>
+                                }
+                                <tr class="fw-bold table-light text-dark">
+                                    <td class="text-start ps-2">TOTAL</td>
+                                    <td>@Model.ResumoGestores.Sum(x => x.DesembolsoVolume).ToString("N2") / @Model.ResumoGestores.Sum(x => x.DesembolsoNr)</td>
+                                    <td>@Model.ResumoGestores.Sum(x => x.ReembolsoVolume).ToString("N2") / @Model.ResumoGestores.Sum(x => x.ReembolsoNr)</td>
+                                    <td>@Model.ResumoGestores.Sum(x => x.PedidosPendentesVolume).ToString("N2") / @Model.ResumoGestores.Sum(x => x.PedidosPendentesNr)</td>
+                                    <td>@Model.ResumoGestores.Sum(x => x.PedidosAprovadosVolume).ToString("N2") / @Model.ResumoGestores.Sum(x => x.PedidosAprovadosNr)</td>
+                                    <td>@Model.ResumoGestores.Sum(x => x.JurosRecebidosVolume).ToString("N2") / @Model.ResumoGestores.Sum(x => x.JurosRecebidosNr)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOCO 3: CARTEIRA VIGENTE E MORA POR FAIXAS DE ATRASO -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-green-header fw-bold py-2 d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-chart-pie me-2"></i>RESUMO DE CARTEIRA (VIGENTE E EM MORA POR GESTOR)</span>
+                    <span class="badge bg-dark fs-6">CARTEIRA VIGENTE TOTAL: MT @Model.CarteiraVigenteTotalVolume.ToString("N2") (@Model.CarteiraVigenteTotalNr)</span>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-custom text-end mb-0">
+                        <thead class="table-dark-custom text-center">
+                            <tr>
+                                <th class="text-start ps-2" rowspan="2">GESTOR</th>
+                                <th rowspan="2">CARTEIRA VIGENTE<br /><small>(Volume / Nr)</small></th>
+                                <th colspan="6">CARTEIRA EM MORA DO DIA (POR FAIXA DE ATRASO)</th>
+                            </tr>
+                            <tr class="table-secondary text-dark">
+                                <th>< 7 Dias</th>
+                                <th>< 15 Dias</th>
+                                <th>< 30 Dias</th>
+                                <th>< 60 Dias</th>
+                                <th>< 90 Dias</th>
+                                <th>> 90 Dias</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.CarteiraMoraGestores != null && Model.CarteiraMoraGestores.Any())
+                            {
+                                foreach (var m in Model.CarteiraMoraGestores)
+                                {
+                                    <tr>
+                                        <td class="text-start ps-2 fw-semibold">@m.GestorNome</td>
+                                        <td class="bg-light fw-bold">@m.VigenteVolume.ToString("N2") / <b>@m.VigenteNr</b></td>
+                                        <td>@m.MoraMenor7Volume.ToString("N2") / <b>@m.MoraMenor7Nr</b></td>
+                                        <td>@m.MoraMenor15Volume.ToString("N2") / <b>@m.MoraMenor15Nr</b></td>
+                                        <td>@m.MoraMenor30Volume.ToString("N2") / <b>@m.MoraMenor30Nr</b></td>
+                                        <td>@m.MoraMenor60Volume.ToString("N2") / <b>@m.MoraMenor60Nr</b></td>
+                                        <td>@m.MoraMenor90Volume.ToString("N2") / <b>@m.MoraMenor90Nr</b></td>
+                                        <td class="text-danger fw-bold">@m.MoraMaior90Volume.ToString("N2") / <b>@m.MoraMaior90Nr</b></td>
+                                    </tr>
+                                }
+                                <tr class="fw-bold table-light text-dark">
+                                    <td class="text-start ps-2">TOTAL</td>
+                                    <td>@Model.CarteiraMoraGestores.Sum(x => x.VigenteVolume).ToString("N2") / @Model.CarteiraMoraGestores.Sum(x => x.VigenteNr)</td>
+                                    <td>@Model.CarteiraMoraGestores.Sum(x => x.MoraMenor7Volume).ToString("N2") / @Model.CarteiraMoraGestores.Sum(x => x.MoraMenor7Nr)</td>
+                                    <td>@Model.CarteiraMoraGestores.Sum(x => x.MoraMenor15Volume).ToString("N2") / @Model.CarteiraMoraGestores.Sum(x => x.MoraMenor15Nr)</td>
+                                    <td>@Model.CarteiraMoraGestores.Sum(x => x.MoraMenor30Volume).ToString("N2") / @Model.CarteiraMoraGestores.Sum(x => x.MoraMenor30Nr)</td>
+                                    <td>@Model.CarteiraMoraGestores.Sum(x => x.MoraMenor60Volume).ToString("N2") / @Model.CarteiraMoraGestores.Sum(x => x.MoraMenor60Nr)</td>
+                                    <td>@Model.CarteiraMoraGestores.Sum(x => x.MoraMenor90Volume).ToString("N2") / @Model.CarteiraMoraGestores.Sum(x => x.MoraMenor90Nr)</td>
+                                    <td class="text-danger">@Model.CarteiraMoraGestores.Sum(x => x.MoraMaior90Volume).ToString("N2") / @Model.CarteiraMoraGestores.Sum(x => x.MoraMaior90Nr)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
