@@ -2010,7 +2010,8 @@ namespace Analise.Controllers
                     {
                         page.Size(PageSizes.A4);
                         page.Margin(20);
-                        page.DefaultTextStyle(x => x.FontFamily("Arial").FontSize(8.5f).FontColor("#172b4d"));
+                        // Alterado de "Arial" para "Lato" para corresponder às fontes registadas no servidor de rede
+                        page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(8.5f).FontColor("#172b4d"));
 
                         page.Footer().AlignCenter().Text(text =>
                         {
@@ -2132,7 +2133,6 @@ namespace Analise.Controllers
             }
             catch (Exception ex)
             {
-                // Se houver qualquer erro na rede, exibe a mensagem exata no ecrã em vez da página cinzenta genérica
                 return Content($"[ERRO AO GERAR RECIBO PDF]: {ex.Message} | Inner: {ex.InnerException?.Message}");
             }
         }
