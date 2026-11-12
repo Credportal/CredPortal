@@ -1980,6 +1980,7 @@ namespace Analise.Controllers
                 var contaModel = await _bancoContext.Contas.FindAsync(contaRealId.Value);
                 if (contaModel != null)
                 {
+                    // Correção da quebra de linha em linha única para evitar crash na rede
                     nomeContaStr = $"{contaModel.Banco} - {contaModel.Conta} ({contaModel.Titular})";
 
                     if ((!string.IsNullOrEmpty(contaModel.Banco) && contaModel.Banco.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0) ||
