@@ -5,6 +5,7 @@
     // Cálculo dinâmico do custo administrativo com base na regra de negócio
     decimal valorEmprestimo = Model.ValorDesembolsado > 0 ? Model.ValorDesembolsado : (Model.ValorDecisao ?? Model.Valor);
     decimal custoAdministrativo = valorEmprestimo <= 10000 ? 200m : (valorEmprestimo * 0.02m);
+    var listaMovimentos = ViewBag.ListaMovimentos as List<Analise.Models.MovimentoExternoModel> ?? new List<Analise.Models.MovimentoExternoModel>();
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,7 +16,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">Documentos do Pedido #@Model.Id</h2>
-            <p class="text-muted small mb-0">Contrato, Garantias, Plano de Amortização, Confissão</p>
+            <p class="text-muted small mb-0">Contrato, Garantias, Plano de Amortização, Recibos e Confissão</p>
         </div>
         <a asp-controller="Pedido" asp-action="Ver" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> Voltar à Lista de Pedidos
@@ -28,17 +29,19 @@
             <div class="row g-3 align-items-center">
                 <div class="col-md-7">
                     <span class="d-block text-secondary small fw-semibold">Mutuário (Cliente)</span>
-                    <div class="d-flex flex-wrap align-items-center gap-3 mt-1">
-                        <h5 class="fw-bold text-dark mb-0">@Model.Entidade?.Nome <span class="text-muted small">(ID: #@Model.Id)</span></h5>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                        <h5 class="fw-bold text-dark mb-0 me-2">@Model.Entidade?.Nome <span class="text-muted small">(ID: #@Model.Id)</span></h5>
 
-                        <!-- Botões Pequenos de Geração de Documentos -->
-                        <div class="d-flex align-items-center gap-2">
-                            <a asp-controller="Pedido" asp-action="GerarContratoPdf" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-success rounded-2 fw-semibold px-2 py-1 shadow-sm d-flex align-items-center gap-1" style="color: #079b62; border-color: #079b62;" title="Gerar Contrato (PDF)">
+                        <!-- Botões de Geração de Documentos e Recibos -->
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            <a asp-controller="Pedido" asp-action="GerarContratoPdf" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-success rounded-2 fw-semibold px-2 py-1 shadow-sm d-flex align-items-center gap-1" style="color: #079b62; border-color: #079b62;" title="Gerar Contrato (PDF)" target="_blank">
                                 <i class="fa-solid fa-file-contract"></i> Contrato
                             </a>
-                            <!-- ADICIONE AQUI O NOVO BOTÃO DO PLANO HORIZONTAL -->
                             <a asp-controller="Pedido" asp-action="GerarPlanoAmortizacaoPdf" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-success rounded-2 fw-semibold px-2 py-1 shadow-sm d-flex align-items-center gap-1" style="color: #079b62; border-color: #079b62;" target="_blank" title="Plano de Amortização (Horizontal)">
-                                <i class="fa-solid fa-file-pdf"></i> Plano de Amortização
+                                <i class="fa-solid fa-file-pdf"></i> Plano
+                            </a>
+                            <a asp-controller="Pedido" asp-action="GerarReciboPagamentoPdf" asp-route-pedidoId="@Model.Id" class="btn btn-sm btn-dark rounded-2 fw-semibold px-2 py-1 shadow-sm d-flex align-items-center gap-1" title="Imprimir Último Recibo" target="_blank">
+                                <i class="fa-solid fa-receipt"></i> Último Recibo
                             </a>
                         </div>
                     </div>
@@ -86,6 +89,53 @@
                 </div>
                 <h5 class="fw-bold text-dark mb-0">MT @custoAdministrativo.ToString("N2")</h5>
             </div>
+        </div>
+    </div>
+
+    <!-- HISTÓRICO DE RECIBOS E PAGAMENTOS EFETUADOS PARA IMPRESSÃO -->
+    <div class="card shadow-sm border-0 rounded-4 bg-white p-4 mb-4">
+        <h5 class="fw-bold text-dark mb-3">
+            <i class="fa-solid fa-print text-success me-2" style="color: #079b62 !important;"></i>
+            Histórico de Recibos de Pagamento Emitidos
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 border rounded-3 overflow-hidden">
+                <thead class="table-light text-muted small">
+                    <tr>
+                        <th class="ps-3 py-2">ID Movimento</th>
+                        <th class="py-2">Tipo de Operação</th>
+                        <th class="py-2 text-end">Valor Pago (MT)</th>
+                        <th class="py-2 text-center pe-3">Ação de Impressão</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (listaMovimentos.Any())
+                    {
+                        foreach (var mov in listaMovimentos)
+                        {
+                            decimal valorMov = mov.Debito > 0 ? mov.Debito : mov.Credito;
+                            <tr>
+                                <td class="ps-3 fw-semibold text-dark">#@mov.Id</td>
+                                <td><span class="badge bg-light text-dark border">@mov.TipoOperacao</span></td>
+                                <td class="text-end fw-bold text-success" style="color: #079b62 !important;">MT @valorMov.ToString("N2")</td>
+                                <td class="text-center pe-3">
+                                    <a asp-controller="Pedido" asp-action="GerarReciboPagamentoPdf" asp-route-pedidoId="@Model.Id" asp-route-movimentoId="@mov.Id" class="btn btn-sm btn-outline-dark fw-semibold rounded-2 px-3" target="_blank" title="Imprimir Recibo Deste Movimento">
+                                        <i class="fa-solid fa-file-pdf text-danger me-1"></i> Imprimir Recibo
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-3 text-muted small">
+                                Nenhum registo de pagamento/reembolso encontrado para este crédito.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 

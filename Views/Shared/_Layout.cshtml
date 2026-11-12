@@ -296,12 +296,14 @@
                     <a asp-controller="Home" asp-action="Index" class="sg-nav-link @(currentController == "Painel" || currentController == "Home" ? "active" : "")">
                         <i class="fa-solid fa-house fa-fw"></i> Painel
                     </a>
-                    @if (usuario != null && usuario.Perfil == Analise.Enuns.PerfilEnum.Admin)
+
+                    @if (usuario != null && (usuario.Perfil == Analise.Enuns.PerfilEnum.Admin || usuario.Perfil == Analise.Enuns.PerfilEnum.Super || usuario.Perfil == Analise.Enuns.PerfilEnum.Gerente))
                     {
                         <a asp-controller="FechoDiario" asp-action="Index" class="sg-nav-link @(currentController == "Index" ? "active" : "")">
                             <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho do dia
                         </a>
                     }
+
                     <a asp-controller="Simulador" asp-action="Index" class="sg-nav-link @(currentController == "Simulador" ? "active" : "")">
                         <i class="fa-solid fa-calculator fa-fw"></i> Simulador
                     </a>
@@ -334,11 +336,15 @@
                         <i class="fa-solid fa-chart-pie fa-fw"></i> Relatórios
                     </a>
 
-                    @if (usuario != null && usuario.Perfil == Analise.Enuns.PerfilEnum.Admin)
+                    @if (usuario != null && (usuario.Perfil == Analise.Enuns.PerfilEnum.Admin || usuario.Perfil == Analise.Enuns.PerfilEnum.Super || usuario.Perfil == Analise.Enuns.PerfilEnum.Gerente))
                     {
-                        <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Usuario" ? "active" : "")">
-                            <i class="fa-solid fa-users fa-fw"></i> Usuários
-                        </a>
+                        @if (usuario.Perfil == Analise.Enuns.PerfilEnum.Admin || usuario.Perfil == Analise.Enuns.PerfilEnum.Super)
+                        {
+                            <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Usuario" ? "active" : "")">
+                                <i class="fa-solid fa-users fa-fw"></i> Usuários
+                            </a>
+                        }
+
                         <a asp-controller="FechoDiario" asp-action="Index" class="sg-nav-link @(currentController == "Index" ? "active" : "")">
                             <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho do dia
                         </a>

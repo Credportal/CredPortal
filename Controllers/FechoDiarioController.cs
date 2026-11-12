@@ -1,4 +1,6 @@
 ﻿using Analise.Data;
+using Analise.Enuns;
+using Analise.Filters;
 using Analise.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +13,8 @@ using System.Threading.Tasks;
 
 namespace Analise.Controllers
 {
+    [PaginaParaUsuarioLogado]
+    [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
     public class FechoDiarioController : Controller
     {
         private readonly BancoContext _bancoContext;

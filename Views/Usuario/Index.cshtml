@@ -1,6 +1,8 @@
-﻿@model List<UsuarioModel>
+﻿@model List<Analise.Models.UsuarioModel>
+@using Analise.Enuns
+
 @{
-    ViewData["Title"] = "Usuários";
+    ViewData["Title"] = "Gestão de Autoridades e Utilizadores";
 }
 
 <div class="container-fluid px-0">
@@ -28,13 +30,13 @@
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pb-3 mb-4 border-bottom">
             <div>
                 <h5 class="fw-bold text-dark m-0">
-                    <i class="fa-solid fa-users text-success me-2"></i>Gestão de Utilizadores
+                    <i class="fa-solid fa-user-shield text-success me-2"></i>Gestão de Autoridades e Utilizadores
                 </h5>
-                <span class="text-muted small">Consulte, adicione e gere as credenciais e acessos dos colaboradores.</span>
+                <span class="text-muted small">Consulte, adicione e gerencie os perfis de acesso e credenciais dos colaboradores.</span>
             </div>
             <div>
                 <a class="btn btn-success px-4 py-2 rounded-3 fw-semibold shadow-sm" asp-controller="Usuario" asp-action="Criar" role="button">
-                    <i class="fa-solid fa-plus me-1"></i> Novo Utilizador
+                    <i class="fa-solid fa-user-plus me-1"></i> Novo Utilizador
                 </a>
             </div>
         </div>
@@ -42,36 +44,73 @@
         <!-- Tabela Responsiva -->
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="table-usuarios" style="font-size: 13px;">
-                <thead class="bg-light text-secondary">
+                <thead class="table-light text-secondary small text-uppercase">
                     <tr>
-                        <th class="ps-3 border-0" scope="col"># ID</th>
-                        <th class="border-0" scope="col">Nome</th>
-                        <th class="border-0" scope="col">Login</th>
-                        <th class="border-0 text-end pe-3" scope="col">Ações</th>
+                        <th class="ps-3 border-0"># ID / Login</th>
+                        <th class="border-0">Nome Completo / Email</th>
+                        <th class="border-0">Agência</th>
+                        <th class="border-0">Perfil Atual</th>
+                        <th class="border-0 text-end pe-3">Alterar Autoridade</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (Model != null && Model.Any())
                     {
-                        foreach (UsuarioModel usuario in Model)
+                        foreach (var item in Model)
                         {
-                            <tr class="linha-usuario" data-id="@usuario.Id" style="cursor: pointer;">
-                                <td class="ps-3 fw-semibold text-muted">#@usuario.Id</td>
-                                <td class="fw-semibold text-dark">
-                                    <i class="fa-solid fa-circle-user text-success me-2"></i>@usuario.Nome
+                            <tr class="linha-usuario" data-id="@item.Id">
+                                <td class="ps-3 fw-semibold text-dark">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold small" style="width: 32px; height: 32px;">
+                                            @(!string.IsNullOrEmpty(item.Login) ? item.Login.Substring(0, 1).ToUpper() : "U")
+                                        </div>
+                                        <div>
+                                            <div>#@item.Id</div>
+                                            <span class="badge bg-light text-dark border px-1 font-monospace" style="font-size: 10px;">@item.Login</span>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-dark border px-2 py-1 font-monospace">@usuario.Login</span>
+                                    <div class="fw-semibold text-dark">@item.Nome</div>
+                                    <div class="text-muted" style="font-size: 11px;">@item.Email</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="fa-solid fa-location-dot me-1 text-secondary"></i> @(item.Agencia?.Nome ?? "Geral / Sede")
+                                    </span>
+                                </td>
+                                <td>
+                                    @{
+                                        string badgeClass = item.Perfil switch
+                                        {
+                                            PerfilEnum.Admin => "bg-danger",
+                                            PerfilEnum.Super => "bg-dark",
+                                            PerfilEnum.Gerente => "bg-primary",
+                                            PerfilEnum.Administrativo => "bg-info text-dark",
+                                            PerfilEnum.Caixa => "bg-warning text-dark",
+                                            PerfilEnum.Operador => "bg-secondary",
+                                            _ => "bg-light text-dark"
+                                        };
+                                    }
+                                    <span class="badge @badgeClass px-2 py-1">@item.Perfil</span>
                                 </td>
                                 <td class="text-end pe-3">
-                                    <a role="button"
-                                       class="btn btn-sm btn-outline-secondary rounded-3 px-2 py-1"
-                                       asp-route-id="@usuario.Id"
-                                       asp-controller="Usuario"
-                                       asp-action="Editar"
-                                       title="Editar Utilizador">
-                                        <i class="fa-solid fa-pen-to-square me-1"></i> Editar
-                                    </a>
+                                    <form asp-action="AtualizarPerfil" method="post" class="d-inline-flex gap-2 align-items-center justify-content-end">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <select name="novoPerfil" class="form-select form-select-sm rounded-3" style="width: 150px;" asp-for="@item.Perfil" asp-items="Html.GetEnumSelectList<PerfilEnum>()">
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-outline-success rounded-3 px-2" title="Guardar Alteração">
+                                            <i class="fa-solid fa-floppy-disk"></i>
+                                        </button>
+                                        <a role="button"
+                                           class="btn btn-sm btn-outline-secondary rounded-3 px-2"
+                                           asp-route-id="@item.Id"
+                                           asp-controller="Usuario"
+                                           asp-action="Editar"
+                                           title="Editar Detalhes">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                    </form>
                                 </td>
                             </tr>
                         }
@@ -79,7 +118,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="4" class="text-center text-muted py-4">
+                            <td colspan="5" class="text-center py-4 text-muted">
                                 <i class="fa-regular fa-folder-open fs-3 d-block mb-2 text-secondary"></i>
                                 Nenhum utilizador registado no sistema.
                             </td>
@@ -87,21 +126,6 @@
                     }
                 </tbody>
             </table>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Contactos -->
-<div id="modalContactosUsuario" class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-address-book text-success me-2"></i>Lista de Contactos</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div id="listaContactoUsuario"></div>
-            </div>
         </div>
     </div>
 </div>
@@ -119,14 +143,6 @@
                     responsive: true
                 });
             }
-
-            // Redirecionamento por Duplo Clique na linha
-            $('#table-usuarios').on('dblclick', 'tr.linha-usuario', function () {
-                var id = $(this).data('id');
-                if (id) {
-                    window.location.href = '/Usuario/Editar/' + id;
-                }
-            });
         });
     </script>
 }

@@ -1,4 +1,5 @@
-﻿using Analise.Filters;
+﻿using Analise.Enuns;
+using Analise.Filters;
 using Analise.Helper;
 using Analise.Models;
 using Analise.Repositorio;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 namespace Analise.Controllers
 {
     [PaginaParaUsuarioLogado]
+    [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
     public class DespesaController : Controller
     {
         private readonly IDespesaRepositorio _despesaRepositorio;

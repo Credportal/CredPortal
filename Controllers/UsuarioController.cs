@@ -1,4 +1,5 @@
-﻿using Analise.Filters;
+﻿using Analise.Enuns;
+using Analise.Filters;
 using Analise.Models;
 using Analise.Repositorio;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Analise.Controllers
 {
-    [PaginaRestritaSomenteAdmin]
+    //[PaginaRestritaSomenteAdmin]
+    [PaginaParaUsuarioLogado]
+    [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super)]
     public class UsuarioController : Controller
     {
         private readonly IUsuarioRepositorio _usuarioRepositorio;

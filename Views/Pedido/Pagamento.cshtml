@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Pagamento das prestações";
     var listaAmortizacoes = ViewBag.ListaAmortizacoes as List<Analise.Models.AmortizacaoModel> ?? new List<Analise.Models.AmortizacaoModel>();
+    var historicoMovimentos = ViewBag.HistoricoMovimentos as List<Analise.Models.MovimentoExternoModel> ?? new List<Analise.Models.MovimentoExternoModel>();
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,9 +27,9 @@
             <div>
                 <i class="fa-solid fa-circle-check me-2"></i> @TempData["MensagemSucesso"]
             </div>
-            <!-- Exemplo de botão para descarregar o último recibo gerado para este pedido -->
+            <!-- Botão para descarregar o último recibo gerado para este pedido -->
             <a asp-controller="Pedido" asp-action="GerarReciboPagamentoPdf" asp-route-pedidoId="@Model.Id" class="btn btn-sm btn-dark text-white fw-bold" target="_blank">
-                <i class="fa-solid fa-file-pdf me-1"></i> Imprimir Recibo
+                <i class="fa-solid fa-file-pdf me-1"></i> Imprimir Último Recibo
             </a>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -119,7 +120,7 @@
         <!-- TABELA DO PLANO DE AMORTIZAÇÃO E MULTAS -->
         <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
             <h5 class="fw-bold text-dark mb-3">
-                <i class="fa-solid fa-table-list text-success me-2" style="color: #079b62 !important;"></i>
+                <i class="fa-solid fa-table-list text-success me-2" style="color: #079b62 !important;"></i> Plano de Amortização
             </h5>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0 border rounded-3 overflow-hidden">
@@ -186,6 +187,20 @@
             </div>
         </div>
     </form>
+
+    <!-- HISTÓRICO DE RECIBOS EMITIDOS -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mt-4">
+        <h5 class="fw-bold text-dark mb-3">
+            <i class="fa-solid fa-receipt text-success me-2" style="color: #079b62 !important;"></i>
+            Histórico e Reimpressão de Recibos
+        </h5>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <p class="text-muted small mb-0">Precisa de reemitir o recibo de um pagamento anterior efetuado para este crédito? Clique no botão abaixo para gerar o PDF a qualquer momento.</p>
+            <a asp-controller="Pedido" asp-action="GerarReciboPagamentoPdf" asp-route-pedidoId="@Model.Id" class="btn btn-outline-dark fw-semibold px-4" target="_blank">
+                <i class="fa-solid fa-file-pdf text-danger me-2"></i> Imprimir Último Recibo Emitido
+            </a>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -223,7 +238,6 @@
                     let totalPrestacao = principal + juroLiquido + multaLiquida;
                     totalGeralDivida += totalPrestacao;
 
-                    // Distribuição priorizada por antiguidade: Multa -> Juro -> Principal
                     let alocadoMulta = 0, alocadoJuro = 0, alocadoPrincipal = 0;
 
                     if (saldoDisponivel > 0) {

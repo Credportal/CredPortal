@@ -50,10 +50,8 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold text-secondary small">Perfil de Acesso</label>
-                                <select asp-for="Perfil" class="form-select form-select-lg rounded-3 fs-6">
+                                <select asp-for="Perfil" class="form-select form-select-lg rounded-3 fs-6" asp-items="Html.GetEnumSelectList<PerfilEnum>()">
                                     <option value="">Selecione o perfil</option>
-                                    <option value="@PerfilEnum.Admin">Administrador</option>
-                                    <option value="@PerfilEnum.Padrao">Padrão</option>
                                 </select>
                                 <span class="text-danger small">@Html.ValidationMessageFor(x => x.Perfil)</span>
                             </div>

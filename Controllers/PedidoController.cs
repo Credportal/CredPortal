@@ -1,4 +1,5 @@
 ﻿using Analise.Data;
+using Analise.Enuns;
 using Analise.Filters;
 using Analise.Helper;
 using Analise.Models;
@@ -93,6 +94,7 @@ namespace Analise.Controllers
         }
 
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Criar(PedidoModel pedido)
         {
@@ -493,16 +495,22 @@ namespace Analise.Controllers
                     dataReferencia = DateTime.Today;
                 }
 
-                // Chame o seu método/serviço que calcula as prestações (exemplo de lógica de cálculo ou simulação)
-                // Se já tiver um simulador ou repositor de cálculo, invoque-o aqui para preencher a lista em memória:
+                // Chame o seu método/serviço que calcula as prestações em memória
                 listaAmortizacoes = GerarPlanoAmortizacaoTemporario(pedido, dataReferencia);
             }
 
-            // 5. Passar dados auxiliares via ViewBag para a View
+            // 5. Carregar o Histórico de Recibos/Movimentos para Impressão
+            var listaMovimentos = await _bancoContext.MovimentosExternos
+                .Where(m => m.EntidadeId == pedido.EntidadeId && m.TipoOperacao.Contains("Reembolso"))
+                .OrderByDescending(m => m.Id)
+                .ToListAsync();
+
+            // 6. Passar dados auxiliares via ViewBag para a View
             ViewBag.GarantiasCliente = garantiasCliente;
             ViewBag.Intervenientes = intervenientes;
             ViewBag.GarantiasPorInterveniente = garantiasMap;
             ViewBag.ListaAmortizacoes = listaAmortizacoes;
+            ViewBag.ListaMovimentos = listaMovimentos; // <-- Alimentará a tabela de recibos na View de Documentos
 
             return View("Documento", pedido);
         }
@@ -1928,6 +1936,7 @@ namespace Analise.Controllers
             decimal valorRealPago = 0;
             int? contaRealId = contaId;
 
+            // 1. Se foi passado um ID de movimento específico, busca os dados reais dele
             if (movimentoId.HasValue && movimentoId.Value > 0)
             {
                 var movimento = await _bancoContext.MovimentosExternos
@@ -1939,10 +1948,12 @@ namespace Analise.Controllers
                     contaRealId = movimento.ContaId;
                 }
             }
+            // 2. Se foi passado um valor avulso
             else if (valorPago.HasValue && valorPago.Value > 0)
             {
                 valorRealPago = valorPago.Value;
             }
+            // 3. Caso contrário, busca o último movimento de reembolso registado para este cliente/pedido
             else
             {
                 var ultimoMovimento = await _bancoContext.MovimentosExternos
@@ -1971,11 +1982,8 @@ namespace Analise.Controllers
                 {
                     nomeContaStr = $"{contaModel.Banco} - {contaModel.Conta} ({contaModel.Titular})";
 
-                    if (!string.IsNullOrEmpty(contaModel.Banco) && contaModel.Banco.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        formaPagamento = "Numerário";
-                    }
-                    else if (!string.IsNullOrEmpty(contaModel.Conta) && contaModel.Conta.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if ((!string.IsNullOrEmpty(contaModel.Banco) && contaModel.Banco.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                        (!string.IsNullOrEmpty(contaModel.Conta) && contaModel.Conta.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0))
                     {
                         formaPagamento = "Numerário";
                     }
@@ -2012,14 +2020,12 @@ namespace Analise.Controllers
                     {
                         col.Spacing(8);
 
-                        // --- FUNÇÃO AUXILIAR PARA GERAR CADA CÓPIA DO RECIBO ---
                         void RenderizarViaRecibo(string viaTitulo)
                         {
                             col.Item().Column(reciboCol =>
                             {
                                 reciboCol.Spacing(4);
 
-                                // Cabeçalho com a Indicação da Via (Original / Duplicado)
                                 reciboCol.Item().Row(row =>
                                 {
                                     row.RelativeItem().Column(c =>
@@ -2030,7 +2036,7 @@ namespace Analise.Controllers
 
                                     row.ConstantItem(160).AlignRight().Column(c =>
                                     {
-                                        c.Item().Text($"Data: {DateTime.Now.ToString("dd/MM/yyyy HH:mm", culturaPt)}").FontSize(7.5f).Italic().AlignRight();
+                                        c.Item().Text($"Data: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(7.5f).Italic().AlignRight();
                                         c.Item().Text($"Nº Recibo: {numeroRecibo}").Bold().FontSize(8).FontColor("#079b62").AlignRight();
                                         c.Item().Text($"Ref: {numeroProcesso}").FontSize(8).FontColor("#718096").AlignRight();
                                     });
@@ -2073,7 +2079,7 @@ namespace Analise.Controllers
                                     });
                                 });
 
-                                // 3. Observações Curtas
+                                // 3. Observações
                                 reciboCol.Item().Background("#f5f7fb").Padding(3).Text("3. OBSERVAÇÕES").Bold().FontSize(8.5f).FontColor("#172b4d");
                                 reciboCol.Item().Text(
                                     "Quantia recebida para amortização de prestações e encargos do crédito, nos termos regulamentares."
@@ -2081,7 +2087,6 @@ namespace Analise.Controllers
 
                                 reciboCol.Item().PaddingTop(10);
 
-                                // Assinaturas
                                 reciboCol.Item().Table(table =>
                                 {
                                     table.ColumnsDefinition(columns =>
@@ -2108,23 +2113,20 @@ namespace Analise.Controllers
                             });
                         }
 
-                        // --- RENDERIZAR CÓPIA 1 (ORIGINAL) ---
-                        RenderizarViaRecibo("1ª VIA — ORIGINAL");
+                        RenderizarViaRecibo("ORIGINAL");
 
-                        // --- LINHA DIVISÓRIA / CORTE ENTRE AS CÓPIAS ---
                         col.Item().PaddingVertical(10).Row(r =>
                         {
                             r.RelativeItem().LineHorizontal(0.8f).LineColor("#cbd5e0");
                         });
 
-                        // --- RENDERIZAR CÓPIA 2 (DUPLICADO) ---
-                        RenderizarViaRecibo("2ª VIA — DUPLICADO");
+                        RenderizarViaRecibo("CÓPIA PARA CLIENTE");
                     });
                 });
             });
 
             byte[] bytes = pdfDocument.GeneratePdf();
-            return File(bytes, "application/pdf", $"Recibo_Duplicado_{pedido.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            return File(bytes, "application/pdf", $"Recibo_Pagamento_{pedido.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
         }
         [HttpGet]
         public async Task<IActionResult> GerarReciboDesembolsoPdf(int id)
