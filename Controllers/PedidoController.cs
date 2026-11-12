@@ -28,6 +28,7 @@ namespace Analise.Controllers
         private readonly IUsuarioRepositorio _usuarioRepositorio;
         private readonly BancoContext _bancoContext;
         private readonly ISessao _sessao;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public PedidoController(
             IPedidoRepositorio pedidoRepositorio,
@@ -36,7 +37,8 @@ namespace Analise.Controllers
             IUsuarioRepositorio usuarioRepositorio,
             IContaRepositorio contaRepositorio,
             BancoContext bancoContext,
-            ISessao sessao)
+            ISessao sessao,
+            IWebHostEnvironment webHostEnvironment)
         {
             _pedidoRepositorio = pedidoRepositorio;
             _entidadeRepositorio = entidadeRepositorio;
@@ -45,6 +47,7 @@ namespace Analise.Controllers
             _contaRepositorio = contaRepositorio;
             _bancoContext = bancoContext;
             _sessao = sessao;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<IActionResult> Ver()
@@ -1938,7 +1941,6 @@ namespace Analise.Controllers
                 decimal valorRealPago = 0;
                 int? contaRealId = contaId;
 
-                // 1. Se foi passado um ID de movimento específico, busca os dados reais dele
                 if (movimentoId.HasValue && movimentoId.Value > 0)
                 {
                     var movimento = await _bancoContext.MovimentosExternos
@@ -1950,12 +1952,10 @@ namespace Analise.Controllers
                         contaRealId = movimento.ContaId;
                     }
                 }
-                // 2. Se foi passado um valor avulso
                 else if (valorPago.HasValue && valorPago.Value > 0)
                 {
                     valorRealPago = valorPago.Value;
                 }
-                // 3. Caso contrário, busca o último movimento de reembolso registado para este cliente/pedido
                 else
                 {
                     var ultimoMovimento = await _bancoContext.MovimentosExternos
@@ -1972,6 +1972,21 @@ namespace Analise.Controllers
                     {
                         valorRealPago = 0;
                     }
+                }
+
+                // --- CALCULAR VALOR EM FALTA E PRÓXIMA DATA DE VENCIMENTO ---
+                var amortizacoes = await _bancoContext.Amortizacoes
+                    .Where(a => a.PedidoId == pedidoId)
+                    .OrderBy(a => a.NR)
+                    .ToListAsync();
+
+                decimal totalEmFalta = amortizacoes.Sum(a => a.TotalPorPagar);
+
+                string proximaVencimentoStr = "N/A";
+                var proximaPrestacao = amortizacoes.FirstOrDefault(a => a.TotalPorPagar > 0);
+                if (proximaPrestacao != null)
+                {
+                    proximaVencimentoStr = proximaPrestacao.Vencimento.ToString("dd/MM/yyyy");
                 }
 
                 string nomeContaStr = "Conta Principal";
@@ -2002,6 +2017,14 @@ namespace Analise.Controllers
                 string contactoCliente = cli?.Telefone ?? "N/A";
                 string operadorStr = usuarioLogado?.Login ?? "Administrador";
 
+                // --- CARREGAR O LOGOTIPO DO DISCO ---
+                byte[] logoBytes = null;
+                string caminhoLogo = Path.Combine(_webHostEnvironment.WebRootPath, "images", "logo.png");
+                if (System.IO.File.Exists(caminhoLogo))
+                {
+                    logoBytes = System.IO.File.ReadAllBytes(caminhoLogo);
+                }
+
                 var culturaPt = new System.Globalization.CultureInfo("pt-PT");
 
                 var pdfDocument = Document.Create(container =>
@@ -2010,7 +2033,6 @@ namespace Analise.Controllers
                     {
                         page.Size(PageSizes.A4);
                         page.Margin(20);
-                        // Alterado de "Arial" para "Lato" para corresponder às fontes registadas no servidor de rede
                         page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(8.5f).FontColor("#172b4d"));
 
                         page.Footer().AlignCenter().Text(text =>
@@ -2029,12 +2051,20 @@ namespace Analise.Controllers
                                 {
                                     reciboCol.Spacing(4);
 
+                                    // Cabeçalho com o Logotipo à Esquerda e Info à Direita
                                     reciboCol.Item().Row(row =>
                                     {
                                         row.RelativeItem().Column(c =>
                                         {
-                                            c.Item().Text("Cash Pronto").Bold().FontSize(16).FontColor("#079b62");
-                                            c.Item().Text($"{nomeEmpresa} — {viaTitulo}").FontSize(7.5f).FontColor("#718096");
+                                            if (logoBytes != null)
+                                            {
+                                                c.Item().Width(120).Image(logoBytes);
+                                            }
+                                            else
+                                            {
+                                                c.Item().Text("Cash Pronto").Bold().FontSize(16).FontColor("#079b62");
+                                            }
+                                            c.Item().Text($"Via: {viaTitulo}").FontSize(7.5f).FontColor("#718096");
                                         });
 
                                         row.ConstantItem(160).AlignRight().Column(c =>
@@ -2066,7 +2096,7 @@ namespace Analise.Controllers
                                         });
                                     });
 
-                                    // 2. Detalhes do Pagamento
+                                    // 2. Detalhes do Pagamento (Atualizado com Valor em Falta e Próximo Vencimento)
                                     reciboCol.Item().Background("#f5f7fb").Padding(3).Text("2. DETALHES DO PAGAMENTO").Bold().FontSize(8.5f).FontColor("#172b4d");
                                     reciboCol.Item().Column(inner =>
                                     {
@@ -2079,6 +2109,11 @@ namespace Analise.Controllers
                                         {
                                             row.RelativeItem(6).Text(t => { t.Span("Operador: ").Bold(); t.Span(operadorStr); });
                                             row.RelativeItem(6).Text(t => { t.Span("Forma Pagamento: ").Bold(); t.Span(formaPagamento); });
+                                        });
+                                        inner.Item().Row(row =>
+                                        {
+                                            row.RelativeItem(6).Text(t => { t.Span("Valor em Falta (Dívida): ").Bold(); t.Span($"{totalEmFalta:N2} MT").Bold().FontColor("#c53030"); });
+                                            row.RelativeItem(6).Text(t => { t.Span("Próximo Vencimento: ").Bold(); t.Span(proximaVencimentoStr).Bold(); });
                                         });
                                     });
 
