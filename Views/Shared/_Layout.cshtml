@@ -30,25 +30,15 @@
         agenciaUtilizador = agencia?.Nome ?? "Agência não identificada";
     }
 
-    // --- VERIFICAÇÃO INDEPENDENTE DE RELÓGIO (Baseada no último registo de fecho) ---
+    // --- VERIFICAÇÃO POR DATA ATUAL DO SERVIDOR (GMT+2) ---
+    DateTime dataHojeServidor = DateTime.UtcNow.AddHours(2).Date;
     bool diaFechado = false;
 
     if (_context.FechosDiariosRegistos != null)
     {
-        // Busca o fecho mais recente gravado na base de dados
-        var ultimoFecho = await _context.FechosDiariosRegistos
+        diaFechado = await _context.FechosDiariosRegistos
             .AsNoTracking()
-            .OrderByDescending(r => r.DataReferencia)
-            .FirstOrDefaultAsync();
-
-        // Se o último registo encontrado estiver marcado como fechado,
-        // o sistema assume o bloqueio até que um novo dia seja aberto/iniciado.
-        if (ultimoFecho != null && ultimoFecho.Fechado)
-        {
-            // Opcional: valida se a data do último fecho corresponde ao dia corrente real do servidor
-            // ou mantém bloqueado se o operador ainda não abriu o dia seguinte.
-            diaFechado = true;
-        }
+            .AnyAsync(r => r.DataReferencia.Date == dataHojeServidor && r.Fechado);
     }
 }
 <html lang="pt">
