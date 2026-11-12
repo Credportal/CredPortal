@@ -39,9 +39,9 @@
         </div>
         <div class="d-flex gap-2">
             <!-- Botão de Exportar / Imprimir PDF da Lista -->
-            <button onclick="window.print()" class="btn btn-outline-success rounded-2 px-3 d-flex align-items-center gap-2" style="color: #079b62; border-color: #079b62;">
-                <i class="fa-solid fa-file-pdf"></i> Exportar
-            </button>
+            <a asp-action="GerarRelatorioContasPdf" class="btn btn-outline-success rounded-2 px-3 d-flex align-items-center gap-2" style="color: #079b62; border-color: #079b62;" target="_blank">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
             <!-- Botão para aceder à tela de Operações Bancárias -->
             <a asp-action="Operacoes" class="btn btn-outline-primary rounded-2 px-3 d-flex align-items-center gap-2">
                 <i class="fa-solid fa-right-left"></i> Operações Bancárias

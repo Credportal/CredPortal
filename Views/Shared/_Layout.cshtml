@@ -97,15 +97,8 @@
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                font-size: 23px;
-                font-weight: 800;
-                color: var(--sg-green);
                 text-decoration: none;
             }
-
-                .sg-brand i {
-                    font-size: 29px;
-                }
 
             .sg-nav-link {
                 display: flex;
@@ -225,10 +218,9 @@
                 <i class="fa-solid fa-bars text-secondary"></i>
             </button>
 
-            <!-- LOGO CRED QUE MOSTRA A SIDEBAR E VOLTA AO PAINEL -->
+            <!-- LOGOTIPO OFICIAL DA EMPRESA -->
             <a asp-controller="Home" asp-action="Index" class="sg-brand" id="logoBrand">
-                <span>Cash Pronto</span>
-                <div class="text-secondary" style="font-size: 11px;">Microcrédito E.I.</div>
+                <img src="~/images/logo.png" alt="Cash Pronto" style="max-height: 38px; width: auto;" />
             </a>
         </div>
 

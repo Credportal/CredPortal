@@ -13,9 +13,15 @@
             <h2 class="fw-bold text-dark mb-1">Gestão de Despesas</h2>
             <p class="text-muted small mb-0">Registo e controlo de saídas financeiras da microcrédito</p>
         </div>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
-            <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
-        </a>
+        <!-- No cabeçalho da página, junto ao botão Voltar ao Painel -->
+        <div class="d-flex gap-2">
+            <a asp-action="GerarRelatorioDespesasPdf" class="btn btn-outline-success rounded-2 px-3 d-flex align-items-center gap-2" style="color: #079b62; border-color: #079b62;" target="_blank">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary rounded-2 px-3 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+            </a>
+        </div>
     </div>
 
     <!-- Alertas -->

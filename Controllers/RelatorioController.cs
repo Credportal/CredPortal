@@ -22,13 +22,15 @@ namespace Analise.Controllers
         private readonly IEntidadeRepositorio _entidadeRepositorio;
         private readonly BancoContext _bancoContext;
         private readonly ISessao _sessao;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public RelatorioController(
             IPedidoRepositorio pedidoRepositorio,
             IEntidadeRepositorio entidadeRepositorio,
             BancoContext bancoContext,
-            ISessao sessao)
+            ISessao sessao, IWebHostEnvironment webHostEnvironment)
         {
+            _webHostEnvironment = webHostEnvironment;
             _pedidoRepositorio = pedidoRepositorio;
             _entidadeRepositorio = entidadeRepositorio;
             _bancoContext = bancoContext;
@@ -259,16 +261,15 @@ namespace Analise.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GerarCarteiraPdf(
-            string tipoRelatorio,
-            DateTime? dataInicial,
-            DateTime? dataFinal,
-            int? gestorId,
-            int? entidadeId,
-            int? contaId)
+     string tipoRelatorio,
+     DateTime? dataInicial,
+     DateTime? dataFinal,
+     int? gestorId,
+     int? entidadeId,
+     int? contaId)
         {
             tipoRelatorio ??= "Pendentes";
             var culturaPt = new CultureInfo("pt-PT");
-            string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
 
             // Obter utilizador logado para auditoria no documento
             var usuarioSessao = _sessao.BuscarSessaoDoUsuario();
@@ -347,8 +348,8 @@ namespace Analise.Controllers
 
                 listaAmortFiltro = await queryAmortizacoes
                     .Where(a => isFeito ? a.PrincipalPorPagar <= 0
-                                       : (isMora ? a.Vencimento.Date < DateTime.Today && a.PrincipalPorPagar > 0
-                                                 : a.Vencimento.Date >= DateTime.Today && a.PrincipalPorPagar > 0))
+                                        : (isMora ? a.Vencimento.Date < DateTime.Today && a.PrincipalPorPagar > 0
+                                                  : a.Vencimento.Date >= DateTime.Today && a.PrincipalPorPagar > 0))
                     .OrderBy(a => a.Vencimento)
                     .ToListAsync();
             }
@@ -384,239 +385,297 @@ namespace Analise.Controllers
                 listaExtratoIntFiltro = await intQuery.OrderByDescending(m => m.DataCadastro).ToListAsync();
             }
 
+            // --- CARREGAR O LOGOTIPO E A MARCA D'ÁGUA DO DISCO ---
+            byte[] logoBytes = null;
+            string caminhoLogo = Path.Combine(_webHostEnvironment.WebRootPath, "images", "logo.png");
+            if (System.IO.File.Exists(caminhoLogo))
+            {
+                logoBytes = System.IO.File.ReadAllBytes(caminhoLogo);
+            }
+
+            byte[] marcaDaguaBytes = null;
+            string caminhoMarcaDagua = Path.Combine(_webHostEnvironment.WebRootPath, "images", "MarcaAgua.png");
+            if (System.IO.File.Exists(caminhoMarcaDagua))
+            {
+                marcaDaguaBytes = System.IO.File.ReadAllBytes(caminhoMarcaDagua);
+            }
+
+            string tituloRelatorioStr = $"Relatório - {tipoRelatorio}";
+
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
+                    // Orientação Paisagem (Landscape) ideal para relatórios largos
                     page.Size(PageSizes.A4.Landscape());
-                    page.Margin(20);
+                    page.MarginTop(20);
+                    page.MarginBottom(45);
+                    page.MarginLeft(20);
+                    page.MarginRight(20);
                     page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(8).FontColor("#172b4d"));
 
-                    // Rodapé com Operador e Empresa
-                    page.Footer().Row(row =>
+                    // Rodapé Institucional Oficial Limpo e sem duplicações
+                    page.Footer().AlignCenter().Column(colFooter =>
                     {
-                        row.RelativeItem().Text(text =>
+                        colFooter.Item().LineHorizontal(1f).LineColor("#b89735");
+                        colFooter.Item().PaddingTop(3).Row(row =>
                         {
-                            text.Span("Processado por: ").FontSize(7.5f).Italic().FontColor("#a0aec0");
-                            text.Span(nomeUsuarioProcessamento).FontSize(7.5f).Bold().FontColor("#718096");
-                        });
+                            row.RelativeItem().Text(text =>
+                            {
+                                text.Span("Processado por: ").FontSize(7.5f).Italic().FontColor("#a0aec0");
+                                text.Span(nomeUsuarioProcessamento).FontSize(7.5f).Bold().FontColor("#718096");
+                            });
 
-                        row.RelativeItem().AlignRight().Text(text =>
-                        {
-                            text.Span($"RELATÓRIO ({tipoRelatorio.ToUpper()}) — ").FontSize(7.5f).Italic().FontColor("#a0aec0");
-                            text.Span(nomeEmpresa).FontSize(7.5f).Bold().FontColor("#718096");
+                            row.RelativeItem(2).AlignCenter().Text(PadraoTimbradoComponent.RodapeTimbrado).FontSize(7.5f).Bold().FontColor("#079b62");
+
+                            row.RelativeItem().AlignRight().Text(text =>
+                            {
+                                text.Span($"Data: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(7.5f).Italic().FontColor("#a0aec0");
+                            });
                         });
                     });
 
-                    page.Content().Column(col =>
+                    // --- CAMADAS (Marca d'água no fundo + Conteúdo estruturado pelo componente) ---
+                    page.Content().Layers(layers =>
                     {
-                        col.Spacing(8);
-
-                        // Cabeçalho institucional
-                        col.Item().Row(row =>
+                        if (marcaDaguaBytes != null)
                         {
-                            row.RelativeItem().Column(c =>
+                            layers.Layer().AlignCenter().AlignMiddle().Column(c =>
                             {
-                                c.Item().Text("Cash Pronto").Bold().FontSize(16).FontColor("#079b62");
-                                c.Item().Text($"Relatório de Carteira - {tipoRelatorio}").Bold().FontSize(11).FontColor("#2d3748");
-                                c.Item().Text(nomeEmpresa).FontSize(8f).FontColor("#718096");
+                                c.Item().Width(500).Image(marcaDaguaBytes);
                             });
+                        }
 
-                            row.ConstantItem(320).AlignRight().Column(c =>
+                        layers.PrimaryLayer().Component(new PadraoTimbradoComponent(
+                            tituloRelatorioStr,
+                            null,
+                            logoBytes,
+                            marcaDaguaBytes,
+                            conteudo =>
                             {
-                                c.Item().Text($"Emissão: {DateTime.Now.ToString("dd/MM/yyyy HH:mm", culturaPt)}").FontSize(8f).Italic().AlignRight();
-                                string pIni = dataInicial?.ToString("dd/MM/yyyy") ?? "Início";
-                                string pFin = dataFinal?.ToString("dd/MM/yyyy") ?? "Hoje";
-                                c.Item().Text($"Período: {pIni} a {pFin}").FontSize(8f).Bold().FontColor("#079b62").AlignRight();
-
-                                if (tipoRelatorio != "Clientes")
+                                conteudo.Column(col =>
                                 {
-                                    string filtrosTxt = "Filtros: ";
-                                    if (tipoRelatorio == "ExtratoExterno") filtrosTxt += $"Cliente: {nomeClienteFiltro}";
-                                    else if (tipoRelatorio == "ExtratoInterno") filtrosTxt += $"Conta: {nomeContaFiltro}";
-                                    else filtrosTxt += $"Gestor: {nomeGestorFiltro} | Cliente: {nomeClienteFiltro}";
+                                    col.Spacing(8);
 
-                                    c.Item().Text(filtrosTxt).FontSize(7.5f).Italic().FontColor("#4a5568").AlignRight();
-                                }
-                            });
-                        });
+                                    // Bloco de informações adicionais de filtros (Período e Filtros aplicados)
+                                    col.Item().Background("#f5f7fb").Padding(6).Row(rowFiltros =>
+                                    {
+                                        string pIni = dataInicial.HasValue ? dataInicial.Value.ToString("dd/MM/yyyy") : "Início";
+                                        string pFin = dataFinal.HasValue ? dataFinal.Value.ToString("dd/MM/yyyy") : "Hoje";
 
-                        col.Item().PaddingVertical(2).LineHorizontal(1).LineColor("#079b62");
+                                        rowFiltros.RelativeItem().Text(t =>
+                                        {
+                                            t.Span("Período Analisado: ").Bold().FontSize(8f);
+                                            t.Span($"{pIni} a {pFin}").FontSize(8f);
+                                        });
 
-                        col.Item().Table(table =>
-                        {
-                            if (tipoRelatorio == "Clientes")
-                            {
-                                table.ColumnsDefinition(c =>
-                                {
-                                    c.RelativeColumn(3); c.RelativeColumn(2); c.RelativeColumn(2); c.RelativeColumn(2);
+                                        if (tipoRelatorio != "Clientes")
+                                        {
+                                            string filtrosTxt = "Filtros: ";
+                                            if (tipoRelatorio == "ExtratoExterno") filtrosTxt += $"Cliente: {nomeClienteFiltro}";
+                                            else if (tipoRelatorio == "ExtratoInterno") filtrosTxt += $"Conta: {nomeContaFiltro}";
+                                            else filtrosTxt += $"Gestor: {nomeGestorFiltro} | Cliente: {nomeClienteFiltro}";
+
+                                            rowFiltros.RelativeItem().AlignRight().Text(filtrosTxt).FontSize(8f).Italic().FontColor("#4a5568");
+                                        }
+                                    });
+
+                                    col.Item().PaddingTop(4);
+
+                                    // Tabela de Dados Específica de cada Relatório
+                                    col.Item().Table(table =>
+                                    {
+                                        if (tipoRelatorio == "Clientes")
+                                        {
+                                            table.ColumnsDefinition(c =>
+                                            {
+                                                c.RelativeColumn(3); c.RelativeColumn(2); c.RelativeColumn(2); c.RelativeColumn(2);
+                                            });
+
+                                            table.Header(h =>
+                                            {
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Cliente").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("NUIT").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Contacto").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Data").Bold();
+                                            });
+
+                                            foreach (var cli in listaClientesFiltro)
+                                            {
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(cli.Nome ?? "N/D").Bold();
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(cli.Nuit ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(cli.Telefone ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(cli.DataCadastro.ToString("dd/MM/yyyy"));
+                                            }
+
+                                            table.Cell().ColumnSpan(3).Background("#f1f5f9").Padding(4).Text($"TOTAL: {listaClientesFiltro.Count}").Bold();
+                                            table.Cell().Background("#f1f5f9").Padding(4).Text("");
+                                        }
+                                        else if (tipoRelatorio == "ExtratoExterno")
+                                        {
+                                            table.ColumnsDefinition(c =>
+                                            {
+                                                c.RelativeColumn(2); c.RelativeColumn(2.5f); c.RelativeColumn(2); c.RelativeColumn(3); c.RelativeColumn(2); c.RelativeColumn(2);
+                                            });
+
+                                            table.Header(h =>
+                                            {
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Data").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Cliente").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Tipo").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Descrição").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Conta").Bold();
+                                            });
+
+                                            decimal totalExtratoExt = 0;
+                                            foreach (var m in listaExtratoExtFiltro)
+                                            {
+                                                decimal valorMov = m.Debito != 0 ? m.Debito : m.Credito;
+                                                bool isReembolso = m.TipoOperacao != null && m.TipoOperacao.Contains("Reembolso", StringComparison.OrdinalIgnoreCase);
+
+                                                decimal valorFinal = isReembolso ? -valorMov : valorMov;
+                                                totalExtratoExt += valorFinal;
+
+                                                string sinalStr = valorFinal > 0 ? "+ " : (valorFinal < 0 ? "- " : "");
+                                                string valorFormatado = $"{sinalStr}MT {Math.Abs(valorFinal):N2}";
+                                                string corValor = valorFinal < 0 ? "#c53030" : "#079b62";
+
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.DataCadastro.ToString("dd/MM/yyyy HH:mm"));
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.Entidade?.Nome ?? "N/D").Bold();
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.TipoOperacao ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.Descricao ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text(valorFormatado).Bold().FontColor(corValor);
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.Conta?.Banco ?? "N/D");
+                                            }
+
+                                            string sinalTotalExt = totalExtratoExt > 0 ? "+ " : (totalExtratoExt < 0 ? "- " : "");
+                                            string totalExtFormatado = $"{sinalTotalExt}MT {Math.Abs(totalExtratoExt):N2}";
+
+                                            table.Cell().ColumnSpan(4).Background("#f1f5f9").Padding(4).Text("TOTAL").Bold();
+                                            table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text(totalExtFormatado).Bold().FontColor("#079b62");
+                                            table.Cell().Background("#f1f5f9").Padding(4).Text("");
+                                        }
+                                        else if (tipoRelatorio == "ExtratoInterno")
+                                        {
+                                            table.ColumnsDefinition(c =>
+                                            {
+                                                c.RelativeColumn(2); c.RelativeColumn(2.5f); c.RelativeColumn(2.5f); c.RelativeColumn(2); c.RelativeColumn(3);
+                                            });
+
+                                            table.Header(h =>
+                                            {
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Data").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Origem").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Destino").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Descrição").Bold();
+                                            });
+
+                                            decimal totalExtratoInt = 0;
+                                            foreach (var m in listaExtratoIntFiltro)
+                                            {
+                                                totalExtratoInt += m.Debito;
+
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.DataCadastro.ToString("dd/MM/yyyy HH:mm"));
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.ContaOrigem?.Banco ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.ContaDestino?.Banco ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{m.Debito:N2} MT").Bold();
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.Descricao ?? "N/D");
+                                            }
+
+                                            table.Cell().ColumnSpan(3).Background("#f1f5f9").Padding(4).Text("TOTAL GERAL").Bold();
+                                            table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text($"{totalExtratoInt:N2} MT").Bold().FontColor("#079b62");
+                                            table.Cell().Background("#f1f5f9").Padding(4).Text("");
+                                        }
+                                        else if (tipoRelatorio == "VencimentosProximos" || tipoRelatorio == "PagamentosPendentes" || tipoRelatorio == "PagamentosFeitos")
+                                        {
+                                            bool isMora = tipoRelatorio == "PagamentosPendentes";
+                                            table.ColumnsDefinition(c =>
+                                            {
+                                                c.RelativeColumn(2); c.RelativeColumn(2); c.RelativeColumn(3); c.RelativeColumn(1.5f);
+                                                c.RelativeColumn(1.5f); c.RelativeColumn(2); c.RelativeColumn(1.5f);
+                                            });
+
+                                            table.Header(h =>
+                                            {
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Gestor").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Cliente").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("CRR").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Vencimento").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor por Pagar").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).AlignCenter().Text(isMora ? "Atraso" : "Estado").Bold();
+                                            });
+
+                                            decimal totalAmortizacoes = 0;
+                                            foreach (var item in listaAmortFiltro)
+                                            {
+                                                int dias = (DateTime.Today - item.Vencimento.Date).Days;
+                                                decimal total = item.PrincipalPorPagar + item.JuroPorPagar + item.MultaPorPagar;
+                                                totalAmortizacoes += total;
+
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Pedido?.Gestor?.Nome ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Pedido?.Entidade?.Nome ?? "N/D").Bold();
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Pedido?.CRR?.ToString() ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Vencimento.ToString("dd/MM/yyyy"));
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{total:N2} MT").Bold();
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignCenter().Text(isMora ? $"+{dias} dias" : "Liquidado");
+                                            }
+
+                                            table.Cell().ColumnSpan(4).Background("#f1f5f9").Padding(4).Text("TOTAL GERAL").Bold();
+                                            table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text($"{totalAmortizacoes:N2} MT").Bold().FontColor("#c53030");
+                                            table.Cell().Background("#f1f5f9").Padding(4).Text("");
+                                        }
+                                        else
+                                        {
+                                            table.ColumnsDefinition(c =>
+                                            {
+                                                c.RelativeColumn(2); c.RelativeColumn(3); c.RelativeColumn(1.5f);
+                                                c.RelativeColumn(1.5f); c.RelativeColumn(2); c.RelativeColumn(1);
+                                                c.RelativeColumn(1); c.RelativeColumn(2);
+                                            });
+
+                                            table.Header(h =>
+                                            {
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Gestor").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Cliente").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("CRR").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).Text("Data").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).AlignCenter().Text("Prazo").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Taxa").Bold();
+                                                h.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Prestação").Bold();
+                                            });
+
+                                            decimal totalValorPedidos = 0;
+                                            decimal totalPrestacaoPedidos = 0;
+
+                                            foreach (var p in listaPedidosFiltro)
+                                            {
+                                                decimal val = p.ValorDecisao ?? p.Valor;
+                                                decimal prest = p.PrestacaoDecisao ?? p.Prestacao;
+                                                totalValorPedidos += val;
+                                                totalPrestacaoPedidos += prest;
+
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(p.Gestor?.Nome ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(p.Entidade?.Nome ?? "N/D").Bold();
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(p.CRR?.ToString() ?? "N/D");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text((p.DataDesembolso ?? p.DataCadastro).ToString("dd/MM/yyyy"));
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{val:N2} MT").Bold();
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignCenter().Text($"{(p.PrazoDecisao ?? p.Prazo)} m");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{(p.TaxaDecisao ?? p.Taxa):N2}%");
+                                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{prest:N2} MT").FontColor("#079b62");
+                                            }
+
+                                            table.Cell().ColumnSpan(4).Background("#f1f5f9").Padding(4).Text("TOTAL").Bold();
+                                            table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text($"{totalValorPedidos:N2} MT").Bold();
+                                            table.Cell().Background("#f1f5f9").Padding(4).Text("");
+                                            table.Cell().Background("#f1f5f9").Padding(4).Text("");
+                                            table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text($"{totalPrestacaoPedidos:N2} MT").Bold().FontColor("#079b62");
+                                        }
+                                    });
                                 });
-
-                                table.Header(h =>
-                                {
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Nome do Cliente").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("NUIT").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Contacto").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Data Cadastro").Bold();
-                                });
-
-                                foreach (var cli in listaClientesFiltro)
-                                {
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(cli.Nome ?? "N/D").Bold();
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(cli.Nuit ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(cli.Telefone ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(cli.DataCadastro.ToString("dd/MM/yyyy"));
-                                }
-
-                                table.Cell().ColumnSpan(3).Background("#f1f5f9").Padding(4).Text($"TOTAL DE CLIENTES: {listaClientesFiltro.Count}").Bold();
-                                table.Cell().Background("#f1f5f9").Padding(4).Text("");
-                            }
-                            else if (tipoRelatorio == "ExtratoExterno")
-                            {
-                                table.ColumnsDefinition(c =>
-                                {
-                                    c.RelativeColumn(2); c.RelativeColumn(2.5f); c.RelativeColumn(2); c.RelativeColumn(3); c.RelativeColumn(2); c.RelativeColumn(2);
-                                });
-
-                                table.Header(h =>
-                                {
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Data").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Cliente").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Tipo").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Descrição").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Conta").Bold();
-                                });
-
-                                decimal totalExtratoExt = 0;
-                                foreach (var m in listaExtratoExtFiltro)
-                                {
-                                    decimal valorMov = m.Debito != 0 ? m.Debito : m.Credito;
-                                    bool isReembolso = m.TipoOperacao != null && m.TipoOperacao.Contains("Reembolso", StringComparison.OrdinalIgnoreCase);
-
-                                    totalExtratoExt += isReembolso ? -valorMov : valorMov;
-                                    string corValor = isReembolso ? "#c53030" : "#079b62";
-
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.DataCadastro.ToString("dd/MM/yyyy HH:mm"));
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.Entidade?.Nome ?? "N/D").Bold();
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.TipoOperacao ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.Descricao ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{valorMov:N2} MT").Bold().FontColor(corValor);
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.Conta?.Banco ?? "N/D");
-                                }
-
-                                table.Cell().ColumnSpan(4).Background("#f1f5f9").Padding(4).Text("TOTAL GERAL").Bold();
-                                table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text($"{totalExtratoExt:N2} MT").Bold().FontColor("#079b62");
-                                table.Cell().Background("#f1f5f9").Padding(4).Text("");
-                            }
-                            else if (tipoRelatorio == "ExtratoInterno")
-                            {
-                                table.ColumnsDefinition(c =>
-                                {
-                                    c.RelativeColumn(2); c.RelativeColumn(2.5f); c.RelativeColumn(2.5f); c.RelativeColumn(2); c.RelativeColumn(3);
-                                });
-
-                                table.Header(h =>
-                                {
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Data").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Origem").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Destino").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Descrição").Bold();
-                                });
-
-                                decimal totalExtratoInt = 0;
-                                foreach (var m in listaExtratoIntFiltro)
-                                {
-                                    totalExtratoInt += m.Debito;
-
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.DataCadastro.ToString("dd/MM/yyyy HH:mm"));
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.ContaOrigem?.Banco ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.ContaDestino?.Banco ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{m.Debito:N2} MT").Bold();
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(m.Descricao ?? "N/D");
-                                }
-
-                                table.Cell().ColumnSpan(3).Background("#f1f5f9").Padding(4).Text("TOTAL GERAL").Bold();
-                                table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text($"{totalExtratoInt:N2} MT").Bold().FontColor("#079b62");
-                                table.Cell().Background("#f1f5f9").Padding(4).Text("");
-                            }
-                            else if (tipoRelatorio == "VencimentosProximos" || tipoRelatorio == "PagamentosPendentes" || tipoRelatorio == "PagamentosFeitos")
-                            {
-                                bool isMora = tipoRelatorio == "PagamentosPendentes";
-                                table.ColumnsDefinition(c =>
-                                {
-                                    c.RelativeColumn(2); c.RelativeColumn(2); c.RelativeColumn(3); c.RelativeColumn(1.5f);
-                                    c.RelativeColumn(1.5f); c.RelativeColumn(2); c.RelativeColumn(1.5f);
-                                });
-
-                                table.Header(h =>
-                                {
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Gestor").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Cliente").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("CRR").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).Text("Vencimento").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).AlignRight().Text("Valor por Pagar").Bold();
-                                    h.Cell().Background("#edf2f7").Padding(4).AlignCenter().Text(isMora ? "Atraso" : "Estado").Bold();
-                                });
-
-                                decimal totalAmortizacoes = 0;
-                                foreach (var item in listaAmortFiltro)
-                                {
-                                    int dias = (DateTime.Today - item.Vencimento.Date).Days;
-                                    decimal total = item.PrincipalPorPagar + item.JuroPorPagar + item.MultaPorPagar;
-                                    totalAmortizacoes += total;
-
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Pedido?.Gestor?.Nome ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Pedido?.Entidade?.Nome ?? "N/D").Bold();
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Pedido?.CRR?.ToString() ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(item.Vencimento.ToString("dd/MM/yyyy"));
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{total:N2} MT").Bold();
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignCenter().Text(isMora ? $"+{dias} dias" : "Liquidado");
-                                }
-
-                                table.Cell().ColumnSpan(4).Background("#f1f5f9").Padding(4).Text("TOTAL GERAL").Bold();
-                                table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text($"{totalAmortizacoes:N2} MT").Bold().FontColor("#c53030");
-                                table.Cell().Background("#f1f5f9").Padding(4).Text("");
-                            }
-                            else
-                            {
-                                table.ColumnsDefinition(c =>
-                                {
-                                    c.RelativeColumn(2); c.RelativeColumn(3); c.RelativeColumn(1.5f);
-                                    c.RelativeColumn(1.5f); c.RelativeColumn(2); c.RelativeColumn(1);
-                                    c.RelativeColumn(1); c.RelativeColumn(2);
-                                });
-
-                                HeaderTabelaPedidos(table);
-
-                                decimal totalValorPedidos = 0;
-                                decimal totalPrestacaoPedidos = 0;
-
-                                foreach (var p in listaPedidosFiltro)
-                                {
-                                    decimal val = p.ValorDecisao ?? p.Valor;
-                                    decimal prest = p.PrestacaoDecisao ?? p.Prestacao;
-                                    totalValorPedidos += val;
-                                    totalPrestacaoPedidos += prest;
-
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(p.Gestor?.Nome ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(p.Entidade?.Nome ?? "N/D").Bold();
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(p.CRR?.ToString() ?? "N/D");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text((p.DataDesembolso ?? p.DataCadastro).ToString("dd/MM/yyyy"));
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{val:N2} MT").Bold();
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignCenter().Text($"{(p.PrazoDecisao ?? p.Prazo)} m");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{(p.TaxaDecisao ?? p.Taxa):N2}%");
-                                    table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{prest:N2} MT").FontColor("#079b62");
-                                }
-
-                                table.Cell().ColumnSpan(4).Background("#f1f5f9").Padding(4).Text("TOTAL GERAL").Bold();
-                                table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text($"{totalValorPedidos:N2} MT").Bold();
-                                table.Cell().Background("#f1f5f9").Padding(4).Text("");
-                                table.Cell().Background("#f1f5f9").Padding(4).Text("");
-                                table.Cell().Background("#f1f5f9").Padding(4).AlignRight().Text($"{totalPrestacaoPedidos:N2} MT").Bold().FontColor("#079b62");
-                            }
-                        });
+                            }));
                     });
                 });
             });
