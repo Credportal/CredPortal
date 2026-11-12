@@ -30,6 +30,9 @@ namespace Analise.Models
         public List<FechoDiarioContaViewModel> SaldosContas { get; set; } = new();
         public List<FechoDiarioGestorViewModel> ResumoGestores { get; set; } = new();
         public List<FechoDiarioGestorViewModel> CarteiraMoraGestores { get; set; } = new();
+
+        // Lista de utilizadores para o modal de verificação de operadores
+        public List<UsuarioModel> ListaUsuarios { get; set; } = new();
     }
 
     // Classes auxiliares para projeção na View

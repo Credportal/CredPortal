@@ -35,7 +35,8 @@ namespace Analise.Controllers
             var viewModel = new FechoDiarioViewModel
             {
                 DataReferencia = dataReferencia,
-                DiaFechado = fechoExistente != null && fechoExistente.Fechado
+                DiaFechado = fechoExistente != null && fechoExistente.Fechado,
+                ListaUsuarios = await _bancoContext.Usuarios.AsNoTracking().ToListAsync()
             };
 
             if (fechoExistente != null)
@@ -136,7 +137,6 @@ namespace Analise.Controllers
                     .ThenInclude(p => p.Gestor)
                     .ToListAsync();
 
-                // Obter nomes distintos dos gestores
                 var gestoresNomes = pedidosDb
                     .Select(p => p.Gestor != null ? p.Gestor.Nome : $"Gestor #{p.GestorId}")
                     .Distinct()
@@ -146,24 +146,20 @@ namespace Analise.Controllers
                 {
                     var pedidosGestor = pedidosDb.Where(p => (p.Gestor != null ? p.Gestor.Nome : $"Gestor #{p.GestorId}") == gestorNome).ToList();
 
-                    // Desembolsos do dia do gestor
                     var desembolsosGestor = pedidosGestor
                         .Where(p => p.DataCadastro.Date == dataReferencia.Date && p.EstadoId == 2)
                         .ToList();
 
-                    // Reembolsos do dia (Amortizações pagas na data)
                     var amortizacoesDiaGestor = amortizacoesDb
                         .Where(a => a.Pedido != null &&
                                     (a.Pedido.Gestor != null ? a.Pedido.Gestor.Nome : $"Gestor #{a.Pedido.GestorId}") == gestorNome &&
                                     a.DataPagamento.HasValue && a.DataPagamento.Value.Date == dataReferencia.Date)
                         .ToList();
 
-                    // Carteira Vigente: Apenas contratos ativos onde Capital Vigente > 0
                     var pedidosVigentesGestor = pedidosGestor
                         .Where(p => p.CapitalVigente > 0m)
                         .ToList();
 
-                    // Amortizações em mora do gestor (vencidas antes da data de referência e com capital por pagar)
                     var amortizacoesMoraGestor = amortizacoesDb
                         .Where(a => a.Pedido != null &&
                                     (a.Pedido.Gestor != null ? a.Pedido.Gestor.Nome : $"Gestor #{a.Pedido.GestorId}") == gestorNome &&
@@ -299,7 +295,6 @@ namespace Analise.Controllers
         {
             DateTime dataReferencia = data ?? DateTime.Today;
 
-            // Obter dados reais das contas e despesas para a data
             var contasDb = await _bancoContext.Contas.ToListAsync();
             var despesasDia = await _bancoContext.MovimentosExternos
                 .Where(m => m.TipoOperacao == "Despesa" && m.DataCadastro.Date == dataReferencia.Date)
@@ -350,7 +345,6 @@ namespace Analise.Controllers
                     {
                         col.Spacing(10);
 
-                        // Cabeçalho
                         col.Item().Row(row =>
                         {
                             row.RelativeItem().Column(c =>
@@ -371,7 +365,6 @@ namespace Analise.Controllers
 
                         col.Item().PaddingTop(5);
 
-                        // Tabela de Contas
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
@@ -401,7 +394,6 @@ namespace Analise.Controllers
                                 table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(5).AlignRight().Text($"{c.SaldoFecho:N2}").Bold().FontSize(8.5f);
                             }
 
-                            // Linha de Totais
                             table.Cell().Background("#f7fafc").Padding(5).Text("TOTAL GERAL").Bold().FontSize(8.5f);
                             table.Cell().Background("#f7fafc").Padding(5).AlignRight().Text($"{saldosContas.Sum(x => x.SaldoAbertura):N2}").Bold().FontSize(8.5f);
                             table.Cell().Background("#f7fafc").Padding(5).AlignRight().Text($"{saldosContas.Sum(x => x.CreditosDia):N2}").Bold().FontColor("#079b62").FontSize(8.5f);
@@ -411,7 +403,6 @@ namespace Analise.Controllers
 
                         col.Item().PaddingTop(10);
 
-                        // Bloco de Despesas do Dia
                         col.Item().Background("#1e293b").Padding(8).Row(row =>
                         {
                             row.RelativeItem().Text("TOTAL DESPESAS DO DIA:").Bold().FontColor("#FFFFFF").FontSize(10);
@@ -490,7 +481,7 @@ namespace Analise.Controllers
 
                     page.Footer().AlignCenter().Text(text =>
                     {
-                        text.Span("MAPA DE DESEMPENHO E FECHO DIÁRIO (APENAS VOLUMES) — ").FontSize(7f).Italic().FontColor("#a0aec0");
+                        text.Span("MAPA DE DESEMPENHO E FECHO DIÁRIO — ").FontSize(7f).Italic().FontColor("#a0aec0");
                         text.Span(nomeEmpresa).FontSize(7f).Bold().FontColor("#718096");
                     });
 
@@ -498,7 +489,6 @@ namespace Analise.Controllers
                     {
                         col.Spacing(5);
 
-                        // Cabeçalho
                         col.Item().Row(row =>
                         {
                             row.RelativeItem().Column(c =>
@@ -515,88 +505,39 @@ namespace Analise.Controllers
 
                         col.Item().PaddingVertical(2).LineHorizontal(1).LineColor("#079b62");
 
-                        // Tabela Simplificada Apenas por Volume + % Mora
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(3f);    // Gestor
-                                columns.RelativeColumn(2.2f);  // Desembolso Vol
-                                columns.RelativeColumn(2.2f);  // Reembolso Vol
-                                columns.RelativeColumn(2.2f);  // Pendentes Vol
-                                columns.RelativeColumn(2.2f);  // Aprovados Vol
-                                columns.RelativeColumn(2.2f);  // Juros Rec. Vol
-                                columns.RelativeColumn(2.5f);  // Vigente Vol
-                                columns.RelativeColumn(2.2f);  // Mora <7d
-                                columns.RelativeColumn(2.2f);  // Mora <15d
-                                columns.RelativeColumn(2.2f);  // Mora <30d
-                                columns.RelativeColumn(2.2f);  // Mora <60d
-                                columns.RelativeColumn(2.2f);  // Mora <90d
-                                columns.RelativeColumn(2.2f);  // Mora >90d
-                                columns.RelativeColumn(2.5f);  // Mora Total
-                                columns.RelativeColumn(1.8f);  // % Mora
+                                columns.RelativeColumn(3f);
+                                columns.RelativeColumn(2.2f);
+                                columns.RelativeColumn(2.2f);
+                                columns.RelativeColumn(2.2f);
+                                columns.RelativeColumn(2.2f);
+                                columns.RelativeColumn(2.2f);
+                                columns.RelativeColumn(2.5f);
                             });
 
                             table.Header(header =>
                             {
                                 header.Cell().Background("#1e293b").Padding(4).Text("GESTOR").Bold().FontColor("#FFFFFF").FontSize(7.5f);
                                 header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("Desembolso").Bold().FontColor("#FFFFFF").FontSize(7.5f);
-                                header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("Reembolso").Bold().FontColor("#FFFFFF").FontSize(7.5f);
+                                header.Cell().Background("#1e293bニング").Padding(4).AlignRight().Text("Reembolso").Bold().FontColor("#FFFFFF").FontSize(7.5f);
                                 header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("Pendentes").Bold().FontColor("#FFFFFF").FontSize(7.5f);
                                 header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("Aprovados").Bold().FontColor("#FFFFFF").FontSize(7.5f);
                                 header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("Juros Rec.").Bold().FontColor("#FFFFFF").FontSize(7.5f);
                                 header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("Vigente").Bold().FontColor("#FFFFFF").FontSize(7.5f);
-                                header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("< 7d").Bold().FontColor("#FFFFFF").FontSize(7.5f);
-                                header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("< 15d").Bold().FontColor("#FFFFFF").FontSize(7.5f);
-                                header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("< 30d").Bold().FontColor("#FFFFFF").FontSize(7.5f);
-                                header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("< 60d").Bold().FontColor("#FFFFFF").FontSize(7.5f);
-                                header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("< 90d").Bold().FontColor("#FFFFFF").FontSize(7.5f);
-                                header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("> 90d").Bold().FontColor("#FFFFFF").FontSize(7.5f);
-                                header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("Mora Total").Bold().FontColor("#FFFFFF").FontSize(7.5f);
-                                header.Cell().Background("#1e293b").Padding(4).AlignRight().Text("% Mora").Bold().FontColor("#FFFFFF").FontSize(7.5f);
                             });
 
-                            foreach (var item in resumoGestores)
+                            foreach (var g in resumoGestores)
                             {
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).Text(item.GestorNome).Bold().FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.DesembolsoVolume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.ReembolsoVolume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.PedidosPendentesVolume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.PedidosAprovadosVolume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.JurosRecebidosVolume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.VigenteVolume:N2}").Bold().FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.MoraMenor7Volume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.MoraMenor15Volume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.MoraMenor30Volume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.MoraMenor60Volume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.MoraMenor90Volume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.MoraMaior90Volume:N2}").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.MoraTotalVolume:N2}").Bold().FontColor("#c53030").FontSize(7.5f);
-                                table.Cell().BorderBottom(0.5f).BorderColor("#cbd5e1").Padding(3).AlignRight().Text($"{item.PercentagemMora:N2}%").Bold().FontColor("#c53030").FontSize(7.5f);
-                            }
-
-                            // Linha de Totais Gerais
-                            if (resumoGestores.Any())
-                            {
-                                decimal vigenteTotalGeral = resumoGestores.Sum(x => x.VigenteVolume);
-                                decimal moraTotalGeral = resumoGestores.Sum(x => x.MoraTotalVolume);
-                                decimal pctMoraGeral = vigenteTotalGeral > 0m ? (moraTotalGeral / vigenteTotalGeral) * 100m : 0m;
-
-                                table.Cell().Background("#f1f5f9").Padding(3).Text("TOTAL GERAL").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.DesembolsoVolume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.ReembolsoVolume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.PedidosPendentesVolume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.PedidosAprovadosVolume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.JurosRecebidosVolume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{vigenteTotalGeral:N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.MoraMenor7Volume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.MoraMenor15Volume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.MoraMenor30Volume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.MoraMenor60Volume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.MoraMenor90Volume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{resumoGestores.Sum(x => x.MoraMaior90Volume):N2}").Bold().FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{moraTotalGeral:N2}").Bold().FontColor("#c53030").FontSize(7.5f);
-                                table.Cell().Background("#f1f5f9").Padding(3).AlignRight().Text($"{pctMoraGeral:N2}%").Bold().FontColor("#c53030").FontSize(7.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).Text(g.GestorNome).Bold().FontSize(7.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{g.DesembolsoVolume:N2}").FontSize(7.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{g.ReembolsoVolume:N2}").FontSize(7.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{g.PedidosPendentesVolume:N2}").FontSize(7.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{g.PedidosAprovadosVolume:N2}").FontSize(7.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{g.JurosRecebidosVolume:N2}").FontSize(7.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#e2e8f0").Padding(4).AlignRight().Text($"{g.VigenteVolume:N2}").Bold().FontSize(7.5f);
                             }
                         });
                     });

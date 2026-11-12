@@ -140,8 +140,6 @@ namespace Analise.Controllers
             ViewBag.CarteiraEmMora = totalCarteiraMora;
             ViewBag.QuantidadeCobrancasMora = quantidadeCobrancasMora;
 
-
-
             // 🔹 Dados para o Gráfico de Evolução da Carteira Vigente (Agrupado por Mês)
             var evolucaoCarteira = _context.Amortizacoes
                 .AsEnumerable()
@@ -159,7 +157,7 @@ namespace Analise.Controllers
 
             // 🔹 Dados para o Gráfico de Operações Chave (Os 5 KPIs principais)
             var operacoesChave = new[]
-                        {
+            {
                 new { Label = "Desembolso do Mês", Valor = totalDesembolsosMesAtual },
                 new { Label = "Pagamentos Previstos", Valor = previstosMesAtual },
                 new { Label = "Pagamentos Pendentes", Valor = pendentesMesAtual },
@@ -214,6 +212,5 @@ namespace Analise.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-
     }
 }

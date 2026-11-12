@@ -30,29 +30,23 @@
         agenciaUtilizador = agencia?.Nome ?? "Agência não identificada";
     }
 
-    // --- VERIFICAÇÃO ROBUSTA DO ESTADO DO DIA USANDO O DiaControloModel ---
-    DateTime dataHoje = DateTime.Now.Date;
+    // --- VERIFICAÇÃO INDEPENDENTE DE RELÓGIO (Baseada no último registo de fecho) ---
     bool diaFechado = false;
 
-    if (_context.DiasControlo != null)
+    if (_context.FechosDiariosRegistos != null)
     {
-        // Procura pelo registo do dia de hoje
-        var controloDia = await _context.DiasControlo
+        // Busca o fecho mais recente gravado na base de dados
+        var ultimoFecho = await _context.FechosDiariosRegistos
             .AsNoTracking()
-            .FirstOrDefaultAsync(d => d.DataReferencia.Date == dataHoje);
+            .OrderByDescending(r => r.DataReferencia)
+            .FirstOrDefaultAsync();
 
-        // Se não encontrar para hoje, pega o último registo de controlo gerido
-        if (controloDia == null)
+        // Se o último registo encontrado estiver marcado como fechado,
+        // o sistema assume o bloqueio até que um novo dia seja aberto/iniciado.
+        if (ultimoFecho != null && ultimoFecho.Fechado)
         {
-            controloDia = await _context.DiasControlo
-                .AsNoTracking()
-                .OrderByDescending(d => d.DataReferencia)
-                .FirstOrDefaultAsync();
-        }
-
-        // Se o dia existe e 'EstaAberto' for falso, significa que o fecho foi efetuado
-        if (controloDia != null && !controloDia.EstaAberto)
-        {
+            // Opcional: valida se a data do último fecho corresponde ao dia corrente real do servidor
+            // ou mantém bloqueado se o operador ainda não abriu o dia seguinte.
             diaFechado = true;
         }
     }
@@ -312,6 +306,12 @@
                     <a asp-controller="Home" asp-action="Index" class="sg-nav-link @(currentController == "Painel" || currentController == "Home" ? "active" : "")">
                         <i class="fa-solid fa-house fa-fw"></i> Painel
                     </a>
+                    @if (usuario != null && usuario.Perfil == Analise.Enuns.PerfilEnum.Admin)
+                    {
+                        <a asp-controller="FechoDiario" asp-action="Index" class="sg-nav-link @(currentController == "Index" ? "active" : "")">
+                            <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho do dia
+                        </a>
+                    }
                     <a asp-controller="Simulador" asp-action="Index" class="sg-nav-link @(currentController == "Simulador" ? "active" : "")">
                         <i class="fa-solid fa-calculator fa-fw"></i> Simulador
                     </a>
@@ -346,11 +346,11 @@
 
                     @if (usuario != null && usuario.Perfil == Analise.Enuns.PerfilEnum.Admin)
                     {
-                        <a asp-controller="FechoDiario" asp-action="Index" class="sg-nav-link @(currentController == "Index" ? "active" : "")">
-                            <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho do dia
-                        </a>
                         <a asp-controller="Usuario" asp-action="Criar" class="sg-nav-link @(currentController == "Usuario" ? "active" : "")">
                             <i class="fa-solid fa-users fa-fw"></i> Usuários
+                        </a>
+                        <a asp-controller="FechoDiario" asp-action="Index" class="sg-nav-link @(currentController == "Index" ? "active" : "")">
+                            <i class="fa-solid fa-file-invoice-dollar fa-fw"></i> Fecho do dia
                         </a>
                     }
 
