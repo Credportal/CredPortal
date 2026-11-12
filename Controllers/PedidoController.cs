@@ -1925,209 +1925,216 @@ namespace Analise.Controllers
         [HttpGet]
         public async Task<IActionResult> GerarReciboPagamentoPdf(int pedidoId, int? movimentoId, decimal? valorPago, int? contaId)
         {
-            var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
-            if (usuarioLogado == null) return RedirectToAction("Index", "Login");
-
-            var pedido = await _pedidoRepositorio.BuscarPorIdAsync(pedidoId);
-            if (pedido == null) return NotFound();
-
-            var cli = pedido.Entidade;
-
-            decimal valorRealPago = 0;
-            int? contaRealId = contaId;
-
-            // 1. Se foi passado um ID de movimento específico, busca os dados reais dele
-            if (movimentoId.HasValue && movimentoId.Value > 0)
+            try
             {
-                var movimento = await _bancoContext.MovimentosExternos
-                    .FirstOrDefaultAsync(m => m.Id == movimentoId.Value);
+                var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
+                if (usuarioLogado == null) return RedirectToAction("Index", "Login");
 
-                if (movimento != null)
+                var pedido = await _pedidoRepositorio.BuscarPorIdAsync(pedidoId);
+                if (pedido == null) return NotFound();
+
+                var cli = pedido.Entidade;
+
+                decimal valorRealPago = 0;
+                int? contaRealId = contaId;
+
+                // 1. Se foi passado um ID de movimento específico, busca os dados reais dele
+                if (movimentoId.HasValue && movimentoId.Value > 0)
                 {
-                    valorRealPago = movimento.Debito > 0 ? movimento.Debito : movimento.Credito;
-                    contaRealId = movimento.ContaId;
-                }
-            }
-            // 2. Se foi passado um valor avulso
-            else if (valorPago.HasValue && valorPago.Value > 0)
-            {
-                valorRealPago = valorPago.Value;
-            }
-            // 3. Caso contrário, busca o último movimento de reembolso registado para este cliente/pedido
-            else
-            {
-                var ultimoMovimento = await _bancoContext.MovimentosExternos
-                    .Where(m => m.EntidadeId == pedido.EntidadeId && m.TipoOperacao.Contains("Reembolso"))
-                    .OrderByDescending(m => m.Id)
-                    .FirstOrDefaultAsync();
+                    var movimento = await _bancoContext.MovimentosExternos
+                        .FirstOrDefaultAsync(m => m.Id == movimentoId.Value);
 
-                if (ultimoMovimento != null)
-                {
-                    valorRealPago = ultimoMovimento.Debito > 0 ? ultimoMovimento.Debito : ultimoMovimento.Credito;
-                    contaRealId = ultimoMovimento.ContaId;
-                }
-                else
-                {
-                    valorRealPago = 0;
-                }
-            }
-
-            string nomeContaStr = "Conta Principal";
-            string formaPagamento = "Depósito/Transferência";
-
-            if (contaRealId.HasValue && contaRealId.Value > 0)
-            {
-                var contaModel = await _bancoContext.Contas.FindAsync(contaRealId.Value);
-                if (contaModel != null)
-                {
-                    // Correção da quebra de linha em linha única para evitar crash na rede
-                    nomeContaStr = $"{contaModel.Banco} - {contaModel.Conta} ({contaModel.Titular})";
-
-                    if ((!string.IsNullOrEmpty(contaModel.Banco) && contaModel.Banco.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0) ||
-                        (!string.IsNullOrEmpty(contaModel.Conta) && contaModel.Conta.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0))
+                    if (movimento != null)
                     {
-                        formaPagamento = "Numerário";
+                        valorRealPago = movimento.Debito > 0 ? movimento.Debito : movimento.Credito;
+                        contaRealId = movimento.ContaId;
                     }
                 }
-            }
-
-            string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
-            string numeroProcesso = pedido.CRR.HasValue ? $"CRR-{pedido.CRR.Value:0}" : $"CP-{pedido.Id}";
-            string numeroRecibo = $"REC-{DateTime.Now:yyyyMMdd}-{pedido.Id}-{new Random().Next(100, 999)}";
-
-            string nomeCliente = cli?.Nome ?? "N/A";
-            string nuitCliente = cli?.Nuit ?? "N/A";
-            string biCliente = cli?.NrDocumento ?? "N/A";
-            string contactoCliente = cli?.Telefone ?? "N/A";
-            string operadorStr = usuarioLogado?.Login ?? "Administrador";
-
-            var culturaPt = new System.Globalization.CultureInfo("pt-PT");
-
-            var pdfDocument = Document.Create(container =>
-            {
-                container.Page(page =>
+                // 2. Se foi passado um valor avulso
+                else if (valorPago.HasValue && valorPago.Value > 0)
                 {
-                    page.Size(PageSizes.A4);
-                    page.Margin(20);
-                    page.DefaultTextStyle(x => x.FontFamily("Arial").FontSize(8.5f).FontColor("#172b4d"));
+                    valorRealPago = valorPago.Value;
+                }
+                // 3. Caso contrário, busca o último movimento de reembolso registado para este cliente/pedido
+                else
+                {
+                    var ultimoMovimento = await _bancoContext.MovimentosExternos
+                        .Where(m => m.EntidadeId == pedido.EntidadeId && m.TipoOperacao != null && m.TipoOperacao.Contains("Reembolso"))
+                        .OrderByDescending(m => m.Id)
+                        .FirstOrDefaultAsync();
 
-                    page.Footer().AlignCenter().Text(text =>
+                    if (ultimoMovimento != null)
                     {
-                        text.Span("DOCUMENTO PROCESSADO POR COMPUTADOR — ").FontSize(7).Italic().FontColor("#a0aec0");
-                        text.Span(nomeEmpresa).FontSize(7).Bold().FontColor("#718096");
-                    });
-
-                    page.Content().Column(col =>
+                        valorRealPago = ultimoMovimento.Debito > 0 ? ultimoMovimento.Debito : ultimoMovimento.Credito;
+                        contaRealId = ultimoMovimento.ContaId;
+                    }
+                    else
                     {
-                        col.Spacing(8);
+                        valorRealPago = 0;
+                    }
+                }
 
-                        void RenderizarViaRecibo(string viaTitulo)
+                string nomeContaStr = "Conta Principal";
+                string formaPagamento = "Depósito/Transferência";
+
+                if (contaRealId.HasValue && contaRealId.Value > 0)
+                {
+                    var contaModel = await _bancoContext.Contas.FindAsync(contaRealId.Value);
+                    if (contaModel != null)
+                    {
+                        nomeContaStr = $"{contaModel.Banco} - {contaModel.Conta} ({contaModel.Titular})";
+
+                        if ((!string.IsNullOrEmpty(contaModel.Banco) && contaModel.Banco.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                            (!string.IsNullOrEmpty(contaModel.Conta) && contaModel.Conta.IndexOf("caixa", StringComparison.OrdinalIgnoreCase) >= 0))
                         {
-                            col.Item().Column(reciboCol =>
-                            {
-                                reciboCol.Spacing(4);
-
-                                reciboCol.Item().Row(row =>
-                                {
-                                    row.RelativeItem().Column(c =>
-                                    {
-                                        c.Item().Text("Cash Pronto").Bold().FontSize(16).FontColor("#079b62");
-                                        c.Item().Text($"{nomeEmpresa} — {viaTitulo}").FontSize(7.5f).FontColor("#718096");
-                                    });
-
-                                    row.ConstantItem(160).AlignRight().Column(c =>
-                                    {
-                                        c.Item().Text($"Data: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(7.5f).Italic().AlignRight();
-                                        c.Item().Text($"Nº Recibo: {numeroRecibo}").Bold().FontSize(8).FontColor("#079b62").AlignRight();
-                                        c.Item().Text($"Ref: {numeroProcesso}").FontSize(8).FontColor("#718096").AlignRight();
-                                    });
-                                });
-
-                                reciboCol.Item().PaddingVertical(2).LineHorizontal(0.8f).LineColor("#079b62");
-
-                                reciboCol.Item().Background("#079b62").Padding(4).AlignCenter().Text("RECIBO DE PAGAMENTO")
-                                    .Bold().FontSize(10).FontColor("#FFFFFF");
-
-                                // 1. Dados do Mutuário
-                                reciboCol.Item().Background("#f5f7fb").Padding(3).Text("1. DADOS DO MUTUÁRIO").Bold().FontSize(8.5f).FontColor("#172b4d");
-                                reciboCol.Item().Column(inner =>
-                                {
-                                    inner.Item().Row(row =>
-                                    {
-                                        row.RelativeItem(7).Text(t => { t.Span("Nome: ").Bold(); t.Span(nomeCliente); });
-                                        row.RelativeItem(5).Text(t => { t.Span("Contacto: ").Bold(); t.Span(contactoCliente); });
-                                    });
-                                    inner.Item().Row(row =>
-                                    {
-                                        row.RelativeItem(6).Text(t => { t.Span("NUIT: ").Bold(); t.Span(nuitCliente); });
-                                        row.RelativeItem(6).Text(t => { t.Span("BI: ").Bold(); t.Span(biCliente); });
-                                    });
-                                });
-
-                                // 2. Detalhes do Pagamento
-                                reciboCol.Item().Background("#f5f7fb").Padding(3).Text("2. DETALHES DO PAGAMENTO").Bold().FontSize(8.5f).FontColor("#172b4d");
-                                reciboCol.Item().Column(inner =>
-                                {
-                                    inner.Item().Row(row =>
-                                    {
-                                        row.RelativeItem(6).Text(t => { t.Span("Valor Recebido: ").Bold(); t.Span($"{valorRealPago:N2} MT").Bold().FontColor("#079b62"); });
-                                        row.RelativeItem(6).Text(t => { t.Span("Conta Destino: ").Bold(); t.Span(nomeContaStr); });
-                                    });
-                                    inner.Item().Row(row =>
-                                    {
-                                        row.RelativeItem(6).Text(t => { t.Span("Operador: ").Bold(); t.Span(operadorStr); });
-                                        row.RelativeItem(6).Text(t => { t.Span("Forma Pagamento: ").Bold(); t.Span(formaPagamento); });
-                                    });
-                                });
-
-                                // 3. Observações
-                                reciboCol.Item().Background("#f5f7fb").Padding(3).Text("3. OBSERVAÇÕES").Bold().FontSize(8.5f).FontColor("#172b4d");
-                                reciboCol.Item().Text(
-                                    "Quantia recebida para amortização de prestações e encargos do crédito, nos termos regulamentares."
-                                ).FontSize(7.5f).Italic().FontColor("#4a5568");
-
-                                reciboCol.Item().PaddingTop(10);
-
-                                reciboCol.Item().Table(table =>
-                                {
-                                    table.ColumnsDefinition(columns =>
-                                    {
-                                        columns.RelativeColumn();
-                                        columns.ConstantColumn(30);
-                                        columns.RelativeColumn();
-                                    });
-
-                                    table.Cell().Column(c =>
-                                    {
-                                        c.Item().PaddingBottom(3).LineHorizontal(0.5f).LineColor("#718096");
-                                        c.Item().Text("Assinatura do Cliente").FontSize(8).Bold();
-                                    });
-
-                                    table.Cell();
-
-                                    table.Cell().Column(c =>
-                                    {
-                                        c.Item().PaddingBottom(3).LineHorizontal(0.5f).LineColor("#718096");
-                                        c.Item().Text("Pelo Operador / Tesouraria").FontSize(8).Bold();
-                                    });
-                                });
-                            });
+                            formaPagamento = "Numerário";
                         }
+                    }
+                }
 
-                        RenderizarViaRecibo("ORIGINAL");
+                string nomeEmpresa = "Cash Pronto Microcrédito E.I.";
+                string numeroProcesso = pedido.CRR.HasValue ? $"CRR-{pedido.CRR.Value:0}" : $"CP-{pedido.Id}";
+                string numeroRecibo = $"REC-{DateTime.Now:yyyyMMdd}-{pedido.Id}-{new Random().Next(100, 999)}";
 
-                        col.Item().PaddingVertical(10).Row(r =>
+                string nomeCliente = cli?.Nome ?? "N/A";
+                string nuitCliente = cli?.Nuit ?? "N/A";
+                string biCliente = cli?.NrDocumento ?? "N/A";
+                string contactoCliente = cli?.Telefone ?? "N/A";
+                string operadorStr = usuarioLogado?.Login ?? "Administrador";
+
+                var culturaPt = new System.Globalization.CultureInfo("pt-PT");
+
+                var pdfDocument = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(20);
+                        page.DefaultTextStyle(x => x.FontFamily("Arial").FontSize(8.5f).FontColor("#172b4d"));
+
+                        page.Footer().AlignCenter().Text(text =>
                         {
-                            r.RelativeItem().LineHorizontal(0.8f).LineColor("#cbd5e0");
+                            text.Span("DOCUMENTO PROCESSADO POR COMPUTADOR — ").FontSize(7).Italic().FontColor("#a0aec0");
+                            text.Span(nomeEmpresa).FontSize(7).Bold().FontColor("#718096");
                         });
 
-                        RenderizarViaRecibo("CÓPIA PARA CLIENTE");
+                        page.Content().Column(col =>
+                        {
+                            col.Spacing(8);
+
+                            void RenderizarViaRecibo(string viaTitulo)
+                            {
+                                col.Item().Column(reciboCol =>
+                                {
+                                    reciboCol.Spacing(4);
+
+                                    reciboCol.Item().Row(row =>
+                                    {
+                                        row.RelativeItem().Column(c =>
+                                        {
+                                            c.Item().Text("Cash Pronto").Bold().FontSize(16).FontColor("#079b62");
+                                            c.Item().Text($"{nomeEmpresa} — {viaTitulo}").FontSize(7.5f).FontColor("#718096");
+                                        });
+
+                                        row.ConstantItem(160).AlignRight().Column(c =>
+                                        {
+                                            c.Item().Text($"Data: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(7.5f).Italic().AlignRight();
+                                            c.Item().Text($"Nº Recibo: {numeroRecibo}").Bold().FontSize(8).FontColor("#079b62").AlignRight();
+                                            c.Item().Text($"Ref: {numeroProcesso}").FontSize(8).FontColor("#718096").AlignRight();
+                                        });
+                                    });
+
+                                    reciboCol.Item().PaddingVertical(2).LineHorizontal(0.8f).LineColor("#079b62");
+
+                                    reciboCol.Item().Background("#079b62").Padding(4).AlignCenter().Text("RECIBO DE PAGAMENTO")
+                                        .Bold().FontSize(10).FontColor("#FFFFFF");
+
+                                    // 1. Dados do Mutuário
+                                    reciboCol.Item().Background("#f5f7fb").Padding(3).Text("1. DADOS DO MUTUÁRIO").Bold().FontSize(8.5f).FontColor("#172b4d");
+                                    reciboCol.Item().Column(inner =>
+                                    {
+                                        inner.Item().Row(row =>
+                                        {
+                                            row.RelativeItem(7).Text(t => { t.Span("Nome: ").Bold(); t.Span(nomeCliente); });
+                                            row.RelativeItem(5).Text(t => { t.Span("Contacto: ").Bold(); t.Span(contactoCliente); });
+                                        });
+                                        inner.Item().Row(row =>
+                                        {
+                                            row.RelativeItem(6).Text(t => { t.Span("NUIT: ").Bold(); t.Span(nuitCliente); });
+                                            row.RelativeItem(6).Text(t => { t.Span("BI: ").Bold(); t.Span(biCliente); });
+                                        });
+                                    });
+
+                                    // 2. Detalhes do Pagamento
+                                    reciboCol.Item().Background("#f5f7fb").Padding(3).Text("2. DETALHES DO PAGAMENTO").Bold().FontSize(8.5f).FontColor("#172b4d");
+                                    reciboCol.Item().Column(inner =>
+                                    {
+                                        inner.Item().Row(row =>
+                                        {
+                                            row.RelativeItem(6).Text(t => { t.Span("Valor Recebido: ").Bold(); t.Span($"{valorRealPago:N2} MT").Bold().FontColor("#079b62"); });
+                                            row.RelativeItem(6).Text(t => { t.Span("Conta Destino: ").Bold(); t.Span(nomeContaStr); });
+                                        });
+                                        inner.Item().Row(row =>
+                                        {
+                                            row.RelativeItem(6).Text(t => { t.Span("Operador: ").Bold(); t.Span(operadorStr); });
+                                            row.RelativeItem(6).Text(t => { t.Span("Forma Pagamento: ").Bold(); t.Span(formaPagamento); });
+                                        });
+                                    });
+
+                                    // 3. Observações
+                                    reciboCol.Item().Background("#f5f7fb").Padding(3).Text("3. OBSERVAÇÕES").Bold().FontSize(8.5f).FontColor("#172b4d");
+                                    reciboCol.Item().Text(
+                                        "Quantia recebida para amortização de prestações e encargos do crédito, nos termos regulamentares."
+                                    ).FontSize(7.5f).Italic().FontColor("#4a5568");
+
+                                    reciboCol.Item().PaddingTop(10);
+
+                                    reciboCol.Item().Table(table =>
+                                    {
+                                        table.ColumnsDefinition(columns =>
+                                        {
+                                            columns.RelativeColumn();
+                                            columns.ConstantColumn(30);
+                                            columns.RelativeColumn();
+                                        });
+
+                                        table.Cell().Column(c =>
+                                        {
+                                            c.Item().PaddingBottom(3).LineHorizontal(0.5f).LineColor("#718096");
+                                            c.Item().Text("Assinatura do Cliente").FontSize(8).Bold();
+                                        });
+
+                                        table.Cell();
+
+                                        table.Cell().Column(c =>
+                                        {
+                                            c.Item().PaddingBottom(3).LineHorizontal(0.5f).LineColor("#718096");
+                                            c.Item().Text("Pelo Operador / Tesouraria").FontSize(8).Bold();
+                                        });
+                                    });
+                                });
+                            }
+
+                            RenderizarViaRecibo("ORIGINAL");
+
+                            col.Item().PaddingVertical(10).Row(r =>
+                            {
+                                r.RelativeItem().LineHorizontal(0.8f).LineColor("#cbd5e0");
+                            });
+
+                            RenderizarViaRecibo("CÓPIA PARA CLIENTE");
+                        });
                     });
                 });
-            });
 
-            byte[] bytes = pdfDocument.GeneratePdf();
-            return File(bytes, "application/pdf", $"Recibo_Pagamento_{pedido.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                byte[] bytes = pdfDocument.GeneratePdf();
+                return File(bytes, "application/pdf", $"Recibo_Pagamento_{pedido.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            }
+            catch (Exception ex)
+            {
+                // Se houver qualquer erro na rede, exibe a mensagem exata no ecrã em vez da página cinzenta genérica
+                return Content($"[ERRO AO GERAR RECIBO PDF]: {ex.Message} | Inner: {ex.InnerException?.Message}");
+            }
         }
         [HttpGet]
         public async Task<IActionResult> GerarReciboDesembolsoPdf(int id)
