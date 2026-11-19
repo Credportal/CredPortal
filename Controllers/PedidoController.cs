@@ -195,6 +195,7 @@ namespace Analise.Controllers
         }
 
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CriarGarantia(GarantiaViewModel model, int pedidoId)
         {
@@ -281,6 +282,7 @@ namespace Analise.Controllers
         // POST: /Pedido/AdicionarInterveniente
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         [ActionName("AdicionarInterveniente")]
         public async Task<IActionResult> AdicionarInterveniente(IntervenienteViewModel model, int pedidoId)
         {
@@ -324,6 +326,7 @@ namespace Analise.Controllers
 
         // POST: /Pedido/RemoverInterveniente
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoverInterveniente(int id, int pedidoId)
         {
@@ -338,6 +341,7 @@ namespace Analise.Controllers
 
         // POST: /Pedido/CriarGarantiaInterveniente
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CriarGarantiaInterveniente(IntervenienteViewModel model, int pedidoId)
         {
@@ -411,6 +415,7 @@ namespace Analise.Controllers
 
         // POST: /Pedido/ProcessarDecisao
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcessarDecisao(int id, decimal? valorDecisao, int? prazoDecisao, decimal? taxaDecisao, decimal? prestacaoDecisao, string decisao)
         {
@@ -1113,6 +1118,7 @@ namespace Analise.Controllers
 
         // POST: /Pedido/SalvarCustosAdm
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SalvarCustosAdm(CustosAdmModel custos)
         {
@@ -1219,6 +1225,7 @@ namespace Analise.Controllers
         }
         // POST: /Pedido/ProcessarDesembolso
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcessarDesembolso(int id, DateTime? dataDesembolsoManual, List<DesembolsoItemInput> desembolsos)
         {
@@ -1396,6 +1403,8 @@ namespace Analise.Controllers
         }
 
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcessarPagamento(int pedidoId, int contaId, decimal valorDeposito, List<AmortizacaoModel> amortizacoes)
         {
             var usuarioLogado = _sessao.BuscarSessaoDoUsuario();
@@ -2690,6 +2699,8 @@ namespace Analise.Controllers
         }
 
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditarGarantia(GarantiaModel model, int pedidoId)
         {
             var garantiaDb = await _bancoContext.Garantias.FindAsync(model.Id);

@@ -1,15 +1,16 @@
-﻿using Analise.Filters;
+﻿using Analise.Enuns;
+using Analise.Filters;
 using Analise.Helper;
 using Analise.Models;
 using Analise.Repositorio;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
 
 namespace Analise.Controllers
 {
@@ -130,6 +131,7 @@ namespace Analise.Controllers
         }
 
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         public IActionResult Criar(EntidadeViewModel model)
         {
             int usuarioId = HttpContext.Session.GetInt32("UsuarioId") ?? 0;
@@ -157,6 +159,8 @@ namespace Analise.Controllers
         }
 
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Editar(EntidadeViewModel model)
         {
             int usuarioId = HttpContext.Session.GetInt32("UsuarioId") ?? 0;

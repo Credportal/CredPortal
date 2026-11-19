@@ -48,6 +48,7 @@ namespace Analise.Controllers
         }
 
         [HttpPost]
+        [PermissaoPerfil(PerfilEnum.Admin, PerfilEnum.Super, PerfilEnum.Gerente)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Criar(DespesaModel despesa)
         {
